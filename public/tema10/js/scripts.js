@@ -1,7 +1,43 @@
+(function() {
+    function checkDevice() {
+        var isMobile = window.innerWidth < 1200;
+        var htmlEl = document.documentElement;
+        if (isMobile) {
+            if (htmlEl.classList.contains('pbl-desktop')) {
+                htmlEl.classList.remove('pbl-desktop');
+                htmlEl.classList.add('pbl-mobile');
+            }
+            if (window.js_configurations) {
+                window.js_configurations.is_mobile = true;
+            }
+        } else {
+            if (htmlEl.classList.contains('pbl-mobile')) {
+                htmlEl.classList.remove('pbl-mobile');
+                htmlEl.classList.add('pbl-desktop');
+            }
+            if (window.js_configurations) {
+                window.js_configurations.is_mobile = false;
+            }
+        }
+    }
+    // Run immediately
+    checkDevice();
+    // Also run on DOMContentLoaded and Load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', checkDevice);
+    } else {
+        checkDevice();
+    }
+    window.addEventListener('load', checkDevice);
+    // Also run on resize
+    window.addEventListener('resize', checkDevice);
+})();
+
 $(window).load(function(){	
 	$("img.lazy").lazy({effect : "fadeIn", effectTime: 500,visibleOnly : true});
 	$("html").get(0).style.setProperty("--header-h", $('.header-bottom').height()+'px');	
 });
+
 /*==================================================== notify.js ====================================================*/
 function _info(selector, msg, position)
 {
