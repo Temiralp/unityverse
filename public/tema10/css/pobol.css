@@ -2257,4 +2257,9 @@ html.pbl-urun .pbl-private-label{
 /* Şimdilik arama barını kaldırıyoruz */
 #sosearchpro {
     display: none !important;
-}}
+}
+
+/* Kurs detay sayfalarındaki mükerrer/fazla eğitim kapağı (thumbnail barı) bölümünü gizle */
+.pbl-product-slider-thumb {
+    display: none !important;
+}
