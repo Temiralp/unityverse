@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="tr" class="pbl-tum-urunler  pbl-desktop" style="">
 <head>
 <title>Tüm Ürünler</title>
@@ -6149,7 +6149,7 @@ document.addEventListener('DOMContentLoaded', function() {
         window.history.pushState({}, '', url);
         
         // Sadece kullanıcı tıklamasıyla çağrıldığında yukarı kaydır
-        if (event && event.type === 'click') {
+        if (typeof event !== 'undefined' && event && event.type === 'click') {
             const container = document.querySelector('.products-list');
             if (container) {
                 window.scrollTo({ top: container.offsetTop - 100, behavior: 'smooth' });
