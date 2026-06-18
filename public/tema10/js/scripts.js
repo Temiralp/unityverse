@@ -282,38 +282,32 @@ function compareRemoveAll()
 }	
   function addToBasket(pid, pcount, getit, extra_price, pdigital = 0, pidx = 0)
   {
-  	if(pcount > 0)
-  	{
-  		if(!checkOptions()) return false;
-  		
-  		poptions = "";
-  		additionalentry = "";
-  		product_fileupload = "";
-  		if($("#poptions1").val() != undefined && $("#poptions1 option:selected").text() != "")	
-  			poptions = $("#poptions1 option:selected").text();	
-  		if($("#poptions2").val() != undefined && $("#poptions2 option:selected").text() != "")	
-  			poptions = poptions + " - " + $("#poptions2 option:selected").text();
-  		if($("#poptions3").val() != undefined && $("#poptions3 option:selected").text() != "")	
-  			poptions = poptions + " - " + $("#poptions3 option:selected").text();
-  		if($("#field_product_fileupload") && $("#field_product_fileupload") != '')	
-  			product_fileupload = $("#field_product_fileupload").val();
-  		if($("#additionalentry").val())	
-  			additionalentry = $("#additionalentry").val();
-  		if($('#product_width').val() || $('#product_heiht').val())
-  			additionalentry = additionalentry + ' ' + $('#product_width').val() + 'x' + $('#product_height').val();
-  		
-  		if(checkAddressIsDefined()) {
-        	$("#preaddress").modal('hide');
-        	_addToBasket(pid, pcount, poptions, additionalentry, getit, extra_price, product_fileupload, 0, pdigital, pidx,true);
-        }
-        else {        	
-        	$("#preaddress").modal('show');
-        	$("#addbasketmodal").attr('onclick','addToBasket('+pid+', '+pcount+', '+getit+')');
-        }
-  	}
-  	else
-  		_error('', lang_arr.js_urun_miktar);
-  	return false;
+      var clickedBtn = window.event ? (window.event.target || window.event.srcElement) : null;
+      var productName = "Eğitimleriniz";
+      if (clickedBtn) {
+          var card = clickedBtn.closest('.pbl-product-card-item') || clickedBtn.closest('.product-layout') || clickedBtn.closest('.left-content-product');
+          if (card) {
+              var img = card.querySelector('img');
+              if (img && img.getAttribute('alt')) {
+                  productName = img.getAttribute('alt');
+              } else {
+                  var titleLink = card.querySelector('.pbl-product-card-item-title a') || card.querySelector('.title a') || card.querySelector('h3 a') || card.querySelector('h4 a');
+                  if (titleLink) {
+                      productName = titleLink.textContent.trim();
+                  }
+              }
+          }
+      }
+      if (productName === "Eğitimleriniz") {
+          var mainTitle = document.querySelector('h1') || document.querySelector('.product-title') || document.querySelector('.title');
+          if (mainTitle) {
+              productName = mainTitle.textContent.trim();
+          }
+      }
+      
+      var whatsappUrl = "https://api.whatsapp.com/send?phone=905454228887&text=" + encodeURIComponent("Merhaba, " + productName + " hakkında bilgi almak istiyorum.");
+      window.open(whatsappUrl, "_blank");
+      return false;
   }
   function getBasketContent(openModal) {
 	  params = JSON.stringify({pid:"",bid:"",cmd:"getpopup",count:""});
