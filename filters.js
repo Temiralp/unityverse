@@ -1,4 +1,4 @@
-﻿function bindFilter() {
+function bindFilter() {
 
     window.VueComponent = window.VueComponent || {};
     window.VueComponent.Filter = new Vue({
@@ -100,8 +100,13 @@
                     this.detectSelectedFilters();
                     this.loading=false;
                     
-                    $('.pagination').html(res.pagination);
-                    $('#search_result').html(res.total_product_count + ' Ã¼rÃ¼n bulundu');
+                    if (typeof window.changePage === 'function') {
+                        let pg = parseInt(getUrlParameter('pg')) || 1;
+                        window.changePage(pg);
+                    } else {
+                        $('.pagination').html(res.pagination);
+                    }
+                    $('#search_result').html(res.total_product_count + ' ürün bulundu');
         			if(res.total_product_count > 12)
 					{
         				$('.pagesize-div').show();

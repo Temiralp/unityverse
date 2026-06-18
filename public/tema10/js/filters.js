@@ -100,7 +100,12 @@ function bindFilter() {
                     this.detectSelectedFilters();
                     this.loading=false;
                     
-                    $('.pagination').html(res.pagination);
+                    if (typeof window.changePage === 'function') {
+                        let pg = parseInt(getUrlParameter('pg')) || 1;
+                        window.changePage(pg);
+                    } else {
+                        $('.pagination').html(res.pagination);
+                    }
                     $('#search_result').html(res.total_product_count + ' ürün bulundu');
         			if(res.total_product_count > 12)
 					{
