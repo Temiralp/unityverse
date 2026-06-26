@@ -27,6 +27,9 @@ const port = process.env.PORT || 8000;
 const rootDir = path.resolve(__dirname, '..');
 const sessionSecret = requireSessionSecret();
 const trustProxy = parseTrustProxy(process.env.TRUST_PROXY);
+const legacyFrontendMode = String(process.env.LEGACY_FRONTEND_MODE || '')
+  .trim()
+  .toLowerCase() === 'true';
 const longCacheExtensions = new Set([
   '.css',
   '.js',
@@ -119,7 +122,12 @@ app.use('/vendor/jodit', express.static(path.join(rootDir, 'node_modules/jodit/e
 
 app.use('/admin', adminRoutes);
 app.use('/api', apiRoutes);
-app.use('/', catalogRoutes);
+// When the original static frontend is active, let express.static serve its
+// public URLs. The EJS catalog stays intact and can be restored by flipping
+// LEGACY_FRONTEND_MODE back to false.
+if (!legacyFrontendMode) {
+  app.use('/', catalogRoutes);
+}
 app.use('/odeme', paymentRoutes);
 app.use('/ajax', leadRoutes);
 app.use('/ajax/enroll', enrollmentRoutes);
@@ -160,4 +168,7 @@ app.use((error, req, res, next) => {
 app.listen(port, () => {
   console.log(`Unityverse backend running at http://localhost:${port}`);
   console.log(`Admin panel: http://localhost:${port}/admin`);
+  if (legacyFrontendMode) {
+    console.log('Legacy frontend mode: public catalog EJS routes are disabled.');
+  }
 });
