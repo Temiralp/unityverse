@@ -1,0 +1,38 @@
+<%- include('../partials/header') %>
+
+<main class="uv-payment-page">
+  <section class="uv-payment-result-section">
+    <div class="uv-shell">
+      <article class="uv-payment-result uv-payment-result--<%= type %>">
+        <span class="uv-payment-result__icon" aria-hidden="true">
+          <i class="fa <%= type === 'success' ? 'fa-check' : 'fa-exclamation' %>"></i>
+        </span>
+        <p class="uv-eyebrow"><%= eyebrow %></p>
+        <h1><%= title %></h1>
+        <p><%= message %></p>
+
+        <% if (registration) { %>
+          <dl>
+            <div>
+              <dt>Eğitim</dt>
+              <dd><%= registration.courseTitle %></dd>
+            </div>
+            <div>
+              <dt>Kayıt No</dt>
+              <dd>#<%= registration.id %></dd>
+            </div>
+          </dl>
+        <% } %>
+
+        <div class="uv-payment-result__actions">
+          <% if (paymentUrl) { %>
+            <a class="btn-primary" href="<%= paymentUrl %>">Tekrar Dene</a>
+          <% } %>
+          <a class="btn-secondary" href="<%= courseUrl %>">Eğitimlere Dön</a>
+        </div>
+      </article>
+    </div>
+  </section>
+</main>
+
+<%- include('../partials/footer') %>

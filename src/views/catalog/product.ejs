@@ -1,0 +1,313 @@
+<%- include('../partials/header') %>
+
+<main class="uv-product-detail" data-product-detail>
+  <div class="uv-shell">
+    <nav class="uv-product-breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Ana Sayfa</a>
+      <span aria-hidden="true">/</span>
+      <% if (product.category) { %>
+        <a href="/tum-urunler?category=<%= product.category.slug %>"><%= product.category.name %></a>
+      <% } else { %>
+        <a href="/tum-urunler/">Eğitimler</a>
+      <% } %>
+      <span aria-hidden="true">/</span>
+      <span><%= product.title %></span>
+    </nav>
+
+    <section class="uv-product-hero">
+      <div class="uv-product-hero__copy">
+        <p class="uv-eyebrow"><%= product.category ? product.category.name : 'Unityverse Academy' %></p>
+        <h1><%= product.title %></h1>
+        <div class="uv-product-badges">
+          <span class="badge badge--staj">Staj Garantili</span>
+          <span class="badge">E-Devlet Onaylı</span>
+        </div>
+        <p><%= product.summary || detail.overview %></p>
+        <button class="btn-primary" type="button" data-enroll-trigger>Eğitime Kaydol</button>
+      </div>
+      <div class="uv-product-hero__media">
+        <% if (product.image) { %>
+          <img src="<%= product.image %>" alt="<%= product.title %>" loading="eager" decoding="async">
+        <% } else { %>
+          <div class="uv-product-hero__fallback" aria-hidden="true"><%= product.title.charAt(0).toUpperCase() %></div>
+        <% } %>
+        <button class="uv-product-play" type="button" aria-label="Tanıtım videosunu oynat">
+          <span aria-hidden="true"></span>
+        </button>
+      </div>
+    </section>
+
+    <div class="uv-product-layout">
+      <article class="uv-product-main">
+        <section class="uv-product-section uv-product-tabs" aria-labelledby="product-overview-title">
+          <div class="uv-tabs" data-tabs>
+            <div class="uv-tabs__list" role="tablist" aria-label="Eğitim detayları">
+              <button id="tab-overview" type="button" role="tab" aria-controls="panel-overview" aria-selected="true">Eğitime İlk Bakış</button>
+              <button id="tab-curriculum" type="button" role="tab" aria-controls="panel-curriculum" aria-selected="false" tabindex="-1">Ders İçerikleri</button>
+              <button id="tab-why" type="button" role="tab" aria-controls="panel-why" aria-selected="false" tabindex="-1">Neden Bu Eğitim</button>
+            </div>
+            <div id="panel-overview" class="uv-tabs__panel" role="tabpanel" aria-labelledby="tab-overview">
+              <h2 id="product-overview-title">Eğitime İlk Bakış</h2>
+              <p><%= detail.overview %></p>
+            </div>
+            <div id="panel-curriculum" class="uv-tabs__panel" role="tabpanel" aria-labelledby="tab-curriculum" hidden>
+              <h2>Ders İçerikleri</h2>
+              <p>Modüller uygulamalı ilerler; her bölümde kısa konu listesi ve proje çıktısı bulunur.</p>
+            </div>
+            <div id="panel-why" class="uv-tabs__panel" role="tabpanel" aria-labelledby="tab-why" hidden>
+              <h2>Neden Bu Eğitim</h2>
+              <ul class="uv-product-checklist">
+                <% detail.why.forEach((item) => { %>
+                  <li><%= item %></li>
+                <% }) %>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section class="uv-product-section" aria-labelledby="learn-title">
+          <div class="section-title">
+            <p class="section-title__eyebrow">Kazanımlar</p>
+            <h2 id="learn-title" class="section-title__heading">Ne Öğreneceksiniz</h2>
+          </div>
+          <ul class="uv-product-learn">
+            <% detail.learnItems.forEach((item) => { %>
+              <li><span aria-hidden="true">✓</span><%= item %></li>
+            <% }) %>
+          </ul>
+        </section>
+
+        <section class="uv-product-section" aria-labelledby="curriculum-title">
+          <div class="section-title">
+            <p class="section-title__eyebrow">Program Akışı</p>
+            <h2 id="curriculum-title" class="section-title__heading">Müfredat</h2>
+          </div>
+          <div class="uv-accordion" data-accordion>
+            <% detail.curriculum.forEach((module, index) => { %>
+              <section class="uv-accordion__item">
+                <button class="uv-accordion__trigger" type="button" aria-expanded="<%= index === 0 ? 'true' : 'false' %>" aria-controls="module-<%= index %>">
+                  <span><%= module.title %></span>
+                  <i aria-hidden="true"></i>
+                </button>
+                <div class="uv-accordion__panel" id="module-<%= index %>" <%= index === 0 ? '' : 'hidden' %>>
+                  <ul>
+                    <% module.topics.forEach((topic) => { %>
+                      <li><%= topic %></li>
+                    <% }) %>
+                  </ul>
+                  <div class="uv-project-callout">
+                    <strong>Proje</strong>
+                    <p><%= module.project %></p>
+                  </div>
+                </div>
+              </section>
+            <% }) %>
+          </div>
+        </section>
+
+        <section class="uv-product-section" aria-labelledby="certificates-title">
+          <div class="section-title">
+            <p class="section-title__eyebrow">Belgelendirme</p>
+            <h2 id="certificates-title" class="section-title__heading">Sertifikalar</h2>
+          </div>
+          <div class="uv-certificate-grid">
+            <% detail.certificates.forEach((certificate) => { %>
+              <article>
+                <span aria-hidden="true">U</span>
+                <h3><%= certificate.title %></h3>
+                <p><%= certificate.description %></p>
+              </article>
+            <% }) %>
+          </div>
+        </section>
+
+        <section class="uv-product-section" aria-labelledby="instructors-title">
+          <div class="section-title">
+            <p class="section-title__eyebrow">Mentor Desteği</p>
+            <h2 id="instructors-title" class="section-title__heading">Eğitmenler</h2>
+          </div>
+          <div class="uv-instructor-grid">
+            <% detail.instructors.forEach((instructor) => { %>
+              <article class="uv-instructor-card">
+                <div class="uv-instructor-card__photo">
+                  <% if (instructor.photo) { %>
+                    <img src="<%= instructor.photo %>" alt="<%= instructor.name %>" loading="lazy">
+                  <% } else { %>
+                    <span aria-hidden="true"><%= instructor.name.charAt(0).toUpperCase() %></span>
+                  <% } %>
+                </div>
+                <div>
+                  <h3><%= instructor.name %></h3>
+                  <strong><%= instructor.title %></strong>
+                  <p><%= instructor.bio %></p>
+                  <a href="<%= instructor.cvUrl %>">CV / Profil</a>
+                </div>
+              </article>
+            <% }) %>
+          </div>
+        </section>
+
+        <% if (detail.gallery.length) { %>
+          <section class="uv-product-section" aria-labelledby="gallery-title">
+            <div class="section-title">
+              <p class="section-title__eyebrow">Görseller</p>
+              <h2 id="gallery-title" class="section-title__heading">Galeri</h2>
+            </div>
+            <div class="uv-gallery" data-lightbox>
+              <% detail.gallery.forEach((image, index) => { %>
+                <button type="button" data-lightbox-src="<%= image %>" aria-label="Galeri görseli <%= index + 1 %>">
+                  <img src="<%= image %>" alt="" loading="lazy">
+                </button>
+              <% }) %>
+            </div>
+          </section>
+        <% } %>
+
+        <section class="uv-product-section" aria-labelledby="faq-title">
+          <div class="section-title">
+            <p class="section-title__eyebrow">Sorular</p>
+            <h2 id="faq-title" class="section-title__heading">FAQ</h2>
+          </div>
+          <div class="uv-accordion" data-accordion>
+            <% detail.faq.forEach((item, index) => { %>
+              <section class="uv-accordion__item">
+                <button class="uv-accordion__trigger" type="button" aria-expanded="false" aria-controls="faq-<%= index %>">
+                  <span><%= item.question %></span>
+                  <i aria-hidden="true"></i>
+                </button>
+                <div class="uv-accordion__panel" id="faq-<%= index %>" hidden>
+                  <p><%= item.answer %></p>
+                </div>
+              </section>
+            <% }) %>
+          </div>
+        </section>
+      </article>
+
+      <aside class="uv-product-sidebar" id="kayit" aria-label="Kayıt bilgileri">
+        <div class="uv-enroll-card">
+          <div class="uv-enroll-card__price">
+            <% if (product.displayPrice.effective) { %>
+              <% if (product.displayPrice.hasDiscount) { %>
+                <s><%= product.displayPrice.base %> TL</s>
+              <% } %>
+              <strong><%= product.displayPrice.effective %> TL</strong>
+            <% } else { %>
+              <strong>Bilgi Al</strong>
+            <% } %>
+          </div>
+          <dl>
+            <div><dt>Format</dt><dd><%= product.lessonType || 'Online / Yüz Yüze' %></dd></div>
+            <div><dt>Süre</dt><dd><%= product.duration || 'Danışmanla netleşir' %></dd></div>
+            <div><dt>Seviye</dt><dd>Başlangıç - Orta</dd></div>
+            <div><dt>Sertifika</dt><dd><%= product.certificate || 'E-Devlet Onaylı' %></dd></div>
+          </dl>
+          <button class="btn-primary" type="button" data-enroll-trigger>Eğitime Kaydol</button>
+          <a class="btn-secondary" href="/form/hemen-bilgi-al-1/">Bilgi Al</a>
+          <div class="uv-share" aria-label="Paylaş">
+            <a href="https://www.facebook.com/sharer/sharer.php?u=<%= encodeURIComponent(sharePath || currentPath || '') %>" aria-label="Facebook'ta paylaş" target="_blank" rel="noopener"><i class="fa fa-facebook" aria-hidden="true"></i></a>
+            <a href="https://twitter.com/intent/tweet?text=<%= encodeURIComponent(product.title) %>" aria-label="X'te paylaş" target="_blank" rel="noopener"><i class="fa fa-twitter" aria-hidden="true"></i></a>
+            <a href="https://www.linkedin.com/shareArticle?mini=true&url=<%= encodeURIComponent(sharePath || currentPath || '') %>&title=<%= encodeURIComponent(product.title) %>" aria-label="LinkedIn'de paylaş" target="_blank" rel="noopener"><i class="fa fa-linkedin" aria-hidden="true"></i></a>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <% if (detail.relatedCourses.length) { %>
+      <%
+        const relatedPayload = JSON.stringify(relatedCoursesJson || []).replace(/</g, '\\u003c');
+      %>
+      <section class="uv-product-section uv-related" aria-labelledby="related-title">
+        <script nonce="<%= cspNonce %>" type="application/json" data-related-json><%- relatedPayload %></script>
+        <div class="uv-slider-head">
+          <div class="section-title">
+            <p class="section-title__eyebrow">Benzer Eğitimler</p>
+            <h2 id="related-title" class="section-title__heading">İlginizi Çekebilir</h2>
+          </div>
+          <div class="uv-slider-controls" aria-label="Benzer eğitim slider kontrolleri">
+            <button type="button" data-related-prev aria-label="Önceki eğitim"></button>
+            <button type="button" data-related-next aria-label="Sonraki eğitim"></button>
+          </div>
+        </div>
+        <div class="uv-slider">
+          <div class="uv-slider__track" data-related-track></div>
+        </div>
+      </section>
+    <% } %>
+  </div>
+
+  <div class="uv-mobile-enroll">
+    <span><%= product.displayPrice.effective ? `${product.displayPrice.effective} TL` : 'Bilgi Al' %></span>
+    <button class="btn-primary" type="button" data-enroll-trigger>Kaydol</button>
+  </div>
+
+  <div
+    class="uv-enrollment-modal"
+    data-enrollment-modal
+    data-product-id="<%= product.id %>"
+    data-product-title="<%= product.title %>"
+    data-product-format="<%= product.lessonType || 'Online / Yüz Yüze' %>"
+    data-product-price="<%= product.displayPrice.effective ? `${product.displayPrice.effective} TL` : 'Bilgi Al' %>"
+    hidden
+  >
+    <section
+      class="uv-enrollment-modal__panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="enrollment-modal-title"
+      aria-describedby="enrollment-modal-description"
+    >
+      <button class="uv-enrollment-modal__close" type="button" aria-label="Kayıt penceresini kapat" data-enrollment-close>×</button>
+      <div class="uv-enrollment-modal__heading">
+        <p class="uv-eyebrow">Kayıt Onayı</p>
+        <h2 id="enrollment-modal-title">Eğitime Kaydol</h2>
+        <p id="enrollment-modal-description">Bilgilerinizi kontrol ederek eğitim kaydınızı tamamlayın.</p>
+      </div>
+
+      <dl class="uv-enrollment-summary">
+        <div>
+          <dt>Eğitim</dt>
+          <dd><%= product.title %></dd>
+        </div>
+        <div>
+          <dt>Format</dt>
+          <dd><%= product.lessonType || 'Online / Yüz Yüze' %></dd>
+        </div>
+        <div>
+          <dt>Fiyat</dt>
+          <dd><%= product.displayPrice.effective ? `${product.displayPrice.effective} TL` : 'Bilgi Al' %></dd>
+        </div>
+      </dl>
+
+      <div class="uv-enrollment-member" aria-label="Üye bilgileri">
+        <label>
+          Ad Soyad
+          <input type="text" data-enrollment-member-name readonly>
+        </label>
+        <label>
+          E-posta
+          <input type="email" data-enrollment-member-email readonly>
+        </label>
+        <label>
+          Telefon
+          <input type="tel" data-enrollment-member-phone readonly>
+        </label>
+      </div>
+
+      <div class="uv-form-trap" aria-hidden="true">
+        <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" data-enrollment-website>
+      </div>
+
+      <p class="uv-enrollment-status" role="status" aria-live="polite" data-enrollment-status></p>
+
+      <div class="uv-enrollment-modal__actions">
+        <button class="btn-secondary" type="button" data-enrollment-close>Vazgeç</button>
+        <button class="btn-primary uv-enrollment-submit" type="button" data-enrollment-submit disabled>
+          <span data-enrollment-submit-label>Hazırlanıyor...</span>
+        </button>
+      </div>
+    </section>
+  </div>
+</main>
+
+<%- include('../partials/footer') %>

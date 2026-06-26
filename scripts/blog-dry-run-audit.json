@@ -1,0 +1,448 @@
+{
+  "filesInDryRun": 123,
+  "parseErrors": 0,
+  "parseErrorFiles": [],
+  "fieldIssueCount": 51,
+  "missingByField": {
+    "title": 0,
+    "slug": 0,
+    "content": 0,
+    "coverImage": 0,
+    "publishedAt": 51
+  },
+  "fieldIssues": [
+    {
+      "slug": "apple-guclu-yeni-nesil-apple-tv-4kyi-tanitiyor-53",
+      "title": "APPLE, GÜÇLÜ YENİ NESİL APPLE TV 4K'YI TANITIYOR",
+      "sourceFile": "blog-detay/apple-guclu-yeni-nesil-apple-tv-4kyi-tanitiyor-53/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "apple-usb-c-gecisine-hazirlaniyor-aksesuarlar-da-guncellenecek-58",
+      "title": "Apple, USB-C geçişine hazırlanıyor: Aksesuarlar da güncellenecek",
+      "sourceFile": "blog-detay/apple-usb-c-gecisine-hazirlaniyor-aksesuarlar-da-guncellenecek-58/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "aranan-3d-artist-olma-yaratici-yeteneginizi-zirveye-tasiyin-164",
+      "title": "Aranan 3D Artist Olma: Yaratıcı Yeteneğinizi Zirveye Taşıyın",
+      "sourceFile": "blog-detay/aranan-3d-artist-olma-yaratici-yeteneginizi-zirveye-tasiyin-164/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "baski-ve-dijital-grafikler-arasindaki-farklar-nelerdir-79",
+      "title": "Baskı ve Dijital Grafikler Arasındaki Farklar Nelerdir?",
+      "sourceFile": "blog-detay/baski-ve-dijital-grafikler-arasindaki-farklar-nelerdir-79/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "batuhan-kocakin-basari-hikayesi-unityverse-academy-ile-vfx-uzmanligina-giden-yol-207",
+      "title": "Batuhan Koçak’ın Başarı Hikayesi: Unityverse Academy ile VFX Uzmanlığına Giden Yol",
+      "sourceFile": "blog-detay/batuhan-kocakin-basari-hikayesi-unityverse-academy-ile-vfx-uzmanligina-giden-yol-207/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "beginning-graphic-design-images-74",
+      "title": "Beginning Graphic Design: Images",
+      "sourceFile": "blog-detay/beginning-graphic-design-images-74/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "berkay-kurt-multiplayer-oyun-gelistiriciliginde-bir-yildiz-130",
+      "title": "Berkay Kurt: Multiplayer Oyun Geliştiriciliğinde Bir Yıldız",
+      "sourceFile": "blog-detay/berkay-kurt-multiplayer-oyun-gelistiriciliginde-bir-yildiz-130/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "bir-grafik-tasarimci-renk-psikolojisini-nasil-etkin-kullanabilir-77",
+      "title": "Bir Grafik Tasarımcı Renk Psikolojisini Nasıl Etkin Kullanabilir?",
+      "sourceFile": "blog-detay/bir-grafik-tasarimci-renk-psikolojisini-nasil-etkin-kullanabilir-77/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "can-kalyoncuoglu-hayallerden-gerceklere-128",
+      "title": "Can Kalyoncuoğlu: Hayallerden Gerçeklere",
+      "sourceFile": "blog-detay/can-kalyoncuoglu-hayallerden-gerceklere-128/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "cizgi-film-ve-animasyon-egitiminde-son-egilimler-11",
+      "title": "Çizgi Film ve Animasyon Eğitiminde Son Eğilimler",
+      "sourceFile": "blog-detay/cizgi-film-ve-animasyon-egitiminde-son-egilimler-11/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "desinatorluk-ve-moda-tasarimi-yaraticiliginizi-dijital-dunyada-hayata-gecirin-158",
+      "title": "Desinatörlük ve Moda Tasarımı: Yaratıcılığınızı Dijital Dünyada Hayata Geçirin",
+      "sourceFile": "blog-detay/desinatorluk-ve-moda-tasarimi-yaraticiliginizi-dijital-dunyada-hayata-gecirin-158/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "elon-musk-twitterin-kontrolunu-ele-gecirdi-66",
+      "title": "Elon Musk Twitter'ın Kontrolünü Ele Geçirdi",
+      "sourceFile": "blog-detay/elon-musk-twitterin-kontrolunu-ele-gecirdi-66/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "film-ve-animasyon-icin-storyboard-yapay-zeka-destekli-egitimlerle-yaratici-surecte-yeni-bir-donem-157",
+      "title": "Film ve Animasyon İçin Storyboard: Yapay Zeka Destekli Eğitimlerle Yaratıcı Süreçte Yeni Bir Dönem",
+      "sourceFile": "blog-detay/film-ve-animasyon-icin-storyboard-yapay-zeka-destekli-egitimlerle-yaratici-surecte-yeni-bir-donem-157/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "flutter-ile-mobil-uygulama-gelistirme-hizli-verimli-ve-platformlar-arasi-uygulamalar-153",
+      "title": "Flutter İle Mobil Uygulama Geliştirme: Hızlı, Verimli ve Platformlar Arası Uygulamalar",
+      "sourceFile": "blog-detay/flutter-ile-mobil-uygulama-gelistirme-hizli-verimli-ve-platformlar-arasi-uygulamalar-153/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "gencler-haber-almak-icin-tiktok-ve-instagrama-yoneliyor-29",
+      "title": "GENÇLER HABER ALMAK İÇİN TIKTOK VE INSTAGRAMA YÖNELİYOR",
+      "sourceFile": "blog-detay/gencler-haber-almak-icin-tiktok-ve-instagrama-yoneliyor-29/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "green-card-basvurusu-nasil-ve-nereden-yapilir-basvuru-sartlari-nelerdir-ucretli-mi-green-card-basvurusu-icin-pasaport-ve-ingilizce-dil-bilgisi-gerekiyor-mu-54",
+      "title": "Green Card başvurusu nasıl ve nereden yapılır, başvuru şartları nelerdir, ücretli mi? Green Card başvurusu için pasaport ve İngilizce dil bilgisi gerekiyor mu?",
+      "sourceFile": "blog-detay/green-card-basvurusu-nasil-ve-nereden-yapilir-basvuru-sartlari-nelerdir-ucretli-mi-green-card-basvurusu-icin-pasaport-ve-ingilizce-dil-bilgisi-gerekiyor-mu-54/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "haber-almanin-yeni-adresi-tiktok-60",
+      "title": "Haber Almanın Yeni Adresi: Tiktok!",
+      "sourceFile": "blog-detay/haber-almanin-yeni-adresi-tiktok-60/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "herkes-yaratici-olabilir-72",
+      "title": "Herkes Yaratıcı Olabilir",
+      "sourceFile": "blog-detay/herkes-yaratici-olabilir-72/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "iklim-aktivistleri-van-goghun-unlu-tablosuna-domates-corbasi-firlatti-49",
+      "title": "İklim aktivistleri Van Gogh'un ünlü tablosuna domates çorbası fırlattı",
+      "sourceFile": "blog-detay/iklim-aktivistleri-van-goghun-unlu-tablosuna-domates-corbasi-firlatti-49/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "kadinlarin-yazilim-sektorunde-yer-almasi-gelecegi-sekillendiren-guc-103",
+      "title": "Kadınların Yazılım Sektöründe Yer Alması: Geleceği Şekillendiren Güç",
+      "sourceFile": "blog-detay/kadinlarin-yazilim-sektorunde-yer-almasi-gelecegi-sekillendiren-guc-103/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "kod-gelistirmenin-otesinde-yapay-zeka-egitimi-213",
+      "title": "Kod Geliştirmenin Ötesinde, Yapay Zeka Eğitimi",
+      "sourceFile": "blog-detay/kod-gelistirmenin-otesinde-yapay-zeka-egitimi-213/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "mario-animasyon-filmi-geliyor-50",
+      "title": "Mario Animasyon Filmi Geliyor",
+      "sourceFile": "blog-detay/mario-animasyon-filmi-geliyor-50/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "marvelous-designer-ile-giysi-tasarimi-uzmanligi-148",
+      "title": "Marvelous Designer ile Giysi Tasarımı Uzmanlığı",
+      "sourceFile": "blog-detay/marvelous-designer-ile-giysi-tasarimi-uzmanligi-148/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "matematik-ne-ise-yarar-57",
+      "title": "Matematik Ne İşe Yarar ?",
+      "sourceFile": "blog-detay/matematik-ne-ise-yarar-57/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "meslek-sahipleri-yapay-zekâya-entegre-olacak-cetin-kaya-koc-ile-soylesi-28",
+      "title": "Meslek Sahipleri Yapay Zekâya Entegre Olacak - Çetin Kaya Koç ile Söyleşi",
+      "sourceFile": "blog-detay/meslek-sahipleri-yapay-zekâya-entegre-olacak-cetin-kaya-koc-ile-soylesi-28/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "metaverse-dijital-evrende-yukselen-firsatlar-ve-gelecegin-teknolojisi-154",
+      "title": "Metaverse: Dijital Evrende Yükselen Fırsatlar ve Geleceğin Teknolojisi",
+      "sourceFile": "blog-detay/metaverse-dijital-evrende-yukselen-firsatlar-ve-gelecegin-teknolojisi-154/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "metaverseu-en-iyi-anlatan-5-film-56",
+      "title": "Metaverse’ü En İyi Anlatan 5 Film",
+      "sourceFile": "blog-detay/metaverseu-en-iyi-anlatan-5-film-56/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "otonom-surus-teknolojileri-yazilim-teknolojilerini-birlestiren-guc-219",
+      "title": "Otonom Sürüş Teknolojileri: Yazılım Teknolojilerini Birleştiren Güç",
+      "sourceFile": "blog-detay/otonom-surus-teknolojileri-yazilim-teknolojilerini-birlestiren-guc-219/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "oyun-gelistirme-egitimi-2025-oyun-gelistirme-ve-kullanilan-teknolojiler-208",
+      "title": "Oyun Geliştirme Eğitimi : 2025 Oyun Geliştirme ve Kullanılan Teknolojiler",
+      "sourceFile": "blog-detay/oyun-gelistirme-egitimi-2025-oyun-gelistirme-ve-kullanilan-teknolojiler-208/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "oyun-gelistirme-egitimi-oyun-motorlarinin-evrimi-227",
+      "title": "Oyun Geliştirme Eğitimi: Oyun Motorlarının Evrimi",
+      "sourceFile": "blog-detay/oyun-gelistirme-egitimi-oyun-motorlarinin-evrimi-227/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "oyun-gelistirme-egitimi-unity-ve-c-ile-kendi-oyununuzu-gelistirin-216",
+      "title": "Oyun Geliştirme Eğitimi , Unity ve C# ile Kendi Oyununuzu Geliştirin",
+      "sourceFile": "blog-detay/oyun-gelistirme-egitimi-unity-ve-c-ile-kendi-oyununuzu-gelistirin-216/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "oyun-gelistirme-unityde-yapay-zekâ-ile-karakter-davranisi-olusturma-210",
+      "title": "Oyun Geliştirme: Unity'de Yapay Zekâ ile Karakter Davranışı Oluşturma",
+      "sourceFile": "blog-detay/oyun-gelistirme-unityde-yapay-zekâ-ile-karakter-davranisi-olusturma-210/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "oyunlarda-yapay-zekâ-ve-metaverse-iliskisi-209",
+      "title": "Oyunlarda Yapay Zekâ ve Metaverse İlişkisi",
+      "sourceFile": "blog-detay/oyunlarda-yapay-zekâ-ve-metaverse-iliskisi-209/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "perspektif-75",
+      "title": "PERSPEKTİF",
+      "sourceFile": "blog-detay/perspektif-75/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "renk-teorisi-73",
+      "title": "RENK TEORİSİ",
+      "sourceFile": "blog-detay/renk-teorisi-73/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "siber-guvenlik-egitimleri-siber-guvenlik-uzmani-olmak-icin-bilmen-gerekenler-221",
+      "title": "Siber Güvenlik Eğitimleri : Siber Güvenlik Uzmanı Olmak İçin Bilmen Gerekenler",
+      "sourceFile": "blog-detay/siber-guvenlik-egitimleri-siber-guvenlik-uzmani-olmak-icin-bilmen-gerekenler-221/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "siber-guvenlik-uzmanligi-ve-ethical-hacking-dijital-guvenligin-korumacisi-olmaya-hazirlanin-160",
+      "title": "Siber Güvenlik Uzmanlığı ve Ethical Hacking: Dijital Güvenliğin Korumacısı Olmaya Hazırlanın",
+      "sourceFile": "blog-detay/siber-guvenlik-uzmanligi-ve-ethical-hacking-dijital-guvenligin-korumacisi-olmaya-hazirlanin-160/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "solidworks-ile-endustriyel-urun-tasarimi-uzmanligi-162",
+      "title": "SolidWorks ile Endüstriyel Ürün Tasarımı Uzmanlığı",
+      "sourceFile": "blog-detay/solidworks-ile-endustriyel-urun-tasarimi-uzmanligi-162/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "suleyman-ozgonul-oyun-gelistiricilikte-zirveye-giden-yol-129",
+      "title": "Süleyman Özgönül: Oyun Geliştiricilikte Zirveye Giden Yol",
+      "sourceFile": "blog-detay/suleyman-ozgonul-oyun-gelistiricilikte-zirveye-giden-yol-129/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "turkiye-rekabet-kurulu-metaya-ceza-kesti-64",
+      "title": "Türkiye Rekabet Kurulu Meta'ya Ceza Kesti!",
+      "sourceFile": "blog-detay/turkiye-rekabet-kurulu-metaya-ceza-kesti-64/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "unity-ile-oyun-gelistirme-egitimi-detayli-rehberle-kendi-oyunlariniza-yon-verin-142",
+      "title": "Unity ile Oyun Geliştirme Eğitimi: Detaylı Rehberle Kendi Oyunlarınıza Yön Verin",
+      "sourceFile": "blog-detay/unity-ile-oyun-gelistirme-egitimi-detayli-rehberle-kendi-oyunlariniza-yon-verin-142/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "unreal-engine-hakkinda-her-sey-67",
+      "title": "Unreal Engine Hakkında Her Şey!",
+      "sourceFile": "blog-detay/unreal-engine-hakkinda-her-sey-67/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "uretilen-ilk-iphone-rekor-bir-fiyata-satildi-55",
+      "title": "Üretilen İlk iPhone Rekor Bir Fiyata Satıldı",
+      "sourceFile": "blog-detay/uretilen-ilk-iphone-rekor-bir-fiyata-satildi-55/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "uretken-yapay-zeka-yazilim-egitimi-214",
+      "title": "Üretken Yapay Zeka Yazılım Eğitimi",
+      "sourceFile": "blog-detay/uretken-yapay-zeka-yazilim-egitimi-214/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "web-tasarim-ragbet-goruyor-76",
+      "title": "Web Tasarım Rağbet Görüyor",
+      "sourceFile": "blog-detay/web-tasarim-ragbet-goruyor-76/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "yapay-zeka-ve-makine-ogrenmesi-yazilimla-uyumlu-uygulamalar-163",
+      "title": "Yapay Zeka ve Makine Öğrenmesi: Yazılımla Uyumlu Uygulamalar",
+      "sourceFile": "blog-detay/yapay-zeka-ve-makine-ogrenmesi-yazilimla-uyumlu-uygulamalar-163/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "yazilim-egitimleri-microservices-mimarisi-223",
+      "title": "Yazılım Eğitimleri : Microservices Mimarisi",
+      "sourceFile": "blog-detay/yazilim-egitimleri-microservices-mimarisi-223/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "yazilim-egitimleri-surdurulebilir-yazilim-green-coding-224",
+      "title": "Yazılım Eğitimleri: Sürdürülebilir Yazılım (Green Coding)",
+      "sourceFile": "blog-detay/yazilim-egitimleri-surdurulebilir-yazilim-green-coding-224/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "yazilim-gelistirme-egitimi-web-performansi-ve-core-web-vitals-225",
+      "title": "Yazılım Geliştirme Eğitimi : Web Performansı ve Core Web Vitals",
+      "sourceFile": "blog-detay/yazilim-gelistirme-egitimi-web-performansi-ve-core-web-vitals-225/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "yazilim-gelistirme-egitimleri-api-ve-yapay-zeka-kullanimi-218",
+      "title": "Yazılım Geliştirme Eğitimleri - API ve Yapay Zeka Kullanımı",
+      "sourceFile": "blog-detay/yazilim-gelistirme-egitimleri-api-ve-yapay-zeka-kullanimi-218/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    },
+    {
+      "slug": "yonetmenlik-ve-sinematografiye-giris-sinema-sanatinda-profesyonellige-adim-atin-146",
+      "title": "Yönetmenlik ve Sinematografiye Giriş: Sinema Sanatında Profesyonelliğe Adım Atın",
+      "sourceFile": "blog-detay/yonetmenlik-ve-sinematografiye-giris-sinema-sanatinda-profesyonellige-adim-atin-146/index.html",
+      "missing": [
+        "publishedAt"
+      ]
+    }
+  ],
+  "coverImage": {
+    "empty": 0,
+    "local": 123,
+    "absolute": 0,
+    "protocolRelative": 0,
+    "data": 0,
+    "missing": [],
+    "missingCount": 0
+  },
+  "contentImages": {
+    "total": 122,
+    "empty": 0,
+    "local": 86,
+    "absolute": 31,
+    "protocolRelative": 0,
+    "data": 5,
+    "missing": [
+      {
+        "slug": "unreal-engine-hakkinda-her-sey-67",
+        "src": "../../uploads/fm/Yoshi’s_Crafted_World.jpg",
+        "localPath": "uploads/fm/Yoshi’s_Crafted_World.jpg"
+      }
+    ],
+    "missingCount": 1
+  }
+}

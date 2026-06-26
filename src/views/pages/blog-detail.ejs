@@ -1,0 +1,97 @@
+<%- include('../partials/header') %>
+
+<main class="uv-page uv-blog-detail-page">
+  <article>
+    <section class="uv-blog-detail-hero">
+      <div class="uv-shell">
+        <nav class="uv-breadcrumb" aria-label="Breadcrumb">
+          <a href="/">Ana Sayfa</a>
+          <span aria-hidden="true">/</span>
+          <a href="/blog/">Blog</a>
+          <span aria-hidden="true">/</span>
+          <span><%= post.title %></span>
+        </nav>
+
+        <div class="uv-blog-detail-hero__content">
+          <p class="uv-eyebrow">Blog</p>
+          <h1><%= post.title %></h1>
+          <% if (post.formattedDate) { %>
+            <p class="uv-blog-detail-hero__meta">
+              <time datetime="<%= (post.publishedAt || post.createdAt).toISOString() %>"><%= post.formattedDate %></time>
+            </p>
+          <% } %>
+        </div>
+
+        <% if (post.image) { %>
+          <figure class="uv-blog-detail-hero__media">
+            <img src="<%= post.image %>" alt="<%= post.title %>" loading="lazy" width="1180" height="560">
+          </figure>
+        <% } %>
+      </div>
+    </section>
+
+    <section class="uv-section uv-blog-detail-section">
+      <div class="uv-shell">
+        <div class="uv-blog-detail-layout">
+          <div class="uv-blog-content">
+            <%- post.content || '' %>
+          </div>
+
+          <aside class="uv-blog-share" aria-labelledby="blog-share-title">
+            <h2 id="blog-share-title">Paylaş</h2>
+            <a href="https://api.whatsapp.com/send?text=<%= encodeURIComponent(post.title + ' ' + sharePath) %>" target="_blank" rel="noreferrer noopener" aria-label="WhatsApp ile paylaş">
+              <i class="fa fa-whatsapp" aria-hidden="true"></i>
+            </a>
+            <a href="https://www.facebook.com/sharer/sharer.php?u=<%= encodeURIComponent(sharePath) %>" target="_blank" rel="noreferrer noopener" aria-label="Facebook ile paylaş">
+              <i class="fa fa-facebook" aria-hidden="true"></i>
+            </a>
+            <a href="https://twitter.com/intent/tweet?text=<%= encodeURIComponent(post.title) %>&url=<%= encodeURIComponent(sharePath) %>" target="_blank" rel="noreferrer noopener" aria-label="Twitter ile paylaş">
+              <i class="fa fa-twitter" aria-hidden="true"></i>
+            </a>
+            <a href="https://www.linkedin.com/sharing/share-offsite/?url=<%= encodeURIComponent(sharePath) %>" target="_blank" rel="noreferrer noopener" aria-label="LinkedIn ile paylaş">
+              <i class="fa fa-linkedin" aria-hidden="true"></i>
+            </a>
+            <button type="button" data-copy-url="<%= sharePath %>" aria-label="Yazı bağlantısını kopyala">
+              <i class="fa fa-link" aria-hidden="true"></i>
+            </button>
+            <p class="uv-blog-share__status" role="status" aria-live="polite" data-copy-status></p>
+          </aside>
+        </div>
+      </div>
+    </section>
+  </article>
+
+  <% if (relatedPosts.length) { %>
+    <section class="uv-section uv-blog-related">
+      <div class="uv-shell">
+        <div class="section-title">
+          <p class="section-title__eyebrow">Blog</p>
+          <h2 class="section-title__heading">İlgili Yazılar</h2>
+        </div>
+        <div class="uv-blog-grid uv-blog-grid--related">
+          <% relatedPosts.forEach((post) => { %>
+            <%- include('partials/blog-card', { post }) %>
+          <% }) %>
+        </div>
+      </div>
+    </section>
+  <% } %>
+
+  <section class="uv-section uv-blog-cta-section">
+    <div class="uv-shell">
+      <div class="uv-blog-cta">
+        <div>
+          <p class="uv-eyebrow">Eğitimler</p>
+          <h2>Eğitimlerimizi keşfet</h2>
+          <p>Kariyer hedefinize uygun programları inceleyin, aklınızdaki soruları danışmanlarımızla netleştirin.</p>
+        </div>
+        <div class="uv-blog-cta__actions">
+          <a class="btn-primary" href="/tum-urunler/">Eğitimleri Keşfet</a>
+          <a class="btn-secondary" href="/sayfa/iletisim-5/">Bilgi Al</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<%- include('../partials/footer') %>

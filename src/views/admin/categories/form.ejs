@@ -1,0 +1,43 @@
+<%- include('../partials/header') %>
+
+<div class="page-head">
+  <h1><%= pageTitle %></h1>
+  <a class="button button-secondary" href="/admin/categories">Geri Dön</a>
+</div>
+
+<section class="panel">
+  <% if (error) { %>
+    <p class="alert" role="alert"><%= error %></p>
+  <% } %>
+
+  <form method="post" action="<%= action %>" class="form grid-form">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <label>
+      Ad
+      <input name="name" value="<%= category ? category.name || '' : '' %>" required>
+    </label>
+    <label>
+      Slug
+      <input name="slug" value="<%= category ? category.slug || '' : '' %>" placeholder="Boş bırakılırsa otomatik oluşturulur">
+    </label>
+    <label>
+      Görsel URL
+      <input name="image" value="<%= category ? category.image || '' : '' %>">
+    </label>
+    <label>
+      Sıralama
+      <input name="sortOrder" type="number" value="<%= category ? category.sortOrder || 0 : 0 %>">
+    </label>
+    <label class="wide">
+      Açıklama
+      <textarea name="description" rows="5"><%= category ? category.description || '' : '' %></textarea>
+    </label>
+    <label class="check">
+      <input type="checkbox" name="isActive" <%= !category || category.isActive ? 'checked' : '' %>>
+      Aktiv
+    </label>
+    <button type="submit"><%= submitLabel %></button>
+  </form>
+</section>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,52 @@
+<%- include('../partials/header') %>
+
+<main class="uv-payment-page">
+  <section class="uv-payment-hero">
+    <div class="uv-shell">
+      <nav class="uv-payment-breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Ana Sayfa</a>
+        <span aria-hidden="true">/</span>
+        <span>Güvenli Ödeme</span>
+      </nav>
+      <p class="uv-eyebrow">PayTR Güvencesiyle</p>
+      <h1>Güvenli ödeme</h1>
+      <p>Kart bilgileriniz PayTR güvenli ödeme altyapısı üzerinden işlenir.</p>
+    </div>
+  </section>
+
+  <section class="uv-payment-section">
+    <div class="uv-shell uv-payment-layout">
+      <aside class="uv-payment-summary" aria-labelledby="payment-summary-title">
+        <h2 id="payment-summary-title">Ödeme Özeti</h2>
+        <dl>
+          <div>
+            <dt>Eğitim</dt>
+            <dd><%= registration.courseTitle %></dd>
+          </div>
+          <div>
+            <dt>Kayıt No</dt>
+            <dd>#<%= registration.id %></dd>
+          </div>
+          <div>
+            <dt>Ödenecek Tutar</dt>
+            <dd><%= formattedAmount %> TL</dd>
+          </div>
+        </dl>
+        <p><i class="fa fa-lock" aria-hidden="true"></i> Kart bilgileriniz Unityverse Academy sunucularında tutulmaz.</p>
+      </aside>
+
+      <div class="uv-payment-frame" aria-label="PayTR güvenli ödeme formu">
+        <iframe
+          id="paytriframe"
+          src="<%= iframeUrl %>"
+          title="PayTR güvenli ödeme formu"
+          frameborder="0"
+          scrolling="no"
+          allow="payment"
+        ></iframe>
+      </div>
+    </div>
+  </section>
+</main>
+
+<%- include('../partials/footer') %>

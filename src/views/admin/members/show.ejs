@@ -1,0 +1,151 @@
+<%- include('../partials/header') %>
+
+<div class="page-head">
+  <div>
+    <h1><%= [member.name, member.surname].filter(Boolean).join(' ') %></h1>
+    <p class="page-subtitle"><%= member.email %> · <%= member.phone || 'Telefon yok' %></p>
+  </div>
+  <a class="button" href="/admin/members">Üyelere Dön</a>
+</div>
+
+<section class="detail-grid">
+  <article class="panel detail-panel">
+    <h2>Üye Bilgileri</h2>
+    <dl class="info-list">
+      <div><dt>Ad Soyad</dt><dd><%= [member.name, member.surname].filter(Boolean).join(' ') %></dd></div>
+      <div><dt>E-posta</dt><dd><%= member.email %></dd></div>
+      <div><dt>Telefon</dt><dd><%= member.phone || '-' %></dd></div>
+      <div><dt>Durum</dt><dd><span class="status-pill <%= member.status === 'ACTIVE' ? 'is-active' : 'is-passive' %>"><%= statusLabels[member.status] || member.status %></span></dd></div>
+      <div><dt>E-posta İzni</dt><dd><%= member.mailList ? 'Var' : 'Yok' %></dd></div>
+      <div><dt>SMS İzni</dt><dd><%= member.smsList ? 'Var' : 'Yok' %></dd></div>
+      <div><dt>Kayıt Tarihi</dt><dd><%= member.createdAt.toLocaleString('tr-TR') %></dd></div>
+    </dl>
+  </article>
+
+  <article class="panel detail-panel">
+    <h2>Durum ve Takip</h2>
+    <% if (error) { %>
+      <p class="alert" role="alert"><%= error %></p>
+    <% } %>
+    <form method="post" action="/admin/members/<%= member.id %>/status" class="form status-form">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <label>
+        Üye Durumu
+        <select name="status">
+          <% Object.keys(statusLabels).forEach((key) => { %>
+            <option value="<%= key %>" <%= member.status === key ? 'selected' : '' %>><%= statusLabels[key] %></option>
+          <% }) %>
+        </select>
+      </label>
+      <button type="submit">Durumu Güncelle</button>
+    </form>
+
+    <form method="post" action="/admin/members/<%= member.id %>/notes" class="form">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <label>
+        Not
+        <textarea name="note" rows="6" placeholder="Üye ile ilgili görüşme, ödeme, takip veya özel bilgiyi yazın"></textarea>
+      </label>
+      <button type="submit">Not Ekle</button>
+    </form>
+  </article>
+</section>
+
+<section class="detail-grid">
+  <article class="panel detail-panel">
+    <div class="panel-head">
+      <div>
+        <h2>İlgilendiği Kurslar</h2>
+        <p>Üyenin satış/takip sürecinde ilgilendiği eğitimler</p>
+      </div>
+    </div>
+
+    <form method="post" action="/admin/members/<%= member.id %>/interests" class="form interest-form">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <label>
+        Kurs
+        <select name="productId" required>
+          <option value="">Kurs seç</option>
+          <% products.forEach((product) => { %>
+            <option value="<%= product.id %>"><%= product.title %></option>
+          <% }) %>
+        </select>
+      </label>
+      <label>
+        Not
+        <input name="note" placeholder="Örn: Hafta sonu grubu ile ilgileniyor">
+      </label>
+      <button type="submit">İlgi Ekle</button>
+    </form>
+
+    <div class="note-list">
+      <% member.courseInterests.forEach((interest) => { %>
+        <article class="note-item">
+          <p><strong><%= interest.product ? interest.product.title : 'Kurs silinmiş' %></strong></p>
+          <% if (interest.note) { %><p><%= interest.note %></p><% } %>
+          <span><%= interest.createdAt.toLocaleString('tr-TR') %></span>
+          <form method="post" action="/admin/members/<%= member.id %>/interests/<%= interest.id %>/delete" class="inline-form">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <button type="submit" class="button-danger">Kaldır</button>
+          </form>
+        </article>
+      <% }) %>
+      <% if (!member.courseInterests.length) { %>
+        <p class="empty-state">Henüz ilgilendiği kurs eklenmedi.</p>
+      <% } %>
+    </div>
+  </article>
+
+  <article class="panel detail-panel">
+    <div class="panel-head">
+      <div>
+        <h2>Eğitim Kayıt Geçmişi</h2>
+        <p>Bu üyeye bağlı eğitim kayıtları</p>
+      </div>
+      <a href="/admin/registrations/new">Yeni Kayıt</a>
+    </div>
+
+    <div class="note-list">
+      <% member.educationRegistrations.forEach((registration) => { %>
+        <article class="note-item">
+          <p><strong><%= registration.courseTitle %></strong></p>
+          <span>
+            <%= registrationStatusLabels[registration.status] || registration.status %>
+            ·
+            <%= registration.createdAt.toLocaleString('tr-TR') %>
+          </span>
+          <% if (registration.product) { %>
+            <span>Kurs: <%= registration.product.title %></span>
+          <% } %>
+          <a class="table-action" href="/admin/registrations/<%= registration.id %>">Detay / Takip</a>
+        </article>
+      <% }) %>
+      <% if (!member.educationRegistrations.length) { %>
+        <p class="empty-state">Henüz eğitim kaydı yok.</p>
+      <% } %>
+    </div>
+  </article>
+</section>
+
+<section class="panel note-panel">
+  <div class="panel-head">
+    <div>
+      <h2>Not Geçmişi</h2>
+      <p>Bu üyeye eklenen tüm notlar</p>
+    </div>
+  </div>
+
+  <div class="note-list">
+    <% member.notes.forEach((item) => { %>
+      <article class="note-item">
+        <p><%= item.note %></p>
+        <span><%= item.authorName || 'Admin' %> · <%= item.createdAt.toLocaleString('tr-TR') %></span>
+      </article>
+    <% }) %>
+    <% if (!member.notes.length) { %>
+      <p class="empty-state">Henüz not eklenmedi.</p>
+    <% } %>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

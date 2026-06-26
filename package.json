@@ -1,0 +1,45 @@
+{
+  "name": "unityverse-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:studio": "prisma studio",
+    "test:enrollment": "node scripts/test-enrollment.js",
+    "test:enrollment-browser": "node scripts/enrollment-frontend-browser-smoke.js",
+    "test:paytr-token": "node scripts/test-paytr-token.js",
+    "test:paytr-iframe": "node scripts/paytr-iframe-browser-smoke.js",
+    "test:paytr-callback": "node scripts/test-paytr-callback.js",
+    "seed": "node prisma/seed.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.12.0",
+    "bcryptjs": "^3.0.2",
+    "cheerio": "^1.2.0",
+    "compression": "^1.8.1",
+    "connect-pg-simple": "^10.0.0",
+    "dotenv": "^16.4.7",
+    "ejs": "^3.1.10",
+    "express": "^4.19.2",
+    "express-session": "^1.18.1",
+    "helmet": "^7.1.0",
+    "jodit": "^4.12.28",
+    "method-override": "^3.0.0",
+    "multer": "^1.4.5-lts.1",
+    "pg": "^8.13.1",
+    "slugify": "^1.6.6"
+  },
+  "devDependencies": {
+    "clean-css-cli": "^5.6.3",
+    "nodemon": "^3.1.9",
+    "prisma": "^6.12.0",
+    "terser": "^5.48.0"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  }
+}

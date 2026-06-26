@@ -1,0 +1,128 @@
+<%- include('../partials/header') %>
+
+<div class="page-head">
+  <div>
+    <h1>Kuponlar</h1>
+    <p class="page-subtitle">İndirim kuponlarını oluşturun ve durumlarını takip edin.</p>
+  </div>
+  <a class="button" href="/admin/coupons/new">Yeni Kupon</a>
+</div>
+
+<section class="panel list-panel">
+  <% if (warning) { %>
+    <p class="panel-warning"><%= warning %></p>
+  <% } %>
+
+  <div class="list-toolbar">
+    <form method="get" action="/admin/coupons" class="search-form coupon-filter-form">
+      <input name="q" value="<%= q %>" placeholder="Kupon kodu veya başlık ara">
+      <select name="isActive">
+        <option value="">Tüm Durumlar</option>
+        <option value="true" <%= isActive === 'true' ? 'selected' : '' %>>Aktif</option>
+        <option value="false" <%= isActive === 'false' ? 'selected' : '' %>>Pasif</option>
+      </select>
+      <select name="discountType">
+        <option value="">Tüm İndirimler</option>
+        <option value="PERCENT" <%= discountType === 'PERCENT' ? 'selected' : '' %>>Yüzde</option>
+        <option value="AMOUNT" <%= discountType === 'AMOUNT' ? 'selected' : '' %>>Tutar</option>
+      </select>
+      <select name="productId">
+        <option value="">Tüm Kurs Bağlantıları</option>
+        <option value="all" <%= productId === 'all' ? 'selected' : '' %>>Tüm kurslara açık</option>
+        <% products.forEach((product) => { %>
+          <option value="<%= product.id %>" <%= productId === String(product.id) ? 'selected' : '' %>><%= product.title %></option>
+        <% }) %>
+      </select>
+      <label class="filter-field">
+        <span>Başlangıç İlk</span>
+        <input type="date" name="startsFrom" value="<%= startsFrom %>">
+      </label>
+      <label class="filter-field">
+        <span>Başlangıç Son</span>
+        <input type="date" name="startsTo" value="<%= startsTo %>">
+      </label>
+      <label class="filter-field">
+        <span>Bitiş İlk</span>
+        <input type="date" name="expiresFrom" value="<%= expiresFrom %>">
+      </label>
+      <label class="filter-field">
+        <span>Bitiş Son</span>
+        <input type="date" name="expiresTo" value="<%= expiresTo %>">
+      </label>
+      <button type="submit">Filtrele</button>
+      <% if (q || isActive || discountType || productId || startsFrom || startsTo || expiresFrom || expiresTo) { %>
+        <a class="button button-secondary" href="/admin/coupons">Temizle</a>
+      <% } %>
+    </form>
+    <strong>Toplam Kupon: <%= totalCount %></strong>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Kod</th>
+        <th>Başlık</th>
+        <th>İndirim</th>
+        <th>Kullanım</th>
+        <th>Geçerlilik</th>
+        <th>Kurslar</th>
+        <th>Durum</th>
+        <th>İşlem</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% coupons.forEach((coupon) => { %>
+        <tr>
+          <td><strong><%= coupon.code %></strong></td>
+          <td><%= coupon.title %></td>
+          <td>
+            <%= coupon.discountType === 'PERCENT' ? `%${coupon.discountValue}` : `${coupon.discountValue} TL` %>
+          </td>
+          <td><%= coupon.usedCount %> / <%= coupon.usageLimit || 'Sınırsız' %></td>
+          <td>
+            <%= coupon.startsAt ? coupon.startsAt.toLocaleDateString('tr-TR') : 'Başlangıç yok' %>
+            -
+            <%= coupon.expiresAt ? coupon.expiresAt.toLocaleDateString('tr-TR') : 'Bitiş yok' %>
+          </td>
+          <td>
+            <% if (coupon.products && coupon.products.length) { %>
+              <% coupon.products.slice(0, 2).forEach((item) => { %>
+                <small class="table-muted"><%= item.product ? item.product.title : 'Kurs silinmiş' %></small>
+              <% }) %>
+              <% if (coupon.products.length > 2) { %>
+                <small class="table-muted">+<%= coupon.products.length - 2 %> kurs daha</small>
+              <% } %>
+            <% } else { %>
+              Tüm kurslar
+            <% } %>
+          </td>
+          <td>
+            <span class="status-pill <%= coupon.isActive ? 'is-active' : 'is-passive' %>">
+              <%= coupon.isActive ? 'Aktif' : 'Pasif' %>
+            </span>
+          </td>
+          <td>
+            <div class="row-actions">
+              <a class="table-action" href="/admin/coupons/<%= coupon.id %>/edit">Düzenle</a>
+              <form method="post" action="/admin/coupons/<%= coupon.id %>/status" class="inline-form">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <input type="hidden" name="isActive" value="<%= coupon.isActive ? 'false' : 'true' %>">
+                <button type="submit" class="button-secondary"><%= coupon.isActive ? 'Pasifleştir' : 'Aktifleştir' %></button>
+              </form>
+              <form method="post" action="/admin/coupons/<%= coupon.id %>/delete" class="inline-form" onsubmit="return confirm('Bu kuponu silmek istediğinize emin misiniz?');">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <button type="submit" class="button-danger">Sil</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+      <% }) %>
+      <% if (!coupons.length) { %>
+        <tr><td colspan="8">Henüz kupon yok.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+  <%- include('../partials/pagination', { pagination }) %>
+</section>
+
+<%- include('../partials/footer') %>

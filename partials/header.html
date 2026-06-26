@@ -1,0 +1,148 @@
+<header class="site-header" data-site-header>
+  <div class="container site-header__inner">
+    <a class="site-logo" href="/" aria-label="Unityverse Academy ana səhifə">
+      <span class="site-logo__mark" aria-hidden="true">UA</span>
+      <span>Unityverse Academy</span>
+    </a>
+
+    <nav class="site-nav" aria-label="Ana naviqasiya">
+      <ul class="site-nav__list">
+        <li class="site-nav__item">
+          <button class="site-nav__toggle" type="button" aria-expanded="false" aria-controls="dropdown-game" data-dropdown-toggle>
+            Oyun Geliştirme
+            <span class="site-nav__chevron" aria-hidden="true"></span>
+          </button>
+          <div class="dropdown" id="dropdown-game" hidden>
+            <a class="dropdown__link" href="/kategori/oyun-gelistirme-egitimleri-244/" data-nav-link>
+              Unity ve Unreal kursları
+              <span class="dropdown__description">Canlı, proje odaklı oyun geliştirme eğitimleri</span>
+            </a>
+            <a class="dropdown__link" href="/kategori/oyun-gelistirme-ozel-ders-272/" data-nav-link>
+              Özel ders programları
+              <span class="dropdown__description">Birebir mentorluk ve portfolyo hazırlığı</span>
+            </a>
+          </div>
+        </li>
+        <li class="site-nav__item">
+          <button class="site-nav__toggle" type="button" aria-expanded="false" aria-controls="dropdown-software" data-dropdown-toggle>
+            Yazılım
+            <span class="site-nav__chevron" aria-hidden="true"></span>
+          </button>
+          <div class="dropdown" id="dropdown-software" hidden>
+            <a class="dropdown__link" href="/kategori/yazilim-egitimleri-ozel-ders-268/" data-nav-link>
+              Yazılım eğitimleri
+              <span class="dropdown__description">Frontend, backend, mobil ve siber güvenlik</span>
+            </a>
+            <a class="dropdown__link" href="/tum-urunler/" data-nav-link>
+              Tüm yazılım kursları
+              <span class="dropdown__description">Güncel programları ve kayıt seçeneklerini incele</span>
+            </a>
+          </div>
+        </li>
+        <li class="site-nav__item">
+          <button class="site-nav__toggle" type="button" aria-expanded="false" aria-controls="dropdown-design" data-dropdown-toggle>
+            Grafik-Tasarım
+            <span class="site-nav__chevron" aria-hidden="true"></span>
+          </button>
+          <div class="dropdown" id="dropdown-design" hidden>
+            <a class="dropdown__link" href="/tum-urunler/" data-nav-link>
+              Grafik tasarım kursları
+              <span class="dropdown__description">Adobe, UI/UX ve görsel iletişim programları</span>
+            </a>
+          </div>
+        </li>
+        <li class="site-nav__item">
+          <button class="site-nav__toggle" type="button" aria-expanded="false" aria-controls="dropdown-3d" data-dropdown-toggle>
+            3D Modelleme
+            <span class="site-nav__chevron" aria-hidden="true"></span>
+          </button>
+          <div class="dropdown" id="dropdown-3d" hidden>
+            <a class="dropdown__link" href="/kategori/mimarlik-egitimleri-ozel-ders-274/" data-nav-link>
+              Mimari görselleştirme
+              <span class="dropdown__description">3ds Max, Corona, SketchUp ve Revit eğitimleri</span>
+            </a>
+          </div>
+        </li>
+        <li class="site-nav__item">
+          <button class="site-nav__toggle" type="button" aria-expanded="false" aria-controls="dropdown-animation" data-dropdown-toggle>
+            Animasyon
+            <span class="site-nav__chevron" aria-hidden="true"></span>
+          </button>
+          <div class="dropdown" id="dropdown-animation" hidden>
+            <a class="dropdown__link" href="/tum-urunler/" data-nav-link>
+              Animasyon eğitimleri
+              <span class="dropdown__description">Video efekt, hareketli grafik ve oyun animasyonu</span>
+            </a>
+          </div>
+        </li>
+      </ul>
+    </nav>
+
+    <div class="site-actions">
+      <a class="site-actions__phone" href="tel:+908503077347" aria-label="Telefon ile ara">0850 307 73 47</a>
+      <button class="icon-btn" type="button" data-theme-toggle aria-label="Tema dəyişdir">
+        <span aria-hidden="true">Aa</span>
+      </button>
+      <a class="btn btn--primary" href="/form/hemen-bilgi-al-1/">Bilgi Al</a>
+      <a class="icon-btn" href="/sepet/" aria-label="Sepet">
+        <span aria-hidden="true">Bag</span>
+      </a>
+    </div>
+
+    <button class="hamburger" type="button" aria-label="Menünü aç" aria-expanded="false" aria-controls="mobile-drawer" data-drawer-toggle>
+      <span class="hamburger__line" aria-hidden="true"></span>
+      <span class="hamburger__line" aria-hidden="true"></span>
+      <span class="hamburger__line" aria-hidden="true"></span>
+    </button>
+  </div>
+
+  <div class="mobile-drawer" id="mobile-drawer" hidden data-mobile-drawer>
+    <div class="mobile-drawer__panel" role="dialog" aria-modal="true" aria-label="Mobil naviqasiya" tabindex="-1">
+      <div class="mobile-drawer__header">
+        <a class="site-logo" href="/" aria-label="Unityverse Academy ana səhifə">
+          <span class="site-logo__mark" aria-hidden="true">UA</span>
+          <span>Unityverse Academy</span>
+        </a>
+        <button class="icon-btn" type="button" aria-label="Menünü bağla" data-drawer-close>
+          <span aria-hidden="true">X</span>
+        </button>
+      </div>
+
+      <nav class="mobile-nav" aria-label="Mobil naviqasiya">
+        <button class="mobile-nav__toggle" type="button" aria-expanded="false" aria-controls="mobile-game" data-mobile-submenu-toggle>Oyun Geliştirme</button>
+        <div class="mobile-nav__submenu" id="mobile-game" hidden>
+          <a href="/kategori/oyun-gelistirme-egitimleri-244/" data-nav-link>Unity ve Unreal kursları</a>
+          <a href="/kategori/oyun-gelistirme-ozel-ders-272/" data-nav-link>Özel ders programları</a>
+        </div>
+
+        <button class="mobile-nav__toggle" type="button" aria-expanded="false" aria-controls="mobile-software" data-mobile-submenu-toggle>Yazılım</button>
+        <div class="mobile-nav__submenu" id="mobile-software" hidden>
+          <a href="/kategori/yazilim-egitimleri-ozel-ders-268/" data-nav-link>Yazılım eğitimleri</a>
+          <a href="/tum-urunler/" data-nav-link>Tüm yazılım kursları</a>
+        </div>
+
+        <button class="mobile-nav__toggle" type="button" aria-expanded="false" aria-controls="mobile-design" data-mobile-submenu-toggle>Grafik-Tasarım</button>
+        <div class="mobile-nav__submenu" id="mobile-design" hidden>
+          <a href="/tum-urunler/" data-nav-link>Grafik tasarım kursları</a>
+        </div>
+
+        <button class="mobile-nav__toggle" type="button" aria-expanded="false" aria-controls="mobile-3d" data-mobile-submenu-toggle>3D Modelleme</button>
+        <div class="mobile-nav__submenu" id="mobile-3d" hidden>
+          <a href="/kategori/mimarlik-egitimleri-ozel-ders-274/" data-nav-link>Mimari görselleştirme</a>
+        </div>
+
+        <button class="mobile-nav__toggle" type="button" aria-expanded="false" aria-controls="mobile-animation" data-mobile-submenu-toggle>Animasyon</button>
+        <div class="mobile-nav__submenu" id="mobile-animation" hidden>
+          <a href="/tum-urunler/" data-nav-link>Animasyon eğitimleri</a>
+        </div>
+      </nav>
+
+      <div class="mobile-drawer__actions">
+        <a class="site-actions__phone" href="tel:+908503077347">0850 307 73 47</a>
+        <button class="btn btn--outline" type="button" data-theme-toggle>Tema dəyişdir</button>
+        <a class="btn btn--primary" href="/form/hemen-bilgi-al-1/">Bilgi Al</a>
+        <a class="btn btn--secondary" href="/sepet/">Sepet</a>
+      </div>
+    </div>
+  </div>
+</header>

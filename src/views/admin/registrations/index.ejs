@@ -1,0 +1,160 @@
+<%- include('../partials/header') %>
+
+<div class="page-head">
+  <div>
+    <h1>Eğitim Kayıtları</h1>
+    <p class="page-subtitle">Öğrencilerin eğitim kayıtlarını, durumlarını ve takip notlarını yönetin.</p>
+  </div>
+  <a class="button" href="/admin/registrations/new">Yeni Kayıt</a>
+</div>
+
+<section class="panel list-panel">
+  <% if (warning) { %>
+    <p class="panel-warning"><%= warning %></p>
+  <% } %>
+
+  <div class="list-toolbar">
+    <form method="get" action="/admin/registrations" class="search-form education-filter-form">
+      <input name="q" value="<%= q %>" placeholder="Eğitim, ad, e-posta veya telefon ara">
+      <select name="status">
+        <option value="">Tüm Durumlar</option>
+        <% Object.keys(statusLabels).forEach((key) => { %>
+          <option value="<%= key %>" <%= status === key ? 'selected' : '' %>><%= statusLabels[key] %></option>
+        <% }) %>
+      </select>
+      <select name="paymentStatus">
+        <option value="">Tüm Ödemeler</option>
+        <% Object.keys(paymentStatusLabels).forEach((key) => { %>
+          <option value="<%= key %>" <%= paymentStatus === key ? 'selected' : '' %>><%= paymentStatusLabels[key] %></option>
+        <% }) %>
+      </select>
+      <select name="productId">
+        <option value="">Tüm Kurslar</option>
+        <% products.forEach((product) => { %>
+          <option value="<%= product.id %>" <%= productId === String(product.id) ? 'selected' : '' %>><%= product.code ? `${product.code} · ` : '' %><%= product.title %></option>
+        <% }) %>
+      </select>
+      <select name="source">
+        <option value="">Tüm Kaynaklar</option>
+        <% sourceOptions.forEach((sourceOption) => { %>
+          <option value="<%= sourceOption %>" <%= source === sourceOption ? 'selected' : '' %>><%= sourceOption === 'admin' ? 'Admin' : 'Site' %></option>
+        <% }) %>
+      </select>
+      <select name="advisorId">
+        <option value="">Tüm Danışmanlar</option>
+        <% advisorOptions.forEach((advisor) => { %>
+          <option value="<%= advisor.id %>" <%= advisorId === String(advisor.id) ? 'selected' : '' %>><%= advisor.name %></option>
+        <% }) %>
+      </select>
+      <select name="followUp">
+        <option value="">Tüm Takipler</option>
+        <option value="today" <%= followUp === 'today' ? 'selected' : '' %>>Bugün aranacaklar</option>
+        <option value="overdue" <%= followUp === 'overdue' ? 'selected' : '' %>>Geciken takipler</option>
+        <option value="scheduled" <%= followUp === 'scheduled' ? 'selected' : '' %>>Planlı takipler</option>
+      </select>
+      <label class="filter-field">
+        <span>Kayıt Başlangıç</span>
+        <input type="date" name="createdFrom" value="<%= createdFrom %>">
+      </label>
+      <label class="filter-field">
+        <span>Kayıt Bitiş</span>
+        <input type="date" name="createdTo" value="<%= createdTo %>">
+      </label>
+      <label class="filter-field">
+        <span>Eğitim Başlangıç</span>
+        <input type="date" name="startsFrom" value="<%= startsFrom %>">
+      </label>
+      <label class="filter-field">
+        <span>Eğitim Bitiş</span>
+        <input type="date" name="startsTo" value="<%= startsTo %>">
+      </label>
+      <button type="submit">Filtrele</button>
+      <% if (q || status || paymentStatus || productId || source || advisorId || followUp || createdFrom || createdTo || startsFrom || startsTo) { %>
+        <a class="button button-secondary" href="/admin/registrations">Temizle</a>
+      <% } %>
+    </form>
+    <strong>Toplam Kayıt: <%= totalCount %></strong>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Eğitim</th>
+        <th>Öğrenci</th>
+        <th>İletişim</th>
+        <th>Kaynak</th>
+        <th>Danışman / Takip</th>
+        <th>Durum</th>
+        <th>Ödeme / Başlangıç</th>
+        <th>Kayıt Tarihi</th>
+        <th>İşlemler</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% registrations.forEach((registration) => { %>
+        <%
+          const totalAmount = registration.totalAmount == null ? 0 : Number(registration.totalAmount);
+          const paidAmount = (registration.payments || []).reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+          const remainingAmount = Math.max(totalAmount - paidAmount, 0);
+        %>
+        <tr>
+          <td>
+            <strong><%= registration.courseTitle %></strong>
+            <% if (registration.product) { %>
+              <small class="table-muted"><%= registration.product.title %></small>
+            <% } %>
+          </td>
+          <td>
+            <strong><%= [registration.name, registration.surname].filter(Boolean).join(' ') %></strong>
+            <% if (registration.member) { %>
+              <small class="table-muted">Üye kaydı bağlı</small>
+            <% } %>
+          </td>
+          <td>
+            <%= registration.phone || '-' %>
+            <small class="table-muted"><%= registration.email || '-' %></small>
+          </td>
+          <td><%= registration.source === 'admin' ? 'Admin' : 'Site' %></td>
+          <td>
+            <%= registration.advisor ? registration.advisor.name : '-' %>
+            <small class="table-muted">
+              <%= registration.nextFollowUpAt ? registration.nextFollowUpAt.toLocaleString('tr-TR') : 'Takip yok' %>
+            </small>
+          </td>
+          <td>
+            <span class="status-pill status-registration-<%= registration.status.toLowerCase() %>">
+              <%= statusLabels[registration.status] || registration.status %>
+            </span>
+          </td>
+          <td>
+            <span class="status-pill status-payment-<%= (registration.paymentStatus || 'PENDING').toLowerCase() %>">
+              <%= paymentStatusLabels[registration.paymentStatus] || registration.paymentStatus || '-' %>
+            </span>
+            <small class="table-muted">
+              Başlangıç: <%= registration.startsAt ? registration.startsAt.toLocaleDateString('tr-TR') : '-' %>
+            </small>
+            <small class="table-muted">
+              Ödenen: <%= paidAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> TL
+            </small>
+            <small class="table-muted">
+              Kalan: <%= remainingAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> TL
+            </small>
+          </td>
+          <td><%= registration.createdAt.toLocaleString('tr-TR') %></td>
+          <td>
+            <div class="row-actions">
+              <a class="table-action" href="/admin/registrations/<%= registration.id %>">Detay / Takip</a>
+              <a class="table-action" href="/admin/registrations/<%= registration.id %>/edit">Düzenle</a>
+            </div>
+          </td>
+        </tr>
+      <% }) %>
+      <% if (!registrations.length) { %>
+        <tr><td colspan="9">Henüz eğitim kaydı yok.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+  <%- include('../partials/pagination', { pagination }) %>
+</section>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,80 @@
+<%
+  const pageInstructors = (typeof instructors !== 'undefined' && Array.isArray(instructors) ? instructors : []).map((instructor) => ({
+    name: instructor.name,
+    title: instructor.specialty || 'Eğitmen',
+    photo: instructor.image,
+    expertise: instructor.specialty || 'Eğitmen',
+    bio: instructor.bio || '',
+    cvUrl: instructor.link || '',
+    linkedin: instructor.linkedin || '',
+    courses: instructor.courses || []
+  }));
+  const instructorsPayload = JSON.stringify(pageInstructors).replace(/</g, '\\u003c');
+%>
+
+<%- include('../partials/header') %>
+
+<main class="uv-page" data-instructors-page>
+  <script nonce="<%= cspNonce %>" type="application/json" data-instructors-json><%- instructorsPayload %></script>
+
+  <section class="uv-page-hero uv-instructors-hero">
+    <div class="uv-shell">
+      <p class="uv-eyebrow">Eğitmenlerimiz</p>
+      <h1>Eğitmenlerimiz</h1>
+      <p>Alanında uzman eğitmen kadromuzla tanışın.</p>
+    </div>
+  </section>
+
+  <section class="uv-section">
+    <div class="uv-shell">
+      <div class="section-title">
+        <p class="section-title__eyebrow">Kadromuz</p>
+        <h2 class="section-title__heading">Eğitim yolculuğuna eşlik eden ekip</h2>
+      </div>
+
+      <div class="uv-instructor-page-grid" aria-label="Eğitmen listesi">
+        <% pageInstructors.forEach((instructor, index) => { %>
+          <article class="uv-instructor-card card">
+            <button class="uv-instructor-card__button" type="button" data-instructor-index="<%= index %>" aria-haspopup="dialog">
+              <span class="uv-instructor-card__media">
+                <img src="<%= instructor.photo %>" alt="<%= instructor.name %>" width="360" height="360" loading="lazy">
+              </span>
+              <span class="uv-instructor-card__body">
+                <span class="uv-instructor-card__tag"><%= instructor.expertise %></span>
+                <span class="uv-instructor-card__name"><%= instructor.name %></span>
+                <% if (instructor.bio) { %>
+                  <span class="uv-instructor-card__bio"><%= instructor.bio %></span>
+                <% } else { %>
+                  <span class="uv-instructor-card__bio">Detaylı bilgi için CV / Profil bağlantısını inceleyebilirsiniz.</span>
+                <% } %>
+                <span class="btn-secondary uv-instructor-card__cta">Detayları Gör</span>
+              </span>
+            </button>
+          </article>
+        <% }) %>
+      </div>
+    </div>
+  </section>
+
+  <section class="uv-section uv-page-cta">
+    <div class="uv-shell">
+      <div class="uv-cta__inner">
+        <div>
+          <p class="uv-eyebrow">Başlangıç adımı</p>
+          <h2>Bu kadrodan eğitim almak ister misin?</h2>
+          <p>Eğitim danışmanlarımız hedefinize göre doğru programı seçmenize yardımcı olur.</p>
+        </div>
+        <a class="btn-primary" href="/form/hemen-bilgi-al-1/">Bilgi Al</a>
+      </div>
+    </div>
+  </section>
+
+  <div class="uv-modal uv-instructor-modal" role="dialog" aria-modal="true" aria-labelledby="instructor-modal-title" hidden data-instructor-modal>
+    <div class="uv-modal__panel uv-instructor-modal__panel" data-modal-panel>
+      <button class="uv-modal__close" type="button" aria-label="Kapat" data-modal-close>×</button>
+      <div class="uv-modal__content uv-instructor-modal__content" data-modal-content></div>
+    </div>
+  </div>
+</main>
+
+<%- include('../partials/footer') %>

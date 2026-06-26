@@ -1,0 +1,385 @@
+<%- include('../partials/header') %>
+<%
+  const startsAtValue = registration.startsAt ? registration.startsAt.toISOString().slice(0, 10) : '';
+%>
+
+<div class="page-head">
+  <div>
+    <h1><%= registration.courseTitle %></h1>
+    <p class="page-subtitle">
+      <%= [registration.name, registration.surname].filter(Boolean).join(' ') %>
+      ·
+      <%= registration.phone || 'Telefon yok' %>
+    </p>
+  </div>
+  <div class="row-actions">
+    <a class="button button-secondary" href="/admin/registrations/<%= registration.id %>/edit">Düzenle</a>
+    <a class="button" href="/admin/registrations">Kayıtlara Dön</a>
+  </div>
+</div>
+
+<section class="detail-grid">
+  <article class="panel detail-panel">
+    <h2>Kayıt Bilgileri</h2>
+    <dl class="info-list">
+      <div><dt>Eğitim</dt><dd><%= registration.courseTitle %></dd></div>
+      <div><dt>Öğrenci</dt><dd><%= [registration.name, registration.surname].filter(Boolean).join(' ') %></dd></div>
+      <div><dt>E-posta</dt><dd><%= registration.email || '-' %></dd></div>
+      <div><dt>Telefon</dt><dd><%= registration.phone || '-' %></dd></div>
+      <div><dt>Kaynak</dt><dd><%= registration.source === 'admin' ? 'Admin' : 'Site' %></dd></div>
+      <div><dt>Danışman</dt><dd><%= registration.advisor ? registration.advisor.name : '-' %></dd></div>
+      <div><dt>Sonraki Takip</dt><dd><%= registration.nextFollowUpAt ? registration.nextFollowUpAt.toLocaleString('tr-TR') : '-' %></dd></div>
+      <div><dt>Durum</dt><dd><span class="status-pill status-registration-<%= registration.status.toLowerCase() %>"><%= statusLabels[registration.status] || registration.status %></span></dd></div>
+      <div><dt>Ödeme</dt><dd><span class="status-pill status-payment-<%= (registration.paymentStatus || 'PENDING').toLowerCase() %>"><%= paymentStatusLabels[registration.paymentStatus] || registration.paymentStatus || '-' %></span></dd></div>
+      <div><dt>Fatura</dt><dd><%= invoiceStatusLabels[registration.invoiceStatus] || registration.invoiceStatus || '-' %></dd></div>
+      <div><dt>Tutar</dt><dd><%= finance.totalAmountText %> TL</dd></div>
+      <div><dt>Kalan</dt><dd><%= finance.remainingAmountText %> TL</dd></div>
+      <div><dt>Başlangıç</dt><dd><%= registration.startsAt ? registration.startsAt.toLocaleDateString('tr-TR') : '-' %></dd></div>
+      <div><dt>Üye</dt><dd><%= registration.member ? [registration.member.name, registration.member.surname].filter(Boolean).join(' ') : '-' %></dd></div>
+      <div><dt>Kurs Kaydı</dt><dd><%= registration.product ? registration.product.title : '-' %></dd></div>
+      <div><dt>Kayıt Tarihi</dt><dd><%= registration.createdAt.toLocaleString('tr-TR') %></dd></div>
+    </dl>
+  </article>
+
+  <article class="panel detail-panel">
+    <h2>Durum ve Takip</h2>
+    <% if (error) { %>
+      <p class="alert"><%= error %></p>
+    <% } %>
+
+    <form method="post" action="/admin/registrations/<%= registration.id %>/status" class="form status-form">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <label>
+        Kayıt Durumu
+        <select name="status">
+          <% Object.keys(statusLabels).forEach((key) => { %>
+            <option value="<%= key %>" <%= registration.status === key ? 'selected' : '' %>><%= statusLabels[key] %></option>
+          <% }) %>
+        </select>
+      </label>
+      <label>
+        Ödeme Durumu
+        <select name="paymentStatus">
+          <% Object.keys(paymentStatusLabels).forEach((key) => { %>
+            <option value="<%= key %>" <%= registration.paymentStatus === key ? 'selected' : '' %>><%= paymentStatusLabels[key] %></option>
+          <% }) %>
+        </select>
+      </label>
+      <label>
+        Toplam Tutar
+        <input name="totalAmount" type="number" step="0.01" min="0" value="<%= registration.totalAmount != null ? registration.totalAmount : '' %>">
+      </label>
+      <label>
+        Fatura Durumu
+        <select name="invoiceStatus">
+          <% Object.keys(invoiceStatusLabels).forEach((key) => { %>
+            <option value="<%= key %>" <%= registration.invoiceStatus === key ? 'selected' : '' %>><%= invoiceStatusLabels[key] %></option>
+          <% }) %>
+        </select>
+      </label>
+      <label>
+        Danışman
+        <select name="advisorId">
+          <option value="">Danışman atanmadı</option>
+          <% advisorOptions.forEach((advisor) => { %>
+            <option value="<%= advisor.id %>" <%= registration.advisorId === advisor.id ? 'selected' : '' %>><%= advisor.name %></option>
+          <% }) %>
+        </select>
+      </label>
+      <label>
+        Sonraki Takip
+        <input name="nextFollowUpAt" type="datetime-local" value="<%= followUpValue %>">
+      </label>
+      <label>
+        Başlangıç Tarihi
+        <input name="startsAt" type="date" value="<%= startsAtValue %>">
+      </label>
+      <label>
+        Ödeme Notu
+        <textarea name="paymentNote" rows="4" placeholder="Tahsilat, kapora, taksit veya iade notu"><%= registration.paymentNote || '' %></textarea>
+      </label>
+      <label>
+        Danışman Notu
+        <textarea name="advisorNote" rows="4" placeholder="Danışman takip notu"><%= registration.advisorNote || '' %></textarea>
+      </label>
+      <label>
+        Durum Notu
+        <textarea name="statusNote" rows="3" placeholder="Durum/ödeme değişikliği notu"></textarea>
+      </label>
+      <button type="submit">Durumu Güncelle</button>
+    </form>
+
+    <form method="post" action="/admin/registrations/<%= registration.id %>/notes" class="form note-form">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <label>
+        Yeni Not
+        <textarea name="note" rows="6" placeholder="Görüşme, ödeme, sözleşme veya takip notu yazın"></textarea>
+      </label>
+      <button type="submit">Not Ekle</button>
+    </form>
+  </article>
+</section>
+
+<section class="panel note-panel">
+  <div class="panel-head">
+    <div>
+      <h2>Satış / Ödeme</h2>
+      <p>Ödenen tutar, kalan borç, tahsilat geçmişi ve taksit planı</p>
+    </div>
+  </div>
+
+  <div class="metric-grid payment-summary-grid">
+    <article class="metric-card">
+      <div class="metric-top"><span>Toplam Tutar</span></div>
+      <strong><%= finance.totalAmountText %></strong>
+      <p>TL</p>
+    </article>
+    <article class="metric-card">
+      <div class="metric-top"><span>Ödenen</span></div>
+      <strong><%= finance.paidAmountText %></strong>
+      <p>TL</p>
+    </article>
+    <article class="metric-card">
+      <div class="metric-top"><span>Kalan</span></div>
+      <strong><%= finance.remainingAmountText %></strong>
+      <p>TL</p>
+    </article>
+    <article class="metric-card">
+      <div class="metric-top"><span>Fatura</span></div>
+      <strong><%= invoiceStatusLabels[registration.invoiceStatus] || '-' %></strong>
+      <p><%= paymentStatusLabels[registration.paymentStatus] || registration.paymentStatus %></p>
+    </article>
+  </div>
+
+  <div class="detail-grid payment-grid">
+    <article>
+      <h2>Ödeme Ekle</h2>
+      <form method="post" action="/admin/registrations/<%= registration.id %>/payments" class="form">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <label>
+          Tutar
+          <input name="amount" type="number" step="0.01" min="0.01" required>
+        </label>
+        <label>
+          Tahsilat Tarihi
+          <input name="paidAt" type="datetime-local">
+        </label>
+        <label>
+          Ödeme Yöntemi
+          <input name="method" placeholder="Nakit, kredi kartı, havale">
+        </label>
+        <label>
+          Tahsilat Notu
+          <textarea name="note" rows="3" placeholder="Makbuz, referans veya açıklama"></textarea>
+        </label>
+        <button type="submit">Ödeme Kaydet</button>
+      </form>
+    </article>
+
+    <article>
+      <h2>Taksit Ekle</h2>
+      <form method="post" action="/admin/registrations/<%= registration.id %>/installments" class="form">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <label>
+          Başlık
+          <input name="title" placeholder="1. taksit">
+        </label>
+        <label>
+          Tutar
+          <input name="amount" type="number" step="0.01" min="0.01" required>
+        </label>
+        <label>
+          Vade Tarihi
+          <input name="dueDate" type="date" required>
+        </label>
+        <label>
+          Durum
+          <select name="status">
+            <% Object.keys(installmentStatusLabels).forEach((key) => { %>
+              <option value="<%= key %>"><%= installmentStatusLabels[key] %></option>
+            <% }) %>
+          </select>
+        </label>
+        <label>
+          Not
+          <textarea name="note" rows="3" placeholder="Taksit açıklaması"></textarea>
+        </label>
+        <button type="submit">Taksit Ekle</button>
+      </form>
+    </article>
+  </div>
+
+  <div class="payment-tables">
+    <article class="list-panel">
+      <div class="list-toolbar"><strong>Ödeme Geçmişi</strong></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Tutar</th>
+            <th>Yöntem</th>
+            <th>Tarih</th>
+            <th>Not</th>
+            <th>Ekleyen</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% registration.payments.forEach((payment) => { %>
+            <tr>
+              <td><strong><%= Number(payment.amount).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> TL</strong></td>
+              <td><%= payment.method || '-' %></td>
+              <td><%= payment.paidAt.toLocaleString('tr-TR') %></td>
+              <td><%= payment.note || '-' %></td>
+              <td><%= payment.authorName || 'Admin' %></td>
+            </tr>
+          <% }) %>
+          <% if (!registration.payments.length) { %>
+            <tr><td colspan="5">Henüz ödeme kaydı yok.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </article>
+
+    <article class="list-panel">
+      <div class="list-toolbar"><strong>Taksit Planı</strong></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Başlık</th>
+            <th>Tutar</th>
+            <th>Vade</th>
+            <th>Durum</th>
+            <th>İşlem</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% registration.installments.forEach((installment) => { %>
+            <tr>
+              <td>
+                <strong><%= installment.title || 'Taksit' %></strong>
+                <% if (installment.note) { %>
+                  <small class="table-muted"><%= installment.note %></small>
+                <% } %>
+              </td>
+              <td><%= Number(installment.amount).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> TL</td>
+              <td><%= installment.dueDate.toLocaleDateString('tr-TR') %></td>
+              <td><%= installmentStatusLabels[installment.status] || installment.status %></td>
+              <td>
+                <form method="post" action="/admin/registrations/<%= registration.id %>/installments/<%= installment.id %>/status" class="inline-form">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <select name="status">
+                    <% Object.keys(installmentStatusLabels).forEach((key) => { %>
+                      <option value="<%= key %>" <%= installment.status === key ? 'selected' : '' %>><%= installmentStatusLabels[key] %></option>
+                    <% }) %>
+                  </select>
+                  <button type="submit" class="button-secondary">Güncelle</button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+          <% if (!registration.installments.length) { %>
+            <tr><td colspan="5">Henüz taksit planı yok.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </article>
+  </div>
+</section>
+
+<section class="panel note-panel">
+  <div class="panel-head">
+    <div>
+      <h2>Status Tarihçesi</h2>
+      <p>Kayıt ve ödeme durumundaki değişiklikler</p>
+    </div>
+  </div>
+
+  <div class="note-list">
+    <% registration.statusHistory.forEach((item) => { %>
+      <article class="note-item">
+        <p>
+          <%= item.fromStatus ? statusLabels[item.fromStatus] || item.fromStatus : 'İlk durum' %>
+          →
+          <%= statusLabels[item.toStatus] || item.toStatus %>
+        </p>
+        <p>
+          Ödeme:
+          <%= item.fromPaymentStatus ? paymentStatusLabels[item.fromPaymentStatus] || item.fromPaymentStatus : '-' %>
+          →
+          <%= item.toPaymentStatus ? paymentStatusLabels[item.toPaymentStatus] || item.toPaymentStatus : '-' %>
+        </p>
+        <% if (item.note) { %>
+          <p><%= item.note %></p>
+        <% } %>
+        <span><%= item.authorName || 'Admin' %> · <%= item.createdAt.toLocaleString('tr-TR') %></span>
+      </article>
+    <% }) %>
+    <% if (!registration.statusHistory.length) { %>
+      <p class="empty-state">Henüz status değişikliği kaydı yok.</p>
+    <% } %>
+  </div>
+</section>
+
+<% if (registration.paymentNote || registration.advisorNote) { %>
+  <section class="panel note-panel">
+    <div class="panel-head">
+      <div>
+        <h2>Ödeme ve Danışman Notları</h2>
+        <p>Kayıt üzerinde güncel tutulan operasyon notları</p>
+      </div>
+    </div>
+    <div class="note-list">
+      <% if (registration.paymentNote) { %>
+        <article class="note-item">
+          <p><%= registration.paymentNote %></p>
+          <span>Ödeme notu</span>
+        </article>
+      <% } %>
+      <% if (registration.advisorNote) { %>
+        <article class="note-item">
+          <p><%= registration.advisorNote %></p>
+          <span>Danışman notu</span>
+        </article>
+      <% } %>
+    </div>
+  </section>
+<% } %>
+
+<% if (registration.note) { %>
+  <section class="panel note-panel">
+    <div class="panel-head">
+      <div>
+        <h2>İlk Not</h2>
+        <p>Kayıt oluşturulurken girilen not</p>
+      </div>
+    </div>
+    <div class="note-list">
+      <article class="note-item">
+        <p><%= registration.note %></p>
+        <span>Kayıt notu · <%= registration.createdAt.toLocaleString('tr-TR') %></span>
+      </article>
+    </div>
+  </section>
+<% } %>
+
+<section class="panel note-panel">
+  <div class="panel-head">
+    <div>
+      <h2>Takip Notları</h2>
+      <p>Bu eğitim kaydı için eklenen görüşme ve takip notları</p>
+    </div>
+  </div>
+
+  <div class="note-list">
+    <% registration.notes.forEach((item) => { %>
+      <article class="note-item">
+        <p><%= item.note %></p>
+        <span><%= item.authorName || 'Admin' %> · <%= item.createdAt.toLocaleString('tr-TR') %></span>
+      </article>
+    <% }) %>
+    <% if (!registration.notes.length) { %>
+      <p class="empty-state">Henüz takip notu eklenmedi.</p>
+    <% } %>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

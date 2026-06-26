@@ -1,0 +1,62 @@
+<%- include('../partials/header') %>
+
+<div class="page-head">
+  <h1><%= pageTitle %></h1>
+  <a class="button button-secondary" href="/admin/blog">Geri Dön</a>
+</div>
+
+<section class="panel">
+  <% if (error) { %>
+    <p class="alert" role="alert"><%= error %></p>
+  <% } %>
+
+  <form method="post" action="<%= action %>" class="form grid-form" enctype="multipart/form-data">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <label class="wide">
+      Başlık
+      <input name="title" value="<%= post ? post.title || '' : '' %>" required>
+    </label>
+    <label>
+      Slug
+      <input name="slug" value="<%= post ? post.slug || '' : '' %>" placeholder="Boş bırakılırsa başlıktan otomatik oluşturulur">
+    </label>
+    <label>
+      Status
+      <select name="status">
+        <option value="DRAFT" <%= !post || post.status === 'DRAFT' ? 'selected' : '' %>>Taslak</option>
+        <option value="PUBLISHED" <%= post && post.status === 'PUBLISHED' ? 'selected' : '' %>>Yayında</option>
+      </select>
+    </label>
+    <label>
+      Kapak Görseli
+      <input name="coverImage" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif">
+      <span class="field-help">JPG, PNG, WebP, GIF veya AVIF · en fazla 5 MB</span>
+    </label>
+    <label>
+      Yayın Tarihi
+      <input name="publishedAt" type="datetime-local" value="<%= publishedAtValue %>">
+    </label>
+    <% if (post && post.image) { %>
+      <div class="wide blog-image-preview">
+        <span>Mevcut kapak görseli</span>
+        <img src="<%= post.image %>" alt="" width="320" height="180">
+        <small>Yeni bir dosya seçmezseniz mevcut görsel korunur.</small>
+      </div>
+    <% } %>
+    <label class="wide">
+      Kısa Özet
+      <textarea name="excerpt" rows="4"><%= post ? post.excerpt || '' : '' %></textarea>
+      <span class="field-help">Blog liste kartlarında başlığın altında görünür. Boş bırakırsanız içerikten otomatik özet oluşturulur.</span>
+    </label>
+    <div class="wide blog-editor-field">
+      <label for="blog-content">İçerik</label>
+      <textarea id="blog-content" name="content" rows="18" data-blog-editor><%= post ? post.content || '' : '' %></textarea>
+      <span class="field-help">Metni biçimlendirebilir, görsel ekleyebilir veya HTML görünümünde doğrudan kod yazabilirsiniz.</span>
+    </div>
+    <button type="submit"><%= submitLabel %></button>
+  </form>
+</section>
+
+<script src="/vendor/jodit/jodit.min.js"></script>
+<script src="/public/tema10/js/admin-blog-editor.js?v=20260624-2"></script>
+<%- include('../partials/footer') %>

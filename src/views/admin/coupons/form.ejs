@@ -1,0 +1,74 @@
+<%- include('../partials/header') %>
+<%
+  const startsAtValue = coupon && coupon.startsAt
+    ? (typeof coupon.startsAt === 'string' ? coupon.startsAt : coupon.startsAt.toISOString().slice(0, 10))
+    : '';
+  const expiresAtValue = coupon && coupon.expiresAt
+    ? (typeof coupon.expiresAt === 'string' ? coupon.expiresAt : coupon.expiresAt.toISOString().slice(0, 10))
+    : '';
+%>
+
+<div class="page-head">
+  <div>
+    <h1><%= pageTitle %></h1>
+    <p class="page-subtitle">Kupon kodu ve indirim kurallarını tanımlayın.</p>
+  </div>
+  <a class="button button-secondary" href="/admin/coupons">Geri Dön</a>
+</div>
+
+<section class="panel">
+  <% if (error) { %>
+    <p class="alert"><%= error %></p>
+  <% } %>
+
+  <form method="post" action="<%= action %>" class="form grid-form">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <label>
+      Kupon Kodu
+      <input name="code" value="<%= coupon ? coupon.code || '' : '' %>" placeholder="ORNEK10" required>
+    </label>
+    <label>
+      Başlık
+      <input name="title" value="<%= coupon ? coupon.title || '' : '' %>" placeholder="Öğrenci indirimi" required>
+    </label>
+    <label>
+      İndirim Tipi
+      <select name="discountType">
+        <option value="PERCENT" <%= !coupon || coupon.discountType === 'PERCENT' ? 'selected' : '' %>>Yüzde</option>
+        <option value="AMOUNT" <%= coupon && coupon.discountType === 'AMOUNT' ? 'selected' : '' %>>Tutar</option>
+      </select>
+    </label>
+    <label>
+      İndirim Değeri
+      <input name="discountValue" value="<%= coupon ? coupon.discountValue || '' : '' %>" type="number" step="0.01" min="0" required>
+    </label>
+    <label>
+      Kullanım Limiti
+      <input name="usageLimit" value="<%= coupon ? coupon.usageLimit || '' : '' %>" type="number" min="1" placeholder="Boş bırakılırsa sınırsız">
+    </label>
+    <label>
+      Başlangıç Tarihi
+      <input name="startsAt" type="date" value="<%= startsAtValue %>">
+    </label>
+    <label>
+      Bitiş Tarihi
+      <input name="expiresAt" type="date" value="<%= expiresAtValue %>">
+    </label>
+    <label class="wide">
+      Geçerli Kurslar
+      <select name="productIds" multiple size="8">
+        <% products.forEach((product) => { %>
+          <option value="<%= product.id %>" <%= selectedProductIds.includes(product.id) ? 'selected' : '' %>><%= product.title %></option>
+        <% }) %>
+      </select>
+      <small class="field-help">Hiç kurs seçmezseniz kupon tüm kurslarda geçerli olur.</small>
+    </label>
+    <label class="check">
+      <input type="checkbox" name="isActive" <%= !coupon || coupon.isActive ? 'checked' : '' %>>
+      Aktif
+    </label>
+    <button type="submit"><%= submitLabel %></button>
+  </form>
+</section>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,122 @@
+<%- include('../partials/header') %>
+
+<div class="page-head">
+  <div>
+    <h1>Kurslar</h1>
+    <p class="page-subtitle">Toplam <%= totalCount %> kurs listeleniyor.</p>
+  </div>
+  <a class="button" href="/admin/products/new">Yeni Kurs</a>
+</div>
+
+<section class="panel list-panel">
+  <div class="list-toolbar">
+    <form method="get" action="/admin/products" class="search-form product-filter-form">
+      <input name="q" value="<%= q %>" placeholder="Kod, başlık, slug veya eğitim tipi ara">
+      <select name="status">
+        <option value="">Tüm Statuslar</option>
+        <option value="PUBLISHED" <%= status === 'PUBLISHED' ? 'selected' : '' %>>Yayında</option>
+        <option value="DRAFT" <%= status === 'DRAFT' ? 'selected' : '' %>>Taslak</option>
+      </select>
+      <select name="categoryId">
+        <option value="">Tüm Kategoriler</option>
+        <option value="none" <%= categoryId === 'none' ? 'selected' : '' %>>Kategorisiz</option>
+        <% categories.forEach((category) => { %>
+          <option value="<%= category.id %>" <%= categoryId === String(category.id) ? 'selected' : '' %>><%= category.name %></option>
+        <% }) %>
+      </select>
+      <select name="lessonType">
+        <option value="">Tüm Eğitim Tipleri</option>
+        <% lessonTypeOptions.forEach((option) => { %>
+          <option value="<%= option %>" <%= lessonType === option ? 'selected' : '' %>><%= option %></option>
+        <% }) %>
+      </select>
+      <select name="discountType">
+        <option value="">Tüm İndirimler</option>
+        <option value="PERCENT" <%= discountType === 'PERCENT' ? 'selected' : '' %>>Yüzde</option>
+        <option value="AMOUNT" <%= discountType === 'AMOUNT' ? 'selected' : '' %>>Tutar</option>
+        <option value="none" <%= discountType === 'none' ? 'selected' : '' %>>İndirimsiz</option>
+      </select>
+      <label class="filter-field">
+        <span>Min Fiyat</span>
+        <input type="number" step="0.01" name="priceFrom" value="<%= priceFrom %>">
+      </label>
+      <label class="filter-field">
+        <span>Max Fiyat</span>
+        <input type="number" step="0.01" name="priceTo" value="<%= priceTo %>">
+      </label>
+      <button type="submit">Filtrele</button>
+      <% if (q || status || categoryId || lessonType || discountType || priceFrom || priceTo) { %>
+        <a class="button button-secondary" href="/admin/products">Temizle</a>
+      <% } %>
+    </form>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Başlık</th>
+        <th>Kategori</th>
+        <th>Eğitim Tipi</th>
+        <th>Status</th>
+        <th>Fiyat</th>
+        <th>İşlem</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% products.forEach((product) => { %>
+        <tr>
+          <td>
+            <strong><%= product.title %></strong>
+            <small class="table-muted">Kod: <%= product.code || '-' %></small>
+            <small class="table-muted"><%= product.slug %></small>
+          </td>
+          <td><%= product.category ? product.category.name : '-' %></td>
+          <td><%= product.lessonType || '-' %></td>
+          <td>
+            <span class="status-pill <%= product.status === 'PUBLISHED' ? 'is-active' : 'is-passive' %>">
+              <%= product.status === 'PUBLISHED' ? 'Yayında' : 'Taslak' %>
+            </span>
+          </td>
+          <td>
+            <% if (product.pricing) { %>
+              <strong><%= product.pricing.basePrice %> TL</strong>
+              <% if (product.discountPrice) { %>
+                <small class="table-muted">
+                  İndirim:
+                  <%= product.discountType === 'PERCENT' ? `%${product.discountValue}` : `${product.discountValue} TL` %>
+                </small>
+                <small class="table-muted">İndirimli: <%= product.pricing.effectivePrice %> TL</small>
+              <% } %>
+              <small class="table-muted">KDV: %<%= product.pricing.vatRate %> · <%= product.pricing.vatAmount %> TL</small>
+              <small class="table-muted">KDV Dahil: <%= product.pricing.priceWithVat %> TL</small>
+            <% } else { %>
+              -
+            <% } %>
+          </td>
+          <td>
+            <div class="row-actions">
+              <a class="table-action" href="/admin/products/<%= product.id %>/edit">Düzenle</a>
+              <form method="post" action="/admin/products/<%= product.id %>/status" class="inline-form">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <input type="hidden" name="status" value="<%= product.status === 'PUBLISHED' ? 'DRAFT' : 'PUBLISHED' %>">
+                <button type="submit" class="button-secondary">
+                  <%= product.status === 'PUBLISHED' ? 'Yayından Al' : 'Yayınla' %>
+                </button>
+              </form>
+              <form method="post" action="/admin/products/<%= product.id %>/delete" class="inline-form" onsubmit="return confirm('Bu kursu silmek istediğinize emin misiniz?');">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <button type="submit" class="button-danger">Sil</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+      <% }) %>
+      <% if (!products.length) { %>
+        <tr><td colspan="6">Henüz kurs yok.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+  <%- include('../partials/pagination', { pagination }) %>
+</section>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,59 @@
+<%- include('../partials/header') %>
+
+<main class="uv-page uv-blog-page">
+  <section class="uv-page-hero uv-blog-hero">
+    <div class="uv-shell">
+      <p class="uv-eyebrow">Blog</p>
+      <h1>Unityverse Academy Blog</h1>
+      <p>Yazılım, oyun geliştirme, tasarım ve kariyer yolculuğuna dair güncel içerikler.</p>
+    </div>
+  </section>
+
+  <section class="uv-section">
+    <div class="uv-shell">
+      <div class="uv-blog-toolbar" aria-label="Blog filtreleri">
+        <div>
+          <p class="uv-blog-toolbar__label">Yazılar</p>
+          <strong><%= totalPosts %> içerik</strong>
+        </div>
+        <a class="uv-blog-filter is-active" href="/blog/" aria-current="page">Tüm Yazılar</a>
+      </div>
+
+      <% if (blogCards.length) { %>
+        <div class="uv-blog-grid">
+          <% blogCards.forEach((post) => { %>
+            <%- include('partials/blog-card', { post }) %>
+          <% }) %>
+        </div>
+
+        <% if (pagination.totalPages > 1) { %>
+          <nav class="uv-pagination" aria-label="Blog sayfalama">
+            <% if (pagination.hasPrev) { %>
+              <a class="uv-pagination__link" href="<%= pagination.prevHref %>">Önceki</a>
+            <% } %>
+
+            <% pagination.pages.forEach((page) => { %>
+              <% if (page.isCurrent) { %>
+                <span class="uv-pagination__link is-current" aria-current="page"><%= page.number %></span>
+              <% } else { %>
+                <a class="uv-pagination__link" href="<%= page.href %>"><%= page.number %></a>
+              <% } %>
+            <% }) %>
+
+            <% if (pagination.hasNext) { %>
+              <a class="uv-pagination__link" href="<%= pagination.nextHref %>">Sonraki</a>
+            <% } %>
+          </nav>
+        <% } %>
+      <% } else { %>
+        <div class="uv-blog-empty card">
+          <h2>Henüz yazı yok</h2>
+          <p>Yeni içerikler yayınlandığında burada listelenecek.</p>
+          <a class="btn-primary" href="/tum-urunler/">Eğitimleri Keşfet</a>
+        </div>
+      <% } %>
+    </div>
+  </section>
+</main>
+
+<%- include('../partials/footer') %>
