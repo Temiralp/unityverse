@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Profilim | Unityverse Academy</title>
+  <link rel="stylesheet" href="../public/tema10/css/member-profile.css">
+</head>
+<body class="member-profile-page">
+  <header class="member-profile-header">
+    <div class="member-profile-header__inner">
+      <a class="member-profile-brand" href="../">Unityverse <span>Academy</span></a>
+      <a class="member-profile-home" href="../">Ana Sayfaya Dön</a>
+    </div>
+  </header>
+  <main class="member-profile-main">
+    <section class="member-profile-card" aria-live="polite">
+      <div class="member-profile-loading" data-member-loading>Profil bilgileriniz yükleniyor...</div>
+      <div class="member-profile-error" data-member-error hidden>Profil bilgileri yüklenemedi. Lütfen sayfayı yenileyin.</div>
+      <div data-member-profile hidden>
+        <div class="member-profile-card__intro">
+          <div class="member-profile-avatar" data-member-initial aria-hidden="true"></div>
+          <div>
+            <h1 data-member-name></h1>
+            <p>Üye profiliniz</p>
+          </div>
+        </div>
+        <dl class="member-profile-details">
+          <div><dt>Adınız</dt><dd data-member-first-name></dd></div>
+          <div><dt>Soyadınız</dt><dd data-member-surname></dd></div>
+          <div><dt>E-posta</dt><dd data-member-email></dd></div>
+          <div><dt>Telefon</dt><dd data-member-phone></dd></div>
+        </dl>
+      </div>
+    </section>
+  </main>
+  <script src="../public/tema10/js/member-profile.js" defer></script>
+</body>
+</html>

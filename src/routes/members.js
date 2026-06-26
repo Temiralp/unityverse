@@ -36,7 +36,7 @@ function memberCallbackUrl(value) {
   const redirect = asText(value);
 
   if (!redirect.startsWith('/') || redirect.startsWith('//') || redirect.includes('\\')) {
-    return '/uye/';
+    return '/';
   }
 
   return redirect;
