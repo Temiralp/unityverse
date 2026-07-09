@@ -2,6 +2,7 @@ const express = require('express');
 
 const { requirePaytrCallbackIp } = require('../config/paytr-allowed-ips');
 const prisma = require('../db');
+const { requirePublicCsrf } = require('../middleware/public-csrf');
 const { createIpRateLimiter } = require('../middleware/rate-limit');
 const {
   PaytrConfigurationError,
@@ -10,6 +11,11 @@ const {
   verifyPaytrCallbackHash
 } = require('../services/paytr');
 const { processPaytrCallback } = require('../services/paytr-callback');
+const {
+  sendBankTransferEmails,
+  sendCardPaymentEmails
+} = require('../services/payment-notifications');
+const { syncPendingRegistrationAmount } = require('../services/registration-pricing');
 
 const router = express.Router();
 const paymentPageRateLimiter = createIpRateLimiter({
@@ -18,6 +24,28 @@ const paymentPageRateLimiter = createIpRateLimiter({
   windowMs: 15 * 60 * 1000,
   message: 'Çok kısa sürede çok fazla ödeme denemesi yaptınız. Lütfen daha sonra tekrar deneyin.'
 });
+const bankTransferRateLimiter = createIpRateLimiter({
+  scope: 'bank-transfer-notice',
+  limit: 5,
+  windowMs: 15 * 60 * 1000,
+  message: 'Çok kısa sürede çok fazla havale bildirimi gönderdiniz. Lütfen daha sonra tekrar deneyin.'
+});
+const REQUIRED_AGREEMENTS = [
+  'distanceSalesAgreement',
+  'privacyAgreement',
+  'refundAgreement'
+];
+
+function paymentOptionsFromEnv() {
+  const noInstallment = String(process.env.PAYTR_NO_INSTALLMENT || '0').trim();
+  const maxInstallment = String(process.env.PAYTR_MAX_INSTALLMENT || '0').trim();
+
+  return {
+    installmentsEnabled: noInstallment !== '1',
+    noInstallment,
+    maxInstallment
+  };
+}
 
 function positiveId(value) {
   const text = String(value || '');
@@ -40,6 +68,38 @@ function formatMoney(value) {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   });
+}
+
+function accepted(value) {
+  return ['1', 'true', 'on', 'yes'].includes(String(value || '').trim().toLowerCase());
+}
+
+function hasRequiredAgreements(body) {
+  return REQUIRED_AGREEMENTS.every((key) => accepted(body?.[key]));
+}
+
+function bankTransferDetails(registration) {
+  const amount = registration ? formatMoney(registration.totalAmount) : '';
+
+  return {
+    accountName: String(process.env.BANK_TRANSFER_ACCOUNT_NAME || 'Unityverse Academy').trim(),
+    bankName: String(process.env.BANK_TRANSFER_BANK_NAME || '').trim(),
+    iban: String(process.env.BANK_TRANSFER_IBAN || '').trim(),
+    branch: String(process.env.BANK_TRANSFER_BRANCH || '').trim(),
+    reference: registration ? `UV-${registration.id}` : '',
+    amount
+  };
+}
+
+function whatsappInstallmentUrl(registration) {
+  const phone = String(process.env.WHATSAPP_PHONE || '905454228887').replace(/\D/g, '');
+  const message = [
+    'Merhaba, taksitli ödeme seçenekleri hakkında bilgi almak istiyorum.',
+    registration ? `Eğitim: ${registration.courseTitle}` : '',
+    registration ? `Kayıt No: ${registration.id}` : ''
+  ].filter(Boolean).join('\n');
+
+  return `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(message)}`;
 }
 
 async function ownRegistration(req, registrationId) {
@@ -89,6 +149,123 @@ function callbackText(res, statusCode, message) {
   return res.status(statusCode).send(message);
 }
 
+function callbackInstallmentCount(body) {
+  const value = String(
+    body.installment_count
+    || body.installment
+    || body.installment_count_selected
+    || ''
+  ).trim();
+
+  return /^[1-9]\d*$/.test(value) ? value : '';
+}
+
+router.post('/:registrationId(\\d+)/havale', requirePublicCsrf, bankTransferRateLimiter, async (req, res, next) => {
+  try {
+    const registrationId = positiveId(req.params.registrationId);
+
+    if (!registrationId) {
+      return res.status(404).send('Eğitim kaydı bulunamadı');
+    }
+
+    if (!req.session.member) {
+      return res.redirect(loginUrl(registrationId));
+    }
+
+    if (!hasRequiredAgreements(req.body)) {
+      let registration = await ownRegistration(req, registrationId);
+      registration = await syncPendingRegistrationAmount(prisma, registration);
+
+      return renderPaymentResult(res, {
+        statusCode: 422,
+        pageTitle: 'Havale/EFT Bildirimi | Unityverse Academy',
+        type: 'failure',
+        eyebrow: 'Sözleşme Onayı',
+        title: 'Sözleşme onayı gerekli',
+        message: 'Havale/EFT bildirimi göndermek için sözleşme onaylarını işaretlemelisiniz.',
+        registration,
+        paymentUrl: `/odeme/${registrationId}`,
+        courseUrl: registration?.product?.slug
+          ? `/urun/${registration.product.slug}/`
+          : '/tum-urunler/'
+      });
+    }
+
+    let registration = await ownRegistration(req, registrationId);
+    registration = await syncPendingRegistrationAmount(prisma, registration);
+
+    if (!registration) {
+      return res.status(404).send('Eğitim kaydı bulunamadı');
+    }
+
+    if (registration.paymentStatus === 'PAID') {
+      return renderPaymentResult(res, {
+        pageTitle: 'Havale/EFT Bildirimi | Unityverse Academy',
+        type: 'success',
+        eyebrow: 'Ödeme Durumu',
+        title: 'Bu eğitim zaten ödendi',
+        message: 'Bu eğitim kaydının ödemesi daha önce tamamlanmış görünüyor.',
+        registration,
+        courseUrl: registration.product?.slug
+          ? `/urun/${registration.product.slug}/`
+          : '/tum-urunler/'
+      });
+    }
+
+    if (registration.paymentStatus !== 'PENDING' || registration.status === 'CANCELLED') {
+      return renderPaymentResult(res, {
+        statusCode: 409,
+        pageTitle: 'Havale/EFT Bildirimi | Unityverse Academy',
+        type: 'failure',
+        eyebrow: 'Ödeme Durumu',
+        title: 'Havale bildirimi şu anda alınamıyor',
+        message: 'Bu eğitim kaydının mevcut durumu havale bildirimi almaya uygun değil.',
+        registration,
+        courseUrl: registration.product?.slug
+          ? `/urun/${registration.product.slug}/`
+          : '/tum-urunler/'
+      });
+    }
+
+    const details = bankTransferDetails(registration);
+    const notice = [
+      'Üye Havale/EFT ödeme yöntemini seçti.',
+      `Beklenen tutar: ${details.amount} TL`,
+      `Açıklama: ${details.reference}`,
+      details.iban ? `IBAN: ${details.iban}` : '',
+      details.bankName ? `Banka: ${details.bankName}` : ''
+    ].filter(Boolean).join('\n');
+
+    await prisma.educationRegistrationNote.create({
+      data: {
+        registrationId,
+        note: notice,
+        authorName: 'Üye'
+      }
+    });
+
+    void sendBankTransferEmails({
+      registration,
+      bankTransfer: details
+    });
+
+    return renderPaymentResult(res, {
+      pageTitle: 'Havale/EFT Bildirimi Alındı | Unityverse Academy',
+      type: 'success',
+      eyebrow: 'Havale/EFT',
+      title: 'Havale bildiriminiz alındı',
+      message: `Ödeme açıklamasına ${details.reference} yazarak havalenizi gerçekleştirebilirsiniz. Ödemeniz danışman ekibimiz tarafından kontrol edildikten sonra kaydınıza işlenecektir.`,
+      registration,
+      paymentUrl: `/odeme/${registrationId}`,
+      courseUrl: registration.product?.slug
+        ? `/urun/${registration.product.slug}/`
+        : '/tum-urunler/'
+    });
+  } catch (error) {
+    return next(error);
+  }
+});
+
 router.post('/callback', requirePaytrCallbackIp, async (req, res, next) => {
   try {
     const merchantOid = String(req.body.merchant_oid || '').trim();
@@ -120,6 +297,7 @@ router.post('/callback', requirePaytrCallbackIp, async (req, res, next) => {
       paymentAmount,
       paymentType: String(req.body.payment_type || '').trim(),
       currency: String(req.body.currency || '').trim(),
+      installmentCount: callbackInstallmentCount(req.body),
       failedReasonCode: String(req.body.failed_reason_code || '').trim(),
       failedReasonMessage: String(req.body.failed_reason_msg || '').trim()
     });
@@ -143,6 +321,10 @@ router.post('/callback', requirePaytrCallbackIp, async (req, res, next) => {
         failedReasonCode: req.body.failed_reason_code || null,
         failedReasonMessage: req.body.failed_reason_msg || null
       });
+    }
+
+    if (result.outcome === 'paid' && result.notification) {
+      void sendCardPaymentEmails(result.notification);
     }
 
     return callbackText(res, 200, 'OK');
@@ -215,7 +397,8 @@ router.get('/:registrationId(\\d+)', paymentPageRateLimiter, async (req, res, ne
       return res.redirect(loginUrl(registrationId));
     }
 
-    const registration = await ownRegistration(req, registrationId);
+    let registration = await ownRegistration(req, registrationId);
+    registration = await syncPendingRegistrationAmount(prisma, registration);
 
     if (!registration) {
       return res.status(404).send('Eğitim kaydı bulunamadı');
@@ -250,10 +433,26 @@ router.get('/:registrationId(\\d+)', paymentPageRateLimiter, async (req, res, ne
       });
     }
 
-    const paytr = await requestPaytrIframeToken({
-      registration,
-      userIp: req.ip
-    });
+    let paytr = null;
+    let cardPaymentError = null;
+
+    try {
+      paytr = await requestPaytrIframeToken({
+        registration,
+        userIp: req.ip
+      });
+    } catch (error) {
+      if (!(error instanceof PaytrConfigurationError) && !(error instanceof PaytrRequestError)) {
+        throw error;
+      }
+
+      console.error('[paytr] payment page token failed:', {
+        message: error.message,
+        reason: error.reason,
+        statusCode: error.statusCode
+      });
+      cardPaymentError = 'Kartla ödeme formu şu anda başlatılamıyor. Havale/EFT ile ödeme yapabilir veya daha sonra tekrar deneyebilirsiniz.';
+    }
 
     return res.render('payments/iframe', {
       activeNav: '',
@@ -265,7 +464,11 @@ router.get('/:registrationId(\\d+)', paymentPageRateLimiter, async (req, res, ne
       ],
       registration,
       formattedAmount: formatMoney(registration.totalAmount),
-      iframeUrl: `https://www.paytr.com/odeme/guvenli/${encodeURIComponent(paytr.token)}`
+      installmentWhatsappUrl: whatsappInstallmentUrl(registration),
+      bankTransfer: bankTransferDetails(registration),
+      paymentOptions: paytr ? paytr.paymentOptions : paymentOptionsFromEnv(),
+      iframeUrl: paytr ? `https://www.paytr.com/odeme/guvenli/${encodeURIComponent(paytr.token)}` : '',
+      cardPaymentError
     });
   } catch (error) {
     if (error instanceof PaytrConfigurationError) {

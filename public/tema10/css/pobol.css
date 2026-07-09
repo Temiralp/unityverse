@@ -2237,12 +2237,151 @@ html.pbl-urun .pbl-private-label{
 #campaigns {z-index: 2020;}
 [class*="datepicker"] .new{background-color: inherit;border-color: inherit;}
 
-/* Giriş Yap / Üye Ol / Sepet bölümlerini gizleme (Statik site için geçici olarak) */
-.users-tools, 
-.pbl-new-header-action-item-user, 
-.pbl-new-header-user-side-bar,
-.btn-shopping-cart {
+/* Sepet ve yazılı üye linklerini gizleme (Statik site için geçici olarak) */
+.pbl-new-header-action-item-basket,
+.btn-shopping-cart,
+[data-member-login],
+[data-member-register] {
     display: none !important;
+}
+
+.type_8 .header-center .pbl-new-header-action-item-user {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: 50px;
+    min-width: 50px;
+    max-width: 50px;
+    height: 50px;
+    padding: 0;
+    margin: 0 0 0 12px;
+    float: right;
+}
+
+.type_8 .header-center .pbl-new-header-action-item-user .top_cart {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    margin: 3px 0;
+    border: 0;
+    border-radius: 4px;
+    background-color: var(--renk1, #0b075f);
+    color: #ffffff;
+    box-shadow: none;
+    cursor: pointer;
+}
+
+.type_8 .header-center .pbl-new-header-action-item-user .inner-info,
+.type_8 .header-center .pbl-new-header-action-item-user svg {
+    display: block;
+    width: 24px;
+    height: 24px;
+}
+
+@media (max-width: 991.98px) {
+    .type_8 .header-center .pbl-new-header-action-item-user {
+        width: 30px;
+        min-width: 30px;
+        max-width: 30px;
+        height: 30px;
+        margin: 0;
+    }
+
+    .type_8 .header-center .pbl-new-header-action-item-user .top_cart {
+        width: 30px;
+        height: 30px;
+        padding: 5px;
+        margin: 0;
+    }
+
+    .type_8 .header-center .pbl-new-header-action-item-user .inner-info {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: static;
+        inset: auto;
+        width: 20px;
+        height: 20px;
+        padding: 0;
+        margin: 0;
+        background: transparent;
+        color: inherit;
+    }
+
+    .type_8 .header-center .pbl-new-header-action-item-user svg {
+        width: 22px;
+        height: 22px;
+    }
+}
+
+.users-tools {
+    display: block !important;
+}
+
+.users-tools--member ul li a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 38px;
+}
+
+.users-tools--member .users-tools__profile span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.type_8 .header-top-right ul.top-link > li.uv-header-user-action-slot {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+    margin-left: 8px;
+}
+
+.type_8 .header-top-right ul.top-link > li.uv-header-user-action-slot > a {
+    display: none !important;
+}
+
+.type_8 .header-top-right .uv-header-profile-button {
+    display: inline-flex;
+    visibility: visible !important;
+    opacity: 1 !important;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    padding: 5px;
+    margin: 0;
+    border: 0;
+    border-radius: 4px;
+    background-color: var(--renk1, #0b075f);
+    color: #ffffff;
+    cursor: pointer;
+    transition: background-color .2s ease, transform .2s ease;
+}
+
+.type_8 .header-top-right .uv-header-profile-button:hover,
+.type_8 .header-top-right .uv-header-profile-button:focus {
+    background-color: var(--renk2, #202020);
+    outline: none;
+    transform: translateY(-1px);
+}
+
+.type_8 .header-top-right .uv-header-profile-button svg {
+    width: 22px;
+    height: 22px;
+    display: block;
+}
+
+@media (min-width: 992px) {
+    .type_8 .header-center .pbl-new-header-action-item-user {
+        display: none !important;
+    }
 }
 
 
@@ -2262,4 +2401,193 @@ html.pbl-urun .pbl-private-label{
 /* Kurs detay sayfalarındaki mükerrer/fazla eğitim kapağı (thumbnail barı) bölümünü gizle */
 .pbl-product-slider-thumb {
     display: none !important;
-}
+}
+
+body:not(.member-logged-in) :is(
+    .price,
+    .price-box,
+    .product_page_price,
+    .pbl-product-card-item-price-add-chart .product-price,
+    .pbl-new-header-right-search-result-right-side-content-item-price,
+    .buy-together-content-product-info-price,
+    .buy-together-footer-price,
+    .complementary-products-carousel-item-price
+) {
+    position: relative;
+    display: flex !important;
+    min-height: 32px;
+    align-items: center;
+    justify-content: center;
+    color: transparent !important;
+}
+
+body:not(.member-logged-in) :is(
+    .price,
+    .price-box,
+    .product_page_price,
+    .pbl-product-card-item-price-add-chart .product-price,
+    .pbl-new-header-right-search-result-right-side-content-item-price,
+    .buy-together-content-product-info-price,
+    .buy-together-footer-price,
+    .complementary-products-carousel-item-price
+) > * {
+    visibility: hidden !important;
+}
+
+body:not(.member-logged-in) :is(
+    .price,
+    .price-box,
+    .product_page_price,
+    .pbl-product-card-item-price-add-chart .product-price,
+    .pbl-new-header-right-search-result-right-side-content-item-price,
+    .buy-together-content-product-info-price,
+    .buy-together-footer-price,
+    .complementary-products-carousel-item-price
+)::after {
+    content: "Qiyməti görmək üçün giriş edin";
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--renk1, #13005a);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.2;
+    text-align: center;
+}
+
+body:not(.member-logged-in) .pbl-new-header-right-search-result-right-side-content-item-price::after {
+    justify-content: flex-start;
+    font-size: 11px;
+}
+
+body:not(.member-logged-in) .table_cell:has(input[id^="price_"]) {
+    display: none !important;
+}
+
+.legacy-static-filter-fallback ~ .filter-loading,
+.legacy-static-filter-fallback ~ #filterPnl {
+    display: none !important;
+}
+
+.legacy-static-filter-fallback .list-group,
+.legacy-static-filter-fallback .checkboxes_list {
+    margin-bottom: 0;
+}
+
+.legacy-static-filter-fallback .checkboxes_list li {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+}
+
+.legacy-static-filter-fallback .checkboxes_list input {
+    flex: 0 0 auto;
+    margin: 0;
+}
+
+body:not(.member-logged-in) .legacy-static-filter-fallback .legacy-price-filter {
+    display: none !important;
+}
+
+.category-top-bar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.category-top-bar-item[data-item="course-search-item"] {
+    flex: 1 1 320px;
+    min-width: 260px;
+}
+
+.course-search-form {
+    margin: 0;
+    width: 100%;
+}
+
+.course-search-control {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 42px;
+}
+
+.course-search-control .fa {
+    position: absolute;
+    left: 14px;
+    color: #6f6a86;
+    font-size: 14px;
+    pointer-events: none;
+}
+
+.course-search-control input {
+    width: 100%;
+    height: 42px;
+    border: 1px solid #dedbea;
+    border-radius: 4px;
+    background: #ffffff;
+    color: #202020;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 0 70px 0 40px;
+    transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.course-search-control input::placeholder {
+    color: #8c889b;
+    font-weight: 400;
+}
+
+.course-search-control input:focus {
+    border-color: var(--renk1, #0b075f);
+    box-shadow: 0 0 0 3px rgba(11, 7, 95, .09);
+}
+
+.course-search-control button {
+    position: absolute;
+    right: 5px;
+    height: 32px;
+    min-width: 56px;
+    border: 0;
+    border-radius: 4px;
+    background: var(--renk1, #0b075f);
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    padding: 0 13px;
+}
+
+.course-search-control button:hover,
+.course-search-control button:focus {
+    background: var(--renk2, #202020);
+}
+
+@media (max-width: 1199.98px) {
+    .category-top-bar-item[data-item="course-search-item"] {
+        order: 4;
+        flex: 1 1 100%;
+        min-width: 100%;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .course-search-control {
+        height: 40px;
+    }
+
+    .course-search-control input {
+        height: 40px;
+        font-size: 13px;
+        padding-right: 62px;
+    }
+
+    .course-search-control button {
+        min-width: 50px;
+        padding: 0 10px;
+    }
+}

@@ -197,15 +197,45 @@ async function main() {
       await delay(150);
     }
 
+    const gateBeforeAccept = await evaluate(client, `(() => {
+      const shell = document.querySelector('[data-payment-frame-shell]');
+      const iframe = document.getElementById('paytriframe');
+      const bankButton = document.querySelector('[data-bank-transfer-submit]');
+      return {
+        iframeExists: Boolean(iframe),
+        iframePointerEvents: iframe ? getComputedStyle(iframe).pointerEvents : null,
+        iframeOpacity: iframe ? getComputedStyle(iframe).opacity : null,
+        agreementCount: document.querySelectorAll('[data-payment-agreement]').length,
+        shellDisabled: shell ? shell.classList.contains('is-disabled') : null,
+        ariaDisabled: shell ? shell.getAttribute('aria-disabled') : null,
+        bankSubmitDisabled: bankButton ? bankButton.disabled : null
+      };
+    })()`);
+
+    await evaluate(client, `(() => {
+      document.querySelectorAll('[data-payment-agreement]').forEach((input) => {
+        input.checked = true;
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+    })()`);
+
     await delay(2500);
     const page = await evaluate(client, `(() => {
       const iframe = document.getElementById('paytriframe');
+      const shell = document.querySelector('[data-payment-frame-shell]');
+      const bankButton = document.querySelector('[data-bank-transfer-submit]');
+      document.querySelector('[data-payment-method="bank"]')?.click();
       return {
         title: document.title,
         heading: document.querySelector('h1')?.textContent.trim(),
         iframeSrc: iframe?.src || null,
         iframeHeight: iframe ? iframe.getBoundingClientRect().height : 0,
-        iframeVisible: iframe ? Boolean(iframe.offsetWidth && iframe.offsetHeight) : false
+        iframeVisible: iframe ? Boolean(iframe.offsetWidth && iframe.offsetHeight) : false,
+        iframePointerEvents: iframe ? getComputedStyle(iframe).pointerEvents : null,
+        shellDisabled: shell ? shell.classList.contains('is-disabled') : null,
+        ariaDisabled: shell ? shell.getAttribute('aria-disabled') : null,
+        bankPanelVisible: !document.querySelector('[data-payment-panel="bank"]')?.hidden,
+        bankSubmitDisabled: bankButton ? bankButton.disabled : null
       };
     })()`);
     const paytrFrameResponse = responses.find((response) => {
@@ -216,6 +246,7 @@ async function main() {
 
     console.log(JSON.stringify({
       registrationId: paymentSession.registrationId,
+      gateBeforeAccept,
       page,
       paytrFrameResponse: paytrFrameResponse || null,
       cspErrors: consoleErrors.filter((message) => message.includes('Content Security Policy')),

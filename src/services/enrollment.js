@@ -15,7 +15,8 @@ async function createEnrollment(prisma, { member, product, totalAmount }) {
       orderBy: { createdAt: 'desc' },
       select: {
         id: true,
-        status: true
+        status: true,
+        paymentStatus: true
       }
     });
 

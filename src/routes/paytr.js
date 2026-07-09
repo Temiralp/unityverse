@@ -8,6 +8,7 @@ const {
   PaytrRequestError,
   requestPaytrIframeToken
 } = require('../services/paytr');
+const { syncPendingRegistrationAmount } = require('../services/registration-pricing');
 
 const router = express.Router();
 const paytrTokenRateLimiter = createIpRateLimiter({
@@ -16,6 +17,11 @@ const paytrTokenRateLimiter = createIpRateLimiter({
   windowMs: 15 * 60 * 1000,
   message: 'Çok kısa sürede çok fazla ödeme denemesi yaptınız. Lütfen daha sonra tekrar deneyin.'
 });
+const REQUIRED_AGREEMENTS = [
+  'distanceSalesAgreement',
+  'privacyAgreement',
+  'refundAgreement'
+];
 
 function positiveId(value) {
   const text = String(value || '');
@@ -23,6 +29,14 @@ function positiveId(value) {
 
   const id = Number(text);
   return Number.isSafeInteger(id) ? id : null;
+}
+
+function accepted(value) {
+  return ['1', 'true', 'on', 'yes'].includes(String(value || '').trim().toLowerCase());
+}
+
+function hasRequiredAgreements(body) {
+  return REQUIRED_AGREEMENTS.every((key) => accepted(body?.[key]));
 }
 
 router.post('/token', requirePublicCsrf, paytrTokenRateLimiter, async (req, res, next) => {
@@ -45,7 +59,15 @@ router.post('/token', requirePublicCsrf, paytrTokenRateLimiter, async (req, res,
       });
     }
 
-    const registration = await prisma.educationRegistration.findFirst({
+    if (!hasRequiredAgreements(req.body)) {
+      return res.status(422).json({
+        status: 'failure',
+        code: 'AGREEMENTS_REQUIRED',
+        message: 'Ödeme başlatmak için sözleşme onayları zorunludur.'
+      });
+    }
+
+    let registration = await prisma.educationRegistration.findFirst({
       where: {
         id: registrationId,
         memberId,
@@ -67,6 +89,7 @@ router.post('/token', requirePublicCsrf, paytrTokenRateLimiter, async (req, res,
         }
       }
     });
+    registration = await syncPendingRegistrationAmount(prisma, registration);
 
     if (!registration) {
       return res.status(404).json({
@@ -83,7 +106,8 @@ router.post('/token', requirePublicCsrf, paytrTokenRateLimiter, async (req, res,
     return res.json({
       status: 'success',
       token: result.token,
-      merchantOid: result.merchantOid
+      merchantOid: result.merchantOid,
+      paymentOptions: result.paymentOptions
     });
   } catch (error) {
     if (error instanceof PaytrConfigurationError) {

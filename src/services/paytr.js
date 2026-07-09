@@ -36,6 +36,32 @@ function paytrSecrets() {
   };
 }
 
+function environmentValue(name, fallback) {
+  const value = String(process.env[name] ?? '').trim();
+  return value || fallback;
+}
+
+function paytrFlag(name, fallback) {
+  const value = environmentValue(name, fallback);
+
+  if (!['0', '1'].includes(value)) {
+    throw new PaytrConfigurationError(`${name} 0 veya 1 olmalıdır.`);
+  }
+
+  return value;
+}
+
+function paytrMaxInstallment(name, fallback) {
+  const value = environmentValue(name, fallback);
+  const allowedValues = new Set(['0', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12']);
+
+  if (!allowedValues.has(value)) {
+    throw new PaytrConfigurationError(`${name} 0 veya 2-12 arasında olmalıdır.`);
+  }
+
+  return value;
+}
+
 function paytrConfig() {
   const publicBaseUrl = requiredEnvironment('PAYTR_PUBLIC_BASE_URL').replace(/\/+$/, '');
   const secrets = paytrSecrets();
@@ -50,9 +76,17 @@ function paytrConfig() {
     publicBaseUrl,
     defaultUserAddress: requiredEnvironment('PAYTR_DEFAULT_USER_ADDRESS'),
     testMode: String(process.env.PAYTR_TEST_MODE || '0').trim() === '1' ? '1' : '0',
-    noInstallment: '0',
-    maxInstallment: '0',
+    noInstallment: paytrFlag('PAYTR_NO_INSTALLMENT', '0'),
+    maxInstallment: paytrMaxInstallment('PAYTR_MAX_INSTALLMENT', '0'),
     currency: 'TL'
+  };
+}
+
+function paymentOptionsFromConfig(config) {
+  return {
+    installmentsEnabled: config.noInstallment === '0',
+    noInstallment: config.noInstallment,
+    maxInstallment: config.maxInstallment
   };
 }
 
@@ -246,6 +280,7 @@ function buildPaytrPayload({ registration, userIp }) {
   return {
     merchantOid,
     paymentAmount,
+    paymentOptions: paymentOptionsFromConfig(config),
     payload
   };
 }
@@ -285,7 +320,8 @@ async function requestPaytrIframeToken({ registration, userIp, fetchImpl = fetch
     return {
       token: result.token,
       merchantOid: request.merchantOid,
-      paymentAmount: request.paymentAmount
+      paymentAmount: request.paymentAmount,
+      paymentOptions: request.paymentOptions
     };
   } catch (error) {
     if (error.name === 'AbortError') {
@@ -315,6 +351,7 @@ module.exports = {
   createUserBasket,
   decimalToKurus,
   kurusToDecimal,
+  paymentOptionsFromConfig,
   registrationIdFromMerchantOid,
   verifyPaytrCallbackHash,
   requestPaytrIframeToken

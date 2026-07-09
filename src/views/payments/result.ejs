@@ -1,15 +1,32 @@
-<%- include('../partials/header') %>
+<%- include('../partials/header', { useLegacyPaymentHeader: true }) %>
 
 <main class="uv-payment-page">
+  <section class="uv-payment-hero uv-payment-hero--result">
+    <div class="uv-shell uv-payment-hero__inner">
+      <div>
+        <nav class="uv-payment-breadcrumb" aria-label="Breadcrumb">
+          <a href="/">Ana Sayfa</a>
+          <span aria-hidden="true">/</span>
+          <span>Ödeme Sonucu</span>
+        </nav>
+        <p class="uv-eyebrow"><%= eyebrow %></p>
+        <h1><%= title %></h1>
+        <p><%= message %></p>
+      </div>
+      <% if (registration) { %>
+        <span class="uv-payment-hero__badge">Kayıt #<%= registration.id %></span>
+      <% } %>
+    </div>
+  </section>
+
   <section class="uv-payment-result-section">
     <div class="uv-shell">
       <article class="uv-payment-result uv-payment-result--<%= type %>">
         <span class="uv-payment-result__icon" aria-hidden="true">
           <i class="fa <%= type === 'success' ? 'fa-check' : 'fa-exclamation' %>"></i>
         </span>
-        <p class="uv-eyebrow"><%= eyebrow %></p>
-        <h1><%= title %></h1>
-        <p><%= message %></p>
+        <h2><%= type === 'success' ? 'İşlem bilginiz alındı' : 'İşlemi tamamlayamadık' %></h2>
+        <p><%= type === 'success' ? 'Ödeme sonucu PayTR bildirimiyle doğrulanır ve kaydınıza otomatik yansır.' : 'Kart bilgilerinizi kontrol ederek tekrar deneyebilir veya danışman desteği alabilirsiniz.' %></p>
 
         <% if (registration) { %>
           <dl>
@@ -35,4 +52,4 @@
   </section>
 </main>
 
-<%- include('../partials/footer') %>
+<%- include('../partials/footer', { useLegacyPaymentFooter: true }) %>

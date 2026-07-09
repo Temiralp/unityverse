@@ -14,6 +14,8 @@
     "test:paytr-token": "node scripts/test-paytr-token.js",
     "test:paytr-iframe": "node scripts/paytr-iframe-browser-smoke.js",
     "test:paytr-callback": "node scripts/test-paytr-callback.js",
+    "test:payment-mails": "node scripts/test-payment-mail-notifications.js",
+    "test:lead-mail": "node scripts/test-lead-mail-notification.js",
     "seed": "node prisma/seed.js"
   },
   "dependencies": {

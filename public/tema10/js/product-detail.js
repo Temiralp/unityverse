@@ -153,6 +153,11 @@
     return '/uye-girisi/?redirect=' + encodeURIComponent(enrollmentReturnPath());
   }
 
+  function currentProductSlug() {
+    var match = window.location.pathname.match(/\/urun\/([^/]+)\/?$/);
+    return match ? decodeURIComponent(match[1]) : '';
+  }
+
   function readJson(response) {
     return response.json().catch(function() {
       return {};
@@ -181,6 +186,7 @@
     var phoneInput = modal.querySelector('[data-enrollment-member-phone]');
     var websiteInput = modal.querySelector('[data-enrollment-website]');
     var productId = modal.dataset.productId;
+    var productSlug = modal.dataset.productSlug || currentProductSlug();
     var lastFocus = null;
     var protection = null;
     var isSubmitting = false;
@@ -314,6 +320,7 @@
         },
         body: new URLSearchParams({
           productId: productId,
+          productSlug: productSlug,
           _csrf: protection.csrfToken,
           _formToken: protection.formToken,
           website: websiteInput.value || ''
@@ -334,12 +341,20 @@
           }
 
           if (response.status === 201) {
-            setStatus('Kaydınız alındı. En kısa sürede sizinle iletişime geçilecek.', 'success');
-            setSubmitState(true, false, 'Kayıt Alındı');
+            setStatus('Kaydınız oluşturuldu. Güvenli ödeme sayfasına yönlendiriliyorsunuz.', 'success');
+            setSubmitState(true, true, 'Ödemeye Geçiliyor...');
+            window.location.assign(result.paymentUrl || (result.registration && result.registration.id ? '/odeme/' + result.registration.id : '/tum-urunler/'));
             return;
           }
 
           if (response.status === 409 && result.code === 'ALREADY_ENROLLED') {
+            if (result.paymentUrl) {
+              setStatus('Bu eğitim için ödeme bekleyen kaydınız var. Ödeme sayfasına yönlendiriliyorsunuz.', 'success');
+              setSubmitState(true, true, 'Ödemeye Geçiliyor...');
+              window.location.assign(result.paymentUrl);
+              return;
+            }
+
             setStatus('Bu eğitime zaten kayıtlısınız.', 'error');
             setSubmitState(true, false, 'Kayıt Mevcut');
             return;

@@ -91,6 +91,14 @@ function isCurriculumLabel(value) {
   return /(ders\s*icer|detayli\s*mufredat|egitim\s*icer|program\s*(ozeti|icer)|ders\s*ozeti)/.test(label);
 }
 
+function tabSystemKey(value) {
+  const label = foldTurkish(value);
+  if (isCurriculumLabel(label)) return 'CURRICULUM';
+  if (/neden|avantaj|almalisiniz/.test(label)) return 'WHY';
+  if (/ilk\s*bakis|genel|aciklama|bilgi/.test(label)) return 'OVERVIEW';
+  return null;
+}
+
 function parseCategory($) {
   const link = $('.breadcrumb a[href*="kategori/"]').last();
   const href = String(link.attr('href') || '').trim();
@@ -116,6 +124,7 @@ function parseCourseFile(filePath) {
   const price = parsePrice(html);
   const category = parseCategory($);
   const tabSections = [];
+  const tabs = [];
   const seenTabIds = new Set();
   let curriculumTabFound = false;
   let curriculumHasContent = false;
@@ -139,6 +148,12 @@ function parseCourseFile(filePath) {
 
     if (hasTextOrImage) {
       tabSections.push(`<section data-source-tab="${tabId}"><h2>${label}</h2>${cleaned}</section>`);
+      tabs.push({
+        systemKey: tabSystemKey(label),
+        title: label,
+        content: cleaned,
+        sortOrder: (tabs.length + 1) * 10
+      });
     }
   });
 
@@ -156,6 +171,7 @@ function parseCourseFile(filePath) {
     code,
     summary,
     content,
+    tabs,
     image,
     price,
     status: missingCurriculum ? 'DRAFT' : 'PUBLISHED',
@@ -261,6 +277,19 @@ function courseWarnings(course) {
   return warnings;
 }
 
+function tabsForWrite(tabs) {
+  const usedSystemKeys = new Set();
+
+  return tabs.map((tab) => {
+    if (!tab.systemKey || usedSystemKeys.has(tab.systemKey)) {
+      return { ...tab, systemKey: null };
+    }
+
+    usedSystemKeys.add(tab.systemKey);
+    return tab;
+  });
+}
+
 function previewCourse(course) {
   return {
     sourceFile: course.sourceFile,
@@ -347,6 +376,7 @@ async function writeCourses(courses) {
     created: 0,
     updated: 0,
     skippedDuplicateExports: [],
+    duplicateCodeAdjusted: [],
     failed: 0,
     unresolvedCategories: [],
     failures: []
@@ -360,12 +390,11 @@ async function writeCourses(courses) {
       try {
         const firstSourceFile = course.code ? seenCodes.get(course.code) : null;
         if (firstSourceFile) {
-          result.skippedDuplicateExports.push({
+          result.duplicateCodeAdjusted.push({
             code: course.code,
             sourceFile: course.sourceFile,
             keptSourceFile: firstSourceFile
           });
-          continue;
         }
 
         if (course.code) seenCodes.set(course.code, course.sourceFile);
@@ -380,7 +409,7 @@ async function writeCourses(courses) {
         }
 
         const data = {
-          code: course.code,
+          code: firstSourceFile ? null : course.code,
           title: course.title,
           summary: course.summary,
           content: course.content,
@@ -390,10 +419,29 @@ async function writeCourses(courses) {
           categoryId
         };
 
-        await prisma.product.upsert({
-          where: { slug: course.slug },
-          create: { slug: course.slug, ...data },
-          update: data
+        await prisma.$transaction(async (tx) => {
+          const savedProduct = await tx.product.upsert({
+            where: { slug: course.slug },
+            create: { slug: course.slug, ...data },
+            update: data,
+            select: { id: true }
+          });
+
+          await tx.productTab.deleteMany({ where: { productId: savedProduct.id } });
+
+          const writableTabs = tabsForWrite(course.tabs);
+
+          if (writableTabs.length) {
+            await tx.productTab.createMany({
+              data: writableTabs.map((tab, index) => ({
+                productId: savedProduct.id,
+                systemKey: tab.systemKey,
+                title: tab.title,
+                content: tab.content,
+                sortOrder: tab.sortOrder || ((index + 1) * 10)
+              }))
+            });
+          }
         });
 
         if (existing) result.updated += 1;

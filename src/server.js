@@ -15,6 +15,9 @@ const apiRoutes = require('./routes/api');
 const catalogRoutes = require('./routes/catalog');
 const enrollmentRoutes = require('./routes/enrollments');
 const leadRoutes = require('./routes/leads');
+const legacyFilterRoutes = require('./routes/legacy-filters');
+const legacyCatalogRoutes = require('./routes/legacy-catalog');
+const legacyProductDetailRoutes = require('./routes/legacy-product-detail');
 const memberRoutes = require('./routes/members');
 const paymentRoutes = require('./routes/payments');
 const paytrRoutes = require('./routes/paytr');
@@ -47,6 +50,47 @@ const longCacheExtensions = new Set([
   '.ttf',
   '.eot'
 ]);
+const staticRootFiles = new Map([
+  ['/', 'index.html'],
+  ['/index.html', 'index.html'],
+  ['/admin.css', 'admin.css'],
+  ['/filters.js', 'filters.js'],
+  ['/googleec1b8b1917d61361.html', 'googleec1b8b1917d61361.html'],
+  ['/robots.txt', 'robots.txt'],
+  ['/sitemap.xml', 'sitemap.xml']
+]);
+const legacyStaticDirectories = [
+  'ajax',
+  'blog',
+  'blog-detay',
+  'form',
+  'kategori',
+  'marka',
+  'os',
+  'partials',
+  'public',
+  'sayfa',
+  'sifremi-unuttum',
+  'siparis-takip',
+  'tum-urunler',
+  'uploads',
+  'urun',
+  'uye',
+  'uye-girisi',
+  'uye-ol'
+];
+function setStaticCacheHeaders(res, filePath) {
+  const ext = path.extname(filePath).toLowerCase();
+
+  if (longCacheExtensions.has(ext)) {
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    return;
+  }
+
+  if (ext === '.html') {
+    res.setHeader('Cache-Control', 'no-cache');
+  }
+}
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.set('trust proxy', trustProxy);
@@ -84,7 +128,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.json({ limit: '10mb' }));
 app.use(methodOverride('_method'));
 
-const pgPool = new Pool({ connectionString: process.env.DATABASE_URL });
+const pgPool = new Pool({ connectionString: process.env.DATABASE_URL }); 
 
 app.use(session({
   store: new PgSession({
@@ -120,15 +164,18 @@ app.use('/vendor/jodit', express.static(path.join(rootDir, 'node_modules/jodit/e
   maxAge: '1y'
 }));
 
+
 app.use('/admin', adminRoutes);
 app.use('/api', apiRoutes);
-// When the original static frontend is active, let express.static serve its
-// public URLs. The EJS catalog stays intact and can be restored by flipping
-// LEGACY_FRONTEND_MODE back to false.
-if (!legacyFrontendMode) {
+// In legacy frontend mode, keep the original course-listing interface while
+// rendering its product cards from admin-managed DB records.
+if (legacyFrontendMode) {
+  app.use('/', legacyCatalogRoutes);
+} else {
   app.use('/', catalogRoutes);
 }
 app.use('/odeme', paymentRoutes);
+app.use('/ajax', legacyFilterRoutes);
 app.use('/ajax', leadRoutes);
 app.use('/ajax/enroll', enrollmentRoutes);
 app.use('/ajax/member', memberRoutes);
@@ -138,22 +185,35 @@ app.get(['/uye-ol', '/uye-ol/'], (req, res) => {
   res.redirect(301, '/uye-girisi/?tab=register');
 });
 
-app.use(express.static(rootDir, {
+const legacyStaticOptions = {
   extensions: ['html'],
   index: 'index.html',
-  setHeaders: (res, filePath) => {
-    const ext = path.extname(filePath).toLowerCase();
+  setHeaders: setStaticCacheHeaders
+};
 
-    if (longCacheExtensions.has(ext)) {
-      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-      return;
+staticRootFiles.forEach((fileName, routePath) => {
+  app.get(routePath, (req, res, next) => {
+    const filePath = path.join(rootDir, fileName);
+    setStaticCacheHeaders(res, filePath);
+    res.sendFile(filePath, (error) => {
+      if (error) next(error);
+    });
+  });
+});
+
+legacyStaticDirectories.forEach((directory) => {
+  app.use(`/${directory}`, express.static(path.join(rootDir, directory), legacyStaticOptions));
+});
+
+if (legacyFrontendMode) {
+  app.use((req, res, next) => {
+    if (/^\/urun\/[^/]+\/?$/.test(req.path)) {
+      return legacyProductDetailRoutes(req, res, next);
     }
 
-    if (ext === '.html') {
-      res.setHeader('Cache-Control', 'no-cache');
-    }
-  }
-}));
+    return next();
+  });
+}
 
 app.use((req, res) => {
   res.status(404).send('404 File Not Found');
@@ -169,6 +229,6 @@ app.listen(port, () => {
   console.log(`Unityverse backend running at http://localhost:${port}`);
   console.log(`Admin panel: http://localhost:${port}/admin`);
   if (legacyFrontendMode) {
-    console.log('Legacy frontend mode: public catalog EJS routes are disabled.');
+    console.log('Legacy frontend mode: static frontend is active; /tum-urunler cards are DB-backed.');
   }
 });

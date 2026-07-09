@@ -15,6 +15,29 @@ const router = express.Router();
 const MEMBER_LOGIN_SCOPE = 'member-signin';
 const MEMBER_LOGIN_LIMIT = 5;
 const MEMBER_LOGIN_WINDOW_MS = 15 * 60 * 1000;
+const registrationStatusLabels = {
+  NEW: 'Yeni kayıt',
+  CONTACTED: 'İletişimde',
+  CONFIRMED: 'Onaylandı',
+  CANCELLED: 'İptal edildi'
+};
+const paymentStatusLabels = {
+  PENDING: 'Bekliyor',
+  PARTIAL: 'Kısmi ödendi',
+  PAID: 'Ödendi',
+  REFUNDED: 'İade'
+};
+const invoiceStatusLabels = {
+  NOT_ISSUED: 'Fatura kesilmedi',
+  ISSUED: 'Fatura kesildi',
+  CANCELLED: 'Fatura iptal'
+};
+const installmentStatusLabels = {
+  PENDING: 'Bekliyor',
+  PAID: 'Ödendi',
+  OVERDUE: 'Gecikti',
+  CANCELLED: 'İptal'
+};
 const registerRateLimiter = createIpRateLimiter({
   scope: 'member-register',
   limit: 5,
@@ -48,6 +71,130 @@ function sessionMember(member) {
     name: member.name,
     surname: member.surname,
     email: member.email
+  };
+}
+
+function formatMoney(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return null;
+
+  return number.toLocaleString('tr-TR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+}
+
+function isoDate(value) {
+  return value instanceof Date ? value.toISOString() : null;
+}
+
+function stripHtml(value) {
+  return asText(value).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+function splitCourseText(value) {
+  return stripHtml(value)
+    .split(/[.\n\r•]+/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .slice(0, 8);
+}
+
+function productContent(product) {
+  if (!product) {
+    return {
+      summary: '',
+      lessons: [],
+      outcomes: [],
+      tabs: []
+    };
+  }
+
+  const outcomes = (product.learningOutcomes || [])
+    .map((item) => asText(item.text))
+    .filter(Boolean)
+    .slice(0, 8);
+  const tabLessons = (product.tabs || [])
+    .flatMap((tab) => splitCourseText(tab.content))
+    .slice(0, 8);
+  const lessons = tabLessons.length ? tabLessons : splitCourseText(product.content || product.summary);
+
+  return {
+    summary: stripHtml(product.summary),
+    lessons,
+    outcomes,
+    tabs: (product.tabs || []).map((tab) => ({
+      title: tab.title,
+      content: stripHtml(tab.content)
+    })).filter((tab) => tab.title || tab.content)
+  };
+}
+
+function financeSummary(registration) {
+  const totalAmount = registration.totalAmount == null ? 0 : Number(registration.totalAmount);
+  const paidAmount = (registration.payments || []).reduce((sum, payment) => {
+    return sum + Number(payment.amount || 0);
+  }, 0);
+  const remainingAmount = Math.max(totalAmount - paidAmount, 0);
+  const installments = registration.installments || [];
+  const unpaidInstallments = installments.filter((item) => item.status !== 'PAID' && item.status !== 'CANCELLED');
+
+  return {
+    totalAmount,
+    paidAmount,
+    remainingAmount,
+    totalAmountText: formatMoney(totalAmount),
+    paidAmountText: formatMoney(paidAmount),
+    remainingAmountText: formatMoney(remainingAmount),
+    installmentCount: installments.length,
+    remainingInstallmentCount: unpaidInstallments.length
+  };
+}
+
+function serializeRegistration(registration) {
+  const finance = financeSummary(registration);
+  const content = productContent(registration.product);
+
+  return {
+    id: registration.id,
+    courseTitle: registration.courseTitle,
+    status: registration.status,
+    statusLabel: registrationStatusLabels[registration.status] || registration.status,
+    paymentStatus: registration.paymentStatus,
+    paymentStatusLabel: paymentStatusLabels[registration.paymentStatus] || registration.paymentStatus,
+    invoiceStatus: registration.invoiceStatus,
+    invoiceStatusLabel: invoiceStatusLabels[registration.invoiceStatus] || registration.invoiceStatus,
+    startsAt: isoDate(registration.startsAt),
+    createdAt: isoDate(registration.createdAt),
+    product: registration.product ? {
+      id: registration.product.id,
+      title: registration.product.title,
+      slug: registration.product.slug,
+      image: registration.product.image,
+      duration: registration.product.duration,
+      lessonType: registration.product.lessonType,
+      certificate: registration.product.certificate
+    } : null,
+    finance,
+    payments: (registration.payments || []).map((payment) => ({
+      id: payment.id,
+      amount: Number(payment.amount || 0),
+      amountText: formatMoney(payment.amount),
+      method: payment.method,
+      paidAt: isoDate(payment.paidAt),
+      note: payment.note
+    })),
+    installments: (registration.installments || []).map((installment) => ({
+      id: installment.id,
+      title: installment.title || 'Taksit',
+      amount: Number(installment.amount || 0),
+      amountText: formatMoney(installment.amount),
+      dueDate: isoDate(installment.dueDate),
+      status: installment.status,
+      statusLabel: installmentStatusLabels[installment.status] || installment.status,
+      note: installment.note
+    })),
+    content
   };
 }
 
@@ -245,7 +392,20 @@ router.get('/me', async (req, res, next) => {
         mailList: true,
         smsList: true,
         status: true,
-        createdAt: true
+        createdAt: true,
+        educationRegistrations: {
+          orderBy: { createdAt: 'desc' },
+          include: {
+            product: {
+              include: {
+                tabs: { orderBy: { sortOrder: 'asc' } },
+                learningOutcomes: { orderBy: { sortOrder: 'asc' } }
+              }
+            },
+            payments: { orderBy: { paidAt: 'desc' } },
+            installments: { orderBy: { dueDate: 'asc' } }
+          }
+        }
       }
     });
 
@@ -254,7 +414,22 @@ router.get('/me', async (req, res, next) => {
       return res.json({ status: 'success', authenticated: false, member: null });
     }
 
-    res.json({ status: 'success', authenticated: true, member });
+    res.json({
+      status: 'success',
+      authenticated: true,
+      member: {
+        id: member.id,
+        name: member.name,
+        surname: member.surname,
+        email: member.email,
+        phone: member.phone,
+        mailList: member.mailList,
+        smsList: member.smsList,
+        status: member.status,
+        createdAt: member.createdAt
+      },
+      registrations: member.educationRegistrations.map(serializeRegistration)
+    });
   } catch (error) {
     next(error);
   }

@@ -119,6 +119,55 @@
   color: var(--uv-color-primary-dark) !important;
 }
 
+body:not(.member-logged-in) :is(
+  .uv-enroll-card__price,
+  .uv-mobile-enroll > span,
+  .uv-course-card__price,
+  .uv-catalog-card__price,
+  .uv-product-card__price
+) {
+  position: relative;
+  display: flex !important;
+  min-height: 34px;
+  align-items: center;
+  justify-content: center;
+  color: transparent !important;
+}
+
+body:not(.member-logged-in) :is(
+  .uv-enroll-card__price,
+  .uv-mobile-enroll > span,
+  .uv-course-card__price,
+  .uv-catalog-card__price,
+  .uv-product-card__price
+) > * {
+  visibility: hidden !important;
+}
+
+body:not(.member-logged-in) :is(
+  .uv-enroll-card__price,
+  .uv-mobile-enroll > span,
+  .uv-course-card__price,
+  .uv-catalog-card__price,
+  .uv-product-card__price
+)::after {
+  content: "Qiyməti görmək üçün giriş edin";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--uv-color-primary-dark);
+  font-size: var(--uv-font-size-sm);
+  font-weight: var(--uv-font-weight-bold);
+  line-height: var(--uv-line-height-tight);
+  text-align: center;
+}
+
+body:not(.member-logged-in) .uv-catalog__price-range {
+  display: none !important;
+}
+
 .btn-primary:focus-visible,
 .btn-secondary:focus-visible {
   outline: var(--uv-focus-ring);

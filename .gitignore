@@ -1,4 +1,20 @@
 node_modules/
-.env
 .DS_Store
 uploads/admin/
+
+# Ortam degiskenleri ve gizli dosyalar (sablon haric)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Veritabani yedekleri ve dokumler — asla repoya girmemeli
+backup*.sql
+*.dump
+*.bak
+
+# Loglar ve gecici dosyalar
+*.log
+logs/
+tmp/

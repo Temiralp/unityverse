@@ -204,7 +204,8 @@ async function main() {
         body = {
           status: 'success',
           message: 'Eğitim kaydınız başarıyla oluşturuldu.',
-          registration: { id: 999, status: 'NEW', paymentStatus: 'PENDING' }
+          registration: { id: 999, status: 'NEW', paymentStatus: 'PENDING' },
+          paymentUrl: '/odeme/999'
         };
       }
 
@@ -256,15 +257,14 @@ async function main() {
 
     await evaluate(client, `document.querySelector('[data-enrollment-submit]').click()`);
     for (let attempt = 0; attempt < 40; attempt += 1) {
-      const status = await evaluate(client, 'document.querySelector("[data-enrollment-status]").textContent.trim()');
-      if (status.includes('Kaydınız alındı')) break;
+      const pathname = await evaluate(client, 'location.pathname');
+      if (pathname === '/odeme/999') break;
       await delay(100);
     }
 
     const success = await evaluate(client, `(() => ({
-      status: document.querySelector('[data-enrollment-status]').textContent.trim(),
-      submitLabel: document.querySelector('[data-enrollment-submit-label]').textContent.trim(),
-      submitDisabled: document.querySelector('[data-enrollment-submit]').disabled
+      pathname: location.pathname,
+      redirectedToPayment: location.pathname === '/odeme/999'
     }))()`);
 
     console.log(JSON.stringify({

@@ -36,6 +36,11 @@ const COMMON_FRAME_SOURCES = [
   'https://*.tawk.to'
 ];
 
+const PAYTR_FRAME_SOURCES = [
+  'https://www.paytr.com',
+  'https://goguvenliodeme.bkm.com.tr'
+];
+
 function commonDirectives() {
   return {
     defaultSrc: ["'self'"],
@@ -66,8 +71,21 @@ const legacyCsp = helmet.contentSecurityPolicy({
 const ejsCsp = helmet.contentSecurityPolicy({
   directives: {
     ...commonDirectives(),
-    connectSrc: ["'self'"],
-    frameSrc: [...COMMON_FRAME_SOURCES, 'https://www.paytr.com'],
+    connectSrc: ["'self'", 'https://www.paytr.com'],
+    frameSrc: [...COMMON_FRAME_SOURCES, ...PAYTR_FRAME_SOURCES],
+    scriptSrc: [
+      "'self'",
+      'https://www.paytr.com',
+      (req, res) => `'nonce-${res.locals.cspNonce}'`
+    ]
+  }
+});
+
+const paymentCsp = helmet.contentSecurityPolicy({
+  directives: {
+    ...commonDirectives(),
+    connectSrc: ["'self'", 'https://www.paytr.com'],
+    frameSrc: [...COMMON_FRAME_SOURCES, ...PAYTR_FRAME_SOURCES, 'https:'],
     scriptSrc: [
       "'self'",
       'https://www.paytr.com',
@@ -85,11 +103,17 @@ function enforceLegacyCsp(req, res, next) {
   legacyCsp(req, res, next);
 }
 
+function isPaymentRender(req, view) {
+  return String(req.originalUrl || req.url || '').startsWith('/odeme')
+    || String(view || '').startsWith('payments/');
+}
+
 function enforceEjsCsp(req, res, next) {
   const render = res.render.bind(res);
 
   res.render = function renderWithEjsCsp(view, options, callback) {
-    ejsCsp(req, res, () => {});
+    const csp = isPaymentRender(req, view) ? paymentCsp : ejsCsp;
+    csp(req, res, () => {});
     return render(view, options, callback);
   };
 

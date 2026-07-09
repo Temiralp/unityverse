@@ -2,6 +2,7 @@ const express = require('express');
 
 const prisma = require('../db');
 const { isLikelyBot, silentSuccess } = require('../middleware/form-protection');
+const { sendLeadNotificationEmail } = require('../services/lead-notifications');
 const { requirePublicCsrf } = require('../middleware/public-csrf');
 const { createIpRateLimiter } = require('../middleware/rate-limit');
 
@@ -39,7 +40,7 @@ async function saveLead(req, res, next) {
   try {
     const data = req.leadData || normalizeLeadData(req.body);
 
-    await prisma.lead.create({
+    const lead = await prisma.lead.create({
       data: {
         source: req.path,
         name: pickFirst(data, ['name', 'ad', 'ad_soyad', 'fullname', 'isim']),
@@ -49,6 +50,8 @@ async function saveLead(req, res, next) {
         payload: data
       }
     });
+
+    void sendLeadNotificationEmail({ lead, data });
 
     res.json({ status: 'success', message: 'Form başarıyla gönderildi.' });
   } catch (error) {

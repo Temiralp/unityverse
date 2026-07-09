@@ -29,6 +29,7 @@ function buildProductFormTabs(tabs) {
   return [
     ...DEFAULT_PRODUCT_TABS.map((tab) => ({
       ...tab,
+      title: text(systemTabs.get(tab.systemKey)?.title) || tab.title,
       content: String(systemTabs.get(tab.systemKey)?.content || '')
     })),
     ...customTabs

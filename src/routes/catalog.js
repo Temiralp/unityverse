@@ -89,13 +89,14 @@ router.get(['/sayfa/iletisim-5', '/sayfa/iletisim-5/', '/sayfa/iletisim-bilgiler
 
 router.get(['/blog', '/blog/', '/blog/:page(\\d+)', '/blog/:page(\\d+)/'], async (req, res, next) => {
   try {
-    const currentPage = Math.max(1, Number.parseInt(req.params.page || '1', 10) || 1);
+    const pageRequest = blogPageRequest(req);
+    const { currentPage, pageSize, usesQueryPagination } = pageRequest;
     const where = { status: 'PUBLISHED' };
     const totalPosts = await prisma.blogPost.count({ where });
-    const totalPages = Math.max(1, Math.ceil(totalPosts / BLOG_PAGE_SIZE));
+    const totalPages = Math.max(1, Math.ceil(totalPosts / pageSize));
 
     if (totalPosts > 0 && currentPage > totalPages) {
-      return res.redirect(totalPages === 1 ? '/blog/' : `/blog/${totalPages}/`);
+      return res.redirect(blogPageHref(totalPages, pageSize, usesQueryPagination));
     }
 
     const posts = totalPosts === 0
@@ -105,8 +106,8 @@ router.get(['/blog', '/blog/', '/blog/:page(\\d+)', '/blog/:page(\\d+)/'], async
         orderBy: [{ id: 'desc' }]
       });
     const pagedPosts = sortBlogPosts(posts).slice(
-      (currentPage - 1) * BLOG_PAGE_SIZE,
-      currentPage * BLOG_PAGE_SIZE
+      (currentPage - 1) * pageSize,
+      currentPage * pageSize
     );
 
     return res.render('pages/blog', {
@@ -115,7 +116,7 @@ router.get(['/blog', '/blog/', '/blog/:page(\\d+)', '/blog/:page(\\d+)/'], async
       extraStyles: ['/public/tema10/css/blog.css'],
       blogCards: pagedPosts.map(createBlogCard),
       totalPosts,
-      pagination: blogPagination(currentPage, totalPages)
+      pagination: blogPagination(currentPage, totalPages, pageRequest)
     });
   } catch (error) {
     return next(error);
@@ -282,7 +283,35 @@ function sortBlogPosts(posts) {
   });
 }
 
-function blogPagination(currentPage, totalPages) {
+function blogPageInteger(value, fallback) {
+  const parsed = Number.parseInt(value, 10);
+
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function blogPageRequest(req) {
+  const usesQueryPagination = req.query.pg !== undefined || req.query.ps !== undefined;
+  const currentPage = blogPageInteger(req.query.pg || req.params.page, 1);
+  const pageSize = Math.min(48, blogPageInteger(req.query.ps, BLOG_PAGE_SIZE));
+
+  return {
+    currentPage,
+    pageSize,
+    usesQueryPagination
+  };
+}
+
+function blogPageHref(page, pageSize, usesQueryPagination) {
+  if (usesQueryPagination) {
+    return `/blog/?pg=${page}&ps=${pageSize}`;
+  }
+
+  return page === 1 ? '/blog/' : `/blog/${page}/`;
+}
+
+function blogPagination(currentPage, totalPages, options = {}) {
+  const pageSize = options.pageSize || BLOG_PAGE_SIZE;
+  const usesQueryPagination = Boolean(options.usesQueryPagination);
   const pages = [];
   const start = Math.max(1, currentPage - 2);
   const end = Math.min(totalPages, currentPage + 2);
@@ -290,7 +319,7 @@ function blogPagination(currentPage, totalPages) {
   for (let page = start; page <= end; page += 1) {
     pages.push({
       number: page,
-      href: page === 1 ? '/blog/' : `/blog/${page}/`,
+      href: blogPageHref(page, pageSize, usesQueryPagination),
       isCurrent: page === currentPage
     });
   }
@@ -300,8 +329,8 @@ function blogPagination(currentPage, totalPages) {
     totalPages,
     hasPrev: currentPage > 1,
     hasNext: currentPage < totalPages,
-    prevHref: currentPage <= 2 ? '/blog/' : `/blog/${currentPage - 1}/`,
-    nextHref: `/blog/${currentPage + 1}/`,
+    prevHref: blogPageHref(currentPage - 1, pageSize, usesQueryPagination),
+    nextHref: blogPageHref(currentPage + 1, pageSize, usesQueryPagination),
     pages
   };
 }

@@ -751,12 +751,35 @@ var searchRequest = null;
           return false;
   }
 
-$(document).ajaxStart(function() {
-   if(typeof ajaxloadingdisabled === 'undefined' || !ajaxloadingdisabled)
-  	$(".site_loading").show();
-}).ajaxStop(function() {
-	if(typeof ajaxloadingdisabled === 'undefined' || !ajaxloadingdisabled)
+var siteLoadingFallbackTimer = null;
+
+function hideSiteLoading() {
+	if (siteLoadingFallbackTimer) {
+		clearTimeout(siteLoadingFallbackTimer);
+		siteLoadingFallbackTimer = null;
+	}
 	$(".site_loading").hide();
+}
+
+function showSiteLoading() {
+	$(".site_loading").show();
+	if (siteLoadingFallbackTimer) clearTimeout(siteLoadingFallbackTimer);
+	siteLoadingFallbackTimer = setTimeout(hideSiteLoading, 8000);
+}
+
+$(document).ajaxStart(function() {
+	if(typeof ajaxloadingdisabled === 'undefined' || !ajaxloadingdisabled)
+		showSiteLoading();
+}).ajaxComplete(function() {
+	setTimeout(function() {
+		if ($.active === 0) hideSiteLoading();
+	}, 0);
+}).ajaxStop(function() {
+	hideSiteLoading();
+});
+
+$(window).on('load', function() {
+	hideSiteLoading();
 });
   $("#pollsubmit").click(function() {
       $("#pollerror").addClass('display_none');
@@ -1256,8 +1279,22 @@ $(document).ready(function() {
         setTimeout(() => unfixBody(), 160);
     }
 
+    function ensureDesktopUserAction() {
+        return;
+    }
+
+    ensureDesktopUserAction();
+
     $('.pbl-new-header-action-item-user, .pbl-new-header-user-side-bar-header-close').click((e) => {
         e.stopPropagation();
+
+        const isUserAction = $(e.currentTarget).hasClass('pbl-new-header-action-item-user');
+
+        if (isUserAction && $('body').hasClass('member-logged-in')) {
+            window.location.href = $('body').attr('data-member-profile-url') || '/uye/';
+            return;
+        }
+
         $userSideBar.hasClass('opened') ? closeUser() : openUser();
     });
 	
@@ -1770,6 +1807,18 @@ function toggleFavorite(productid, callback_success)
 	return false;
 }
 
+function memberProfileUrl() {
+	var base = (typeof site_url !== 'undefined' && site_url) ? site_url : '/';
+	if (base === './') return './uye/';
+	if (base.slice(-1) !== '/') base += '/';
+	return base + 'uye/';
+}
+
+function memberLoginRedirect(result) {
+	var callbackUrl = result && result.param ? result.param.login_callback_url : '';
+	return callbackUrl && callbackUrl !== '/' ? callbackUrl : memberProfileUrl();
+}
+
 function signin(from_sidebar = false)
 {
 	var class_prefix = '.uye-girisi-';
@@ -1808,10 +1857,7 @@ function signin(from_sidebar = false)
 				_success('', result.message);
 				if($(class_prefix+'rememberme').is(":checked"))
 					writeCookie(site_url, $(class_prefix+'email').val(), 30);
-				if(undefined != result.param.login_callback_url)
-					setTimeout(function(){ document.location = result.param.login_callback_url; }, 1000);
-				else    
-					setTimeout(function(){ document.location = return_url; }, 1000);
+				setTimeout(function(){ document.location = memberLoginRedirect(result); }, 1000);
 			}
 			else if($.trim(result.status)=="failure")
 			{
@@ -1922,3 +1968,654 @@ $( document ).ready(function() {
 	    });
 	}
 });
+
+(function(window, document) {
+	'use strict';
+
+	function normalizeSiteUrl(path) {
+		var normalizedPath = String(path || '').replace(/^\/+/, '');
+		var base = (typeof site_url !== 'undefined' && site_url) ? site_url : '/';
+		if (base === './' || base === '/' || /^https?:\/\/[^/]+\/?$/.test(base)) return '/' + normalizedPath;
+		if (base.slice(-1) !== '/') base += '/';
+		return base + normalizedPath;
+	}
+
+	function memberEndpoint(action) {
+		return normalizeSiteUrl('ajax/member/' + action);
+	}
+
+	function loadFormProtection() {
+		if (document.querySelector('script[data-form-protection-script]')) return;
+
+		var script = document.createElement('script');
+		script.src = '/public/tema10/js/form-protection.js?v=5';
+		script.defer = true;
+		script.setAttribute('data-form-protection-script', '');
+		document.head.appendChild(script);
+	}
+
+	function escapeHtml(value) {
+		return String(value || '').replace(/[&<>"']/g, function(character) {
+			return {
+				'&': '&amp;',
+				'<': '&lt;',
+				'>': '&gt;',
+				'"': '&quot;',
+				"'": '&#39;'
+			}[character];
+		});
+	}
+
+	function formatMemberPrice(value) {
+		var number = Number(value);
+		if (!Number.isFinite(number) || number <= 0) return '';
+
+		return number.toLocaleString('tr-TR', {
+			minimumFractionDigits: 2,
+			maximumFractionDigits: 2
+		}) + ' TL';
+	}
+
+	function productPriceHtml(product) {
+		if (!product) return '';
+
+		var base = Number(product.price || 0);
+		var effective = product.discountPrice == null ? base : Number(product.discountPrice || 0);
+		var effectiveText = formatMemberPrice(effective);
+
+		if (!effectiveText) return '';
+
+		var oldPrice = base > 0 && effective > 0 && effective < base
+			? '<span class="old-price price-old">' + escapeHtml(formatMemberPrice(base)) + '</span>'
+			: '';
+
+		return oldPrice + '<span class="new-price price-new">' + escapeHtml(effectiveText) + '</span>';
+	}
+
+	function productSlugFromHref(href) {
+		var match = String(href || '').match(/\/urun\/([^/?#]+)\/?/);
+		return match ? decodeURIComponent(match[1]) : '';
+	}
+
+	function productIdFromCard($card) {
+		var onclick = String($card.find('[onclick*="addToBasket("]').first().attr('onclick') || '');
+		var match = onclick.match(/addToBasket\((\d+)/);
+		return match ? Number(match[1]) : null;
+	}
+
+	function absoluteUrl(value) {
+		try {
+			return new URL(String(value || ''), window.location.href).href;
+		} catch (error) {
+			return '';
+		}
+	}
+
+	function legacyPriceHtmlFromSource(source) {
+		var match = String(source || '').match(/var\s+base_price\s*=\s*([0-9]+(?:\.[0-9]+)?)/);
+		return match ? '<span class="new-price price-new">' + escapeHtml(formatMemberPrice(match[1])) + '</span>' : '';
+	}
+
+	function currentLegacyProductSlug() {
+		return productSlugFromHref(window.location.pathname + '/');
+	}
+
+	function renderLegacyListingPrices(productsById, productsBySlug) {
+		var fallbackItems = [];
+
+		$('.pbl-product-card-item').each(function() {
+			var $card = $(this);
+			var id = productIdFromCard($card);
+			var $link = $card.find('a[href*="/urun/"]').first();
+			var href = $link.attr('href') || '';
+			var slug = productSlugFromHref(href);
+			var product = (id && productsById[id]) || (slug && productsBySlug[slug]);
+			var html = productPriceHtml(product);
+			var $wrap;
+
+			$wrap = $card.find('.pbl-product-card-item-price-add-chart').first();
+			if (!$wrap.length || $wrap.find('.product-price').length) return;
+
+			if (html) {
+				$wrap.prepend('<div class="product-price uv-member-product-price">' + html + '</div>');
+				return;
+			}
+
+			if (href) {
+				fallbackItems.push({
+					$wrap: $wrap,
+					url: absoluteUrl(href)
+				});
+			}
+		});
+
+		renderLegacyListingFallbackPrices(fallbackItems);
+	}
+
+	function renderLegacyListingFallbackPrices(items) {
+		var index = 0;
+		var active = 0;
+		var cache = {};
+		var maxConcurrent = 4;
+
+		function next() {
+			if (!document.body.classList.contains('member-logged-in')) return;
+
+			while (active < maxConcurrent && index < items.length) {
+				(function(item) {
+					var cachedHtml = cache[item.url];
+
+					index += 1;
+					if (!item.url || item.$wrap.find('.product-price').length) return;
+
+					if (cachedHtml !== undefined) {
+						if (cachedHtml) {
+							item.$wrap.prepend('<div class="product-price uv-member-product-price">' + cachedHtml + '</div>');
+						}
+						return;
+					}
+
+					active += 1;
+					$.ajax({
+						type: 'get',
+						url: item.url,
+						dataType: 'html',
+						success: function(source) {
+							var html = legacyPriceHtmlFromSource(source);
+							cache[item.url] = html;
+							if (html && !item.$wrap.find('.product-price').length) {
+								item.$wrap.prepend('<div class="product-price uv-member-product-price">' + html + '</div>');
+							}
+						},
+						complete: function() {
+							active -= 1;
+							next();
+						}
+					});
+				}(items[index]));
+			}
+		}
+
+		next();
+	}
+
+	function renderLegacyDetailPrice(productsBySlug) {
+		var slug = currentLegacyProductSlug();
+		var product = slug && productsBySlug[slug];
+		var html = productPriceHtml(product);
+		var $target;
+
+		if (!html && typeof window.base_price !== 'undefined') {
+			html = '<span class="new-price price-new">' + escapeHtml(formatMemberPrice(window.base_price)) + '</span>';
+		}
+
+		if (!html || $('.product_page_price .price-new').length) return;
+
+		$target = $('.content-product-right .pbl-stock-code').first();
+		if (!$target.length) {
+			$target = $('.content-product-right .product-label').first();
+		}
+		if (!$target.length) return;
+
+		$target.after(
+			'<div class="product-label form-group uv-member-detail-price">' +
+				'<div class="price product_page_price">' + html + '</div>' +
+			'</div>'
+		);
+	}
+
+	function renderMemberPrices() {
+		$.ajax({
+			type: 'get',
+			url: normalizeSiteUrl('api/member-prices'),
+			dataType: 'json',
+			success: function(result) {
+				var products = result && Array.isArray(result.data) ? result.data : [];
+				var productsById = {};
+				var productsBySlug = {};
+
+				products.forEach(function(product) {
+					if (product && product.id != null) productsById[Number(product.id)] = product;
+					if (product && product.slug) productsBySlug[String(product.slug)] = product;
+				});
+
+				renderLegacyListingPrices(productsById, productsBySlug);
+				renderLegacyDetailPrice(productsBySlug);
+			}
+		});
+	}
+
+	function renderMemberHeader(member) {
+		var fullName = $.trim([member.name, member.surname].filter(Boolean).join(' ')) || member.email;
+		var safeFullName = escapeHtml(fullName);
+		var profileUrl = normalizeSiteUrl('uye/');
+		var profileHtml = '<a href="' + profileUrl + '" class="top-link-wishlist" title="Profilim" aria-label="Profilim"><i class="fa fa-user-circle" aria-hidden="true"></i> <span>Profilim</span></a>';
+		var logoutHtml = '<a href="#" class="top-link-wishlist js-member-logout" title="Çıkış Yap"><i class="fa fa-sign-out" aria-hidden="true"></i> <span>Çıkış Yap</span></a>';
+		var sidebarHtml = [
+			'<div class="login-signup">',
+				'<div class="login-signup-heading">',
+					'<div class="login-signup-title">Merhaba, ' + safeFullName + '</div>',
+					'<div class="login-signup-sub-title">Üye hesabınıza hızlıca ulaşabilirsiniz.</div>',
+				'</div>',
+				'<div class="d-flex flex-column position-relative mt-15">',
+					'<a class="signup-buttons" href="' + profileUrl + '"><i class="fa fa-user" aria-hidden="true"></i> Profilim</a>',
+				'</div>',
+				'<div class="d-flex flex-column position-relative mt-15">',
+					'<a class="signup-buttons js-member-logout" href="#"><i class="fa fa-sign-out" aria-hidden="true"></i> Çıkış Yap</a>',
+				'</div>',
+			'</div>'
+		].join('');
+
+		$('body').addClass('member-logged-in').attr('data-member-profile-url', profileUrl);
+		$('.uv-header-profile-button').attr({
+			'aria-label': 'Profilim',
+			'title': 'Profilim'
+		});
+		$('[data-member-login]').html(profileHtml);
+		$('[data-member-register]').html(logoutHtml).prop('hidden', false);
+		$('.users-tools').addClass('users-tools--member');
+		$('.users-tools ul').html(
+			'<li><a class="users-tools__profile" href="' + profileUrl + '"><i class="fa fa-user" aria-hidden="true"></i> <span>' + safeFullName + '</span></a></li>' +
+			'<li><a href="#" class="js-member-logout"><i class="fa fa-sign-out" aria-hidden="true"></i> Çıkış Yap</a></li>'
+		);
+		$('.pbl-new-header-user-side-bar-content').html(sidebarHtml);
+	}
+
+	function refreshMemberState() {
+		$.ajax({
+			type: 'get',
+			url: memberEndpoint('me'),
+			dataType: 'json',
+			success: function(result) {
+				if (result && result.authenticated && result.member) {
+					renderMemberHeader(result.member);
+					renderMemberPrices();
+				}
+			}
+		});
+	}
+
+	function logoutMember() {
+		$.ajax({
+			type: 'post',
+			url: memberEndpoint('logout'),
+			dataType: 'json',
+			success: function(result) {
+				if ($.trim(result.status) === 'success') {
+					window.location.href = result.param && result.param.login_callback_url
+						? result.param.login_callback_url
+						: normalizeSiteUrl('');
+					return;
+				}
+
+				_error('', result.message || 'Çıkış yapılamadı.');
+			},
+			error: function() {
+				_error('', 'Çıkış yapılamadı. Lütfen tekrar deneyiniz.');
+			}
+		});
+
+		return false;
+	}
+
+	loadFormProtection();
+	$(document).on('click', '.js-member-logout', function(event) {
+		event.preventDefault();
+		return logoutMember();
+	});
+	$(document).ready(refreshMemberState);
+})(window, document);
+
+(function(window, document, $) {
+	'use strict';
+
+	if (!$) return;
+
+	var isSubmitting = false;
+	var originalAddToBasket = null;
+	var originalPrivateAddToBasket = null;
+	var originalPublicAddToBasket = null;
+
+	function normalizeSiteUrl(path) {
+		var base = (typeof site_url !== 'undefined' && site_url) ? site_url : '/';
+		if (base === './') return './' + path;
+		if (base.slice(-1) !== '/') base += '/';
+		return base + path;
+	}
+
+	function endpoint(path) {
+		return normalizeSiteUrl(path).replace(/([^:])\/{2,}/g, '$1/');
+	}
+
+	function readJson(response) {
+		return response.json().catch(function() {
+			return {};
+		});
+	}
+
+	function currentProductSlug() {
+		var match = window.location.pathname.match(/\/urun\/([^/]+)\/?$/);
+		return match ? decodeURIComponent(match[1]) : '';
+	}
+
+	function currentProductTitle() {
+		var title = document.querySelector('.content-product-right .title-product h1, h1');
+		return title ? $.trim(title.textContent) : 'Bu eğitim';
+	}
+
+	function redirectPath(productId) {
+		var url = new URL(window.location.href);
+		url.searchParams.set('legacyEnroll', String(productId || ''));
+		return url.pathname + url.search + url.hash;
+	}
+
+	function redirectToLogin(productId, loginUrl) {
+		window.location.href = loginUrl || endpoint('uye-girisi/?redirect=' + encodeURIComponent(redirectPath(productId)));
+	}
+
+	function notifySuccess(message) {
+		if (typeof window._success === 'function') return window._success('', message);
+		window.alert(message);
+		return false;
+	}
+
+	function notifyInfo(message) {
+		if ($.notify) $.notify(message, { className: 'info' });
+		return false;
+	}
+
+	function notifyError(message) {
+		if (typeof window._error === 'function') return window._error('', message);
+		window.alert(message);
+		return false;
+	}
+
+	function canUseBackendEnrollment() {
+		return window.uvLegacyEnrollToBackend !== false;
+	}
+
+	function loadEnrollmentProtection() {
+		return Promise.all([
+			fetch(endpoint('api/csrf-token'), {
+				credentials: 'same-origin',
+				headers: { 'X-Requested-With': 'XMLHttpRequest' }
+			}),
+			fetch(endpoint('api/form-protection-token?scope=enrollment'), {
+				credentials: 'same-origin',
+				headers: { 'X-Requested-With': 'XMLHttpRequest' }
+			})
+		])
+			.then(function(responses) {
+				if (!responses[0].ok || !responses[1].ok) {
+					throw new Error('Kayıt güvenlik bilgileri alınamadı.');
+				}
+
+				return Promise.all(responses.map(readJson));
+			})
+			.then(function(results) {
+				if (!results[0].token || !results[1].token) {
+					throw new Error('Kayıt güvenlik bilgileri eksik.');
+				}
+
+				return new Promise(function(resolve) {
+					window.setTimeout(function() {
+						resolve({
+							csrfToken: results[0].token,
+							formToken: results[1].token
+						});
+					}, 2600);
+				});
+			});
+	}
+
+	function postEnrollment(productId, protection) {
+		return fetch(endpoint('ajax/enroll'), {
+			method: 'POST',
+			credentials: 'same-origin',
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+				'X-Requested-With': 'XMLHttpRequest'
+			},
+			body: new URLSearchParams({
+				productId: productId,
+				productSlug: currentProductSlug(),
+				_csrf: protection.csrfToken,
+				_formToken: protection.formToken,
+				website: ''
+			})
+		})
+			.then(function(response) {
+				return readJson(response).then(function(result) {
+					return { response: response, result: result };
+				});
+			});
+	}
+
+	function handleEnrollmentResult(productId, payload) {
+		var response = payload.response;
+		var result = payload.result || {};
+
+		if (response.status === 401) {
+			redirectToLogin(productId, result.loginUrl);
+			return;
+		}
+
+		if (response.status === 201) {
+			notifySuccess('Kaydınız oluşturuldu. Güvenli ödeme sayfasına yönlendiriliyorsunuz.');
+			window.location.href = result.paymentUrl || (result.registration && result.registration.id ? endpoint('odeme/' + result.registration.id) : endpoint('tum-urunler/'));
+			return;
+		}
+
+		if (response.status === 409 && result.code === 'ALREADY_ENROLLED') {
+			if (result.paymentUrl) {
+				notifyInfo('Bu eğitim için ödeme bekleyen kaydınız var. Ödeme sayfasına yönlendiriliyorsunuz.');
+				window.location.href = result.paymentUrl;
+				return;
+			}
+
+			notifyError('Bu eğitime zaten kayıtlısınız.');
+			return;
+		}
+
+		if (response.status === 409 && result.code === 'PRODUCT_MISMATCH') {
+			notifyError('Eğitim bilgisi güncel değil. Lütfen sayfayı yenileyip tekrar deneyin.');
+			return;
+		}
+
+		if (response.status === 422 && result.code === 'PROFILE_INCOMPLETE') {
+			notifyError('Kaydı tamamlamak için profilinizde ad, e-posta ve telefon bilgileriniz eksiksiz olmalıdır.');
+			return;
+		}
+
+		if (response.status === 429) {
+			notifyError(result.message || 'Çok fazla kayıt denemesi yaptınız. Lütfen daha sonra tekrar deneyin.');
+			return;
+		}
+
+		notifyError(result.message || 'Kayıt tamamlanamadı. Lütfen tekrar deneyin.');
+	}
+
+	function startLegacyEnrollment(productId) {
+		if (!canUseBackendEnrollment()) return false;
+		if (isSubmitting) return false;
+		if (!/^[1-9]\d*$/.test(String(productId || ''))) {
+			notifyError('Geçerli bir eğitim seçmelisiniz.');
+			return false;
+		}
+
+		isSubmitting = true;
+		notifyInfo(currentProductTitle() + ' için üyelik durumunuz kontrol ediliyor.');
+
+		fetch(endpoint('ajax/member/me'), {
+			credentials: 'same-origin',
+			headers: { 'X-Requested-With': 'XMLHttpRequest' }
+		})
+			.then(function(response) {
+				if (!response.ok) throw new Error('Üye bilgileri alınamadı.');
+				return readJson(response);
+			})
+			.then(function(result) {
+				if (!result.authenticated || !result.member) {
+					redirectToLogin(productId);
+					return null;
+				}
+
+				return loadEnrollmentProtection()
+					.then(function(protection) {
+						return postEnrollment(productId, protection);
+					})
+					.then(function(payload) {
+						handleEnrollmentResult(productId, payload);
+					});
+			})
+			.catch(function(error) {
+				notifyError(error.message || 'Kayıt başlatılamadı. Lütfen tekrar deneyin.');
+			})
+			.finally(function() {
+				isSubmitting = false;
+			});
+
+		return false;
+	}
+
+	function wrapLegacyBasketFunctions() {
+		if (!canUseBackendEnrollment()) return;
+
+		if (typeof window.__addToBasket === 'function' && window.__addToBasket !== originalAddToBasket) {
+			originalAddToBasket = window.__addToBasket;
+			window.__addToBasket = function(productId) {
+				return startLegacyEnrollment(productId);
+			};
+		}
+
+		if (typeof window.addToBasket === 'function' && window.addToBasket !== originalPublicAddToBasket) {
+			originalPublicAddToBasket = window.addToBasket;
+			window.addToBasket = function(productId) {
+				return startLegacyEnrollment(productId);
+			};
+		}
+
+		if (typeof window._addToBasket === 'function' && window._addToBasket !== originalPrivateAddToBasket) {
+			originalPrivateAddToBasket = window._addToBasket;
+			window._addToBasket = function(productId) {
+				return startLegacyEnrollment(productId);
+			};
+		}
+	}
+
+	function productIdFromInlineHandler(element) {
+		var handler = element && element.getAttribute ? String(element.getAttribute('onclick') || '') : '';
+		var match = handler.match(/(?:__addToBasket|_addToBasket|addToBasket)\(\s*([1-9]\d*)/);
+		return match ? match[1] : '';
+	}
+
+	function handleLegacyEnrollmentClick(event) {
+		if (!canUseBackendEnrollment()) return;
+
+		var button = event.target.closest('button[onclick*="addToBasket"], a[onclick*="addToBasket"]');
+		var productId = productIdFromInlineHandler(button);
+		if (!productId) return;
+
+		event.preventDefault();
+		event.stopPropagation();
+		if (typeof event.stopImmediatePropagation === 'function') {
+			event.stopImmediatePropagation();
+		}
+
+		startLegacyEnrollment(productId);
+	}
+
+	function resumePendingEnrollment() {
+		var url = new URL(window.location.href);
+		var productId = url.searchParams.get('legacyEnroll');
+
+		if (!productId) return;
+
+		url.searchParams.delete('legacyEnroll');
+		window.history.replaceState({}, '', url.pathname + url.search + url.hash);
+		startLegacyEnrollment(productId);
+	}
+
+	$(document).ready(function() {
+		window.setTimeout(function() {
+			wrapLegacyBasketFunctions();
+			resumePendingEnrollment();
+		}, 0);
+	});
+
+	document.addEventListener('click', handleLegacyEnrollmentClick, true);
+})(window, document, window.jQuery);
+
+(function(window, document) {
+    'use strict';
+
+    var profileButtonHtml =
+        '<button class="uv-header-profile-button" type="button" aria-label="Üye hesabı">' +
+            '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" aria-hidden="true">' +
+                '<path fill="currentColor" d="M5.85 17.1q1.275-.975 2.85-1.538T12 15q1.725 0 3.3.563t2.85 1.537q.875-1.025 1.363-2.325T20 12q0-3.325-2.337-5.663T12 4Q8.675 4 6.337 6.337T4 12q0 1.475.488 2.775T5.85 17.1ZM12 13q-1.475 0-2.488-1.012T8.5 9.5q0-1.475 1.012-2.488T12 6q1.475 0 2.488 1.012T15.5 9.5q0 1.475-1.012 2.488T12 13Zm0 9q-2.075 0-3.9-.788t-3.175-2.137q-1.35-1.35-2.137-3.175T2 12q0-2.075.788-3.9t2.137-3.175q1.35-1.35 3.175-2.137T12 2q2.075 0 3.9.788t3.175 2.137q1.35 1.35 2.138 3.175T22 12q0 2.075-.788 3.9t-2.137 3.175q-1.35 1.35-3.175 2.138T12 22Z" />' +
+            '</svg>' +
+        '</button>';
+
+    function ensureTopbarProfileButton() {
+        var topLinks = document.querySelector('.header-top-right ul.top-link');
+        if (!topLinks) return;
+
+        var askLink = topLinks.querySelector('a[title="Bize Sorun"], a[data-target="#bize_sorun"]');
+        var askItem = askLink ? askLink.closest('li') : null;
+        var slot = topLinks.querySelector('.uv-header-user-action-slot');
+
+        if (!slot) {
+            slot = document.createElement('li');
+            slot.className = 'wishlist uv-header-user-action-slot';
+        }
+
+        if (!slot.querySelector('.uv-header-profile-button')) {
+            slot.innerHTML = profileButtonHtml;
+        }
+
+        if (askItem && askItem.nextSibling !== slot) {
+            askItem.parentNode.insertBefore(slot, askItem.nextSibling);
+            return;
+        }
+
+        if (!askItem && !slot.parentNode) {
+            topLinks.appendChild(slot);
+        }
+    }
+
+    function openUserSidebar() {
+        var sidebar = document.querySelector('.pbl-new-header-user-side-bar');
+        if (!sidebar) return;
+
+        sidebar.classList.add('opened');
+        document.body.classList.add('body-fix', 'bodyNoClick', 'overlay');
+    }
+
+    function handleProfileButtonClick(event) {
+        var button = event.target.closest('.uv-header-profile-button');
+        if (!button) return;
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (document.body.classList.contains('member-logged-in')) {
+            window.location.href = document.body.getAttribute('data-member-profile-url') || '/uye/';
+            return;
+        }
+
+        openUserSidebar();
+    }
+
+    function initTopbarProfileButton() {
+        ensureTopbarProfileButton();
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initTopbarProfileButton);
+    } else {
+        initTopbarProfileButton();
+    }
+
+    window.addEventListener('load', initTopbarProfileButton);
+    document.addEventListener('click', handleProfileButtonClick, true);
+})(window, document);

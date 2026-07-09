@@ -132,7 +132,10 @@ async function main() {
       },
       body: new URLSearchParams({
         registrationId,
-        _csrf: tokenCsrf.token
+        _csrf: tokenCsrf.token,
+        distanceSalesAgreement: '1',
+        privacyAgreement: '1',
+        refundAgreement: '1'
       })
     }, cookie);
 

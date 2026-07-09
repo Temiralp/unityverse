@@ -10,6 +10,14 @@ function callbackPaymentNote(merchantOid) {
   return `PayTR merchant_oid: ${merchantOid}`;
 }
 
+function positiveInteger(value) {
+  const text = String(value || '').trim();
+  if (!/^[1-9]\d*$/.test(text)) return null;
+
+  const number = Number(text);
+  return Number.isSafeInteger(number) ? number : null;
+}
+
 async function processPaytrCallback(prisma, callback) {
   const registrationId = registrationIdFromMerchantOid(callback.merchantOid);
 
@@ -44,7 +52,12 @@ async function processPaytrCallback(prisma, callback) {
         id: true,
         status: true,
         paymentStatus: true,
-        totalAmount: true
+        totalAmount: true,
+        courseTitle: true,
+        name: true,
+        surname: true,
+        email: true,
+        phone: true
       }
     });
 
@@ -117,7 +130,18 @@ async function processPaytrCallback(prisma, callback) {
 
     return {
       outcome: 'paid',
-      registrationId
+      registrationId,
+      notification: {
+        registration,
+        payment: {
+          amount: kurusToDecimal(callback.totalAmount),
+          merchantOid: callback.merchantOid,
+          paymentAmount: callback.paymentAmount,
+          totalAmount: callback.totalAmount,
+          paymentType: callback.paymentType || 'Kart',
+          installmentCount: positiveInteger(callback.installmentCount)
+        }
+      }
     };
   });
 }

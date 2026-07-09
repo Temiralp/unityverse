@@ -44,6 +44,29 @@
     }
   }
 
+  function syncMemberState() {
+    if (!window.fetch) return;
+
+    fetch('/ajax/member/me', { credentials: 'same-origin' })
+      .then(function(response) {
+        if (!response.ok) throw new Error('Member request failed');
+        return response.json();
+      })
+      .then(function(result) {
+        if (result && result.authenticated && result.member) {
+          document.body.classList.add('member-logged-in');
+          document.body.setAttribute('data-member-profile-url', '/uye/');
+          return;
+        }
+
+        document.body.classList.remove('member-logged-in');
+        document.body.removeAttribute('data-member-profile-url');
+      })
+      .catch(function() {
+        document.body.classList.remove('member-logged-in');
+      });
+  }
+
   function initNavbar(navbar) {
     var toggle = navbar.querySelector('[data-navbar-toggle]');
     var drawer = navbar.querySelector('[data-navbar-drawer]');
@@ -184,5 +207,6 @@
   document.addEventListener('DOMContentLoaded', function() {
     Array.prototype.forEach.call(document.querySelectorAll('[data-navbar]'), initNavbar);
     initFooter(document);
+    syncMemberState();
   });
 })(document, window);

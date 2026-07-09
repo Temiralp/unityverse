@@ -5,7 +5,7 @@
   var csrfTokenPromise = null;
   var protectedPaths = [
     { pattern: /\/ajax\/(?:sendCustomForm|askme)(?:\?|$)/, scope: 'lead' },
-    { pattern: /\/ajax\/member\/(?:register|signin)(?:\?|$)/, scope: 'member' },
+    { pattern: /\/ajax\/member\/(?:register|signin|logout|profile|password)(?:\?|$)/, scope: 'member' },
     { pattern: /\/ajax\/enroll(?:\?|$)/, scope: 'enrollment' }
   ];
 
