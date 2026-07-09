@@ -1,0 +1,138 @@
+<%- include('../partials/header') %>
+<%
+  const startsAtValue = registration && registration.startsAt
+    ? (typeof registration.startsAt === 'string' ? registration.startsAt : registration.startsAt.toISOString().slice(0, 10))
+    : '';
+  const productCodeValue = registration && registration.product
+    ? registration.product.code || ''
+    : registration && registration.productCode
+      ? registration.productCode
+      : '';
+%>
+
+<div class="page-head">
+  <div>
+    <h1><%= pageTitle %></h1>
+    <p class="page-subtitle">Telefon, WhatsApp veya yüz yüze gelen kayıtları manuel ekleyin.</p>
+  </div>
+  <a class="button" href="/admin/registrations">Kayıtlara Dön</a>
+</div>
+
+<section class="panel">
+  <% if (error) { %>
+    <p class="alert"><%= error %></p>
+  <% } %>
+
+  <form method="post" action="<%= action %>" class="form grid-form">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <label>
+      Üye Bağla
+      <select name="memberId">
+        <option value="">Üye seçmeden devam et</option>
+        <% members.forEach((member) => { %>
+          <option value="<%= member.id %>" <%= String(registration && registration.memberId || '') === String(member.id) ? 'selected' : '' %>>
+            <%= [member.name, member.surname].filter(Boolean).join(' ') %> · <%= member.email %>
+          </option>
+        <% }) %>
+      </select>
+    </label>
+
+    <label>
+      Kurs Kodu
+      <input name="productCode" value="<%= productCodeValue %>" placeholder="Örn: UNITY-101">
+    </label>
+
+    <label>
+      Eğitim / Kurs
+      <select name="productId">
+        <option value="">Listeden kurs seçme</option>
+        <% products.forEach((product) => { %>
+          <option value="<%= product.id %>" <%= String(registration && registration.productId || '') === String(product.id) ? 'selected' : '' %>>
+            <%= product.code ? `${product.code} · ` : '' %><%= product.title %>
+          </option>
+        <% }) %>
+      </select>
+    </label>
+
+    <label class="wide">
+      Eğitim Adı
+      <input name="courseTitle" value="<%= registration ? registration.courseTitle || '' : '' %>" placeholder="Örn: Unity ile Oyun Geliştirme">
+    </label>
+
+    <label>
+      Ad
+      <input name="name" value="<%= registration ? registration.name || '' : '' %>" required>
+    </label>
+
+    <label>
+      Soyad
+      <input name="surname" value="<%= registration ? registration.surname || '' : '' %>">
+    </label>
+
+    <label>
+      E-posta
+      <input name="email" type="email" value="<%= registration ? registration.email || '' : '' %>">
+    </label>
+
+    <label>
+      Telefon
+      <input name="phone" value="<%= registration ? registration.phone || '' : '' %>" required>
+    </label>
+
+    <label>
+      Durum
+      <select name="status">
+        <% Object.keys(statusLabels).forEach((key) => { %>
+          <option value="<%= key %>" <%= (registration && registration.status || 'NEW') === key ? 'selected' : '' %>><%= statusLabels[key] %></option>
+        <% }) %>
+      </select>
+    </label>
+
+    <label>
+      Ödeme Durumu
+      <select name="paymentStatus">
+        <% Object.keys(paymentStatusLabels).forEach((key) => { %>
+          <option value="<%= key %>" <%= (registration && registration.paymentStatus || 'PENDING') === key ? 'selected' : '' %>><%= paymentStatusLabels[key] %></option>
+        <% }) %>
+      </select>
+    </label>
+
+    <label>
+      Toplam Tutar
+      <input name="totalAmount" type="number" step="0.01" min="0" value="<%= registration && registration.totalAmount != null ? registration.totalAmount : '' %>" placeholder="Örn: 25000">
+    </label>
+
+    <label>
+      Fatura Durumu
+      <select name="invoiceStatus">
+        <% Object.keys(invoiceStatusLabels).forEach((key) => { %>
+          <option value="<%= key %>" <%= (registration && registration.invoiceStatus || 'NOT_ISSUED') === key ? 'selected' : '' %>><%= invoiceStatusLabels[key] %></option>
+        <% }) %>
+      </select>
+    </label>
+
+    <label>
+      Başlangıç Tarihi
+      <input name="startsAt" type="date" value="<%= startsAtValue %>">
+    </label>
+
+    <label class="wide">
+      Ödeme Notu
+      <textarea name="paymentNote" rows="3" placeholder="Kapora, taksit, ödeme yöntemi veya tahsilat bilgisi"><%= registration ? registration.paymentNote || '' : '' %></textarea>
+    </label>
+
+    <label class="wide">
+      Danışman Notu
+      <textarea name="advisorNote" rows="4" placeholder="Danışmanın takip edeceği özel bilgi, grup tercihi veya görüşme sonucu"><%= registration ? registration.advisorNote || '' : '' %></textarea>
+    </label>
+
+    <label class="wide">
+      İlk Not
+      <textarea name="note" rows="5" placeholder="Kayıt kaynağı, görüşme detayı, ödeme bilgisi veya takip notu"><%= registration ? registration.note || '' : '' %></textarea>
+    </label>
+
+    <button type="submit"><%= submitLabel %></button>
+  </form>
+</section>
+
+<%- include('../partials/footer') %>

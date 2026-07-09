@@ -1,0 +1,159 @@
+<%- include('../partials/header') %>
+
+<main class="uv-page">
+  <section class="uv-page-hero uv-about-hero">
+    <div class="uv-shell uv-page-hero__grid">
+      <div class="uv-about-hero__copy">
+        <p class="uv-eyebrow">Hakkımızda</p>
+        <h1>Unityverse Academy</h1>
+        <p>Nitelikli yazılımcı ve oyun geliştirici yetiştiriyoruz.</p>
+        <p>Akademimizin misyonu, öğrencilerine en güncel ve kaliteli eğitimi sunarak, sektörde aranan profesyoneller olmalarını sağlamaktır.</p>
+        <div class="uv-about-hero__actions">
+          <a class="btn-primary" href="/form/hemen-bilgi-al-1/">Bilgi / Randevu Al</a>
+          <a class="btn-secondary" href="/tum-urunler/">Eğitimleri İncele</a>
+        </div>
+      </div>
+      <figure class="uv-page-hero__media uv-about-hero__media">
+        <img src="/uploads/fm/IMG_4921-min2.jpg" alt="Unityverse Academy eğitim ortamı" width="720" height="520" loading="lazy">
+      </figure>
+    </div>
+  </section>
+
+  <section class="uv-section">
+    <div class="uv-shell uv-story uv-about-story">
+      <div class="uv-story__copy">
+        <div class="section-title">
+          <p class="section-title__eyebrow">Hikayemiz</p>
+          <h2 class="section-title__heading">Akademinin Yolu</h2>
+        </div>
+        <p>Unityverse Academy, semantik teknoloji çatısı altında kurulmuş bir eğitim markasıdır. 2010'ların başında şirket içindeki çalışanların eğitilmesi amacıyla kurulan eğitim merkezi, üretilen bilginin ve know-how'ın aktarılması için Sanayi Bakanlığı projesi kapsamında dışarıdan öğrenci almaya başlamıştır. Günümüzde bilişim sektörüne nitelikli iş gücü yetiştirmektedir.</p>
+        <p><strong>Yazılım</strong>, <strong>grafik tasarım</strong>, <strong>modelleme</strong> gibi bilişim alanlarında eğitim verilmektedir. Akademinin Yazılım Eğitimlerini, <strong>ilk 100 bilgisayar mühendisi</strong> içinde yer alan <strong>Çetin Kaya Koç</strong> koordine etmektedir. Akademimizin misyonu, öğrencilerine en güncel ve kaliteli eğitimi sunarak, sektörde aranan profesyoneller olmalarını sağlamaktır.</p>
+        <p>Akademimizde verilen eğitimler, <strong>California Üniversitesi standartlarında</strong> hazırlanmıştır. Eğitimlerimiz, hem <strong>teorik</strong> hem de <strong>pratik</strong> bilgileri kapsamaktadır. Eğitim süresince öğrenciler, kendi <strong>projelerini geliştirir</strong> ve bunları eğitmenlerin ve diğer öğrencilerin geri bildirimleriyle iyileştirirler. Eğitimi başarıyla tamamlayan öğrencilerimiz,<strong> Unityverse Akademi sertifikası</strong> almaya hak kazanırlar. Ayrıca, öğrencilerimiz <strong>uluslararası sertifika</strong> sınavlarına da katılabilirler.</p>
+        <p>Akademimiz, öğrencilerine tercihlerine göre hem <strong>online</strong> hem de <strong>yüz yüze</strong> eğitim imkanı sunmaktadır. Online eğitimlerimiz, canlı dersler ve ders bitimi video kayıtları şeklinde sunulmaktadır. Yüz yüze eğitimlerimiz ise modern teknolojiyle donatılmış sınıflarda gerçekleştirilmektedir. Akademimizde öğrenciler, eğitmenlerle ve diğer öğrencilerle yakın bir iletişim içindedir. Öğrenciler, birbirlerine destek olur, fikir alışverişinde bulunur ve<strong> ortak çalışmalar</strong> yaparlar.</p>
+        <p>Akademimiz, öğrencilerinin mezuniyet sonrasında da yanındadır. Öğrencilerine iş bulma konusunda rehberlik eder ve onları sektördeki işverenlerle buluşturur. Akademimizin mezunları arasında birçok başarılı <strong>yazılım geliştirici</strong>, <strong>grafik tasarımcı</strong> ve <strong>3D geliştiriciler</strong> bulunmaktadır. Mezunlarımız, hem <strong>ulusal</strong> hem de <strong>uluslararası</strong> şirketlerde çalışmakta veya <strong>kendi girişimlerini</strong> kurmaktadırlar.</p>
+      </div>
+      <div class="uv-story__gallery uv-about-story__gallery">
+        <img src="/uploads/fm/WhatsApp_Görsel_2025-09-23_saat_14_40_10_b4a342a21.jpg" alt="Unityverse Academy etkinlik alanı" width="620" height="388" loading="lazy">
+        <img src="/uploads/fm/IMG_5238-min2.jpg" alt="Unityverse Academy sınıf ortamı" width="620" height="388" loading="lazy">
+      </div>
+    </div>
+  </section>
+
+  <section class="uv-section uv-section--white">
+    <div class="uv-shell">
+      <div class="section-title">
+        <p class="section-title__eyebrow">Kurucular</p>
+        <h2 class="section-title__heading">Akademik Liderlik</h2>
+      </div>
+      <div class="uv-founder-grid uv-founder-grid--featured">
+        <% instructors.forEach((instructor) => {
+          const isCetin = instructor.name.includes('Çetin');
+          const role = isCetin ? 'Eğitim Koordinatörü' : 'Kurucu';
+          const bio = isCetin
+            ? 'Akademinin Yazılım Eğitimlerini, ilk 100 bilgisayar mühendisi içinde yer alan Çetin Kaya Koç koordine etmektedir.'
+            : instructor.specialty || '';
+        %>
+          <article class="uv-person-card uv-founder-card">
+            <img src="<%= instructor.image %>" alt="<%= instructor.name %>" width="320" height="320" loading="lazy">
+            <div class="uv-founder-card__body">
+              <p class="uv-founder-card__role"><%= role %></p>
+              <h3><%= instructor.name %></h3>
+              <% if (bio) { %>
+                <p><%= bio %></p>
+              <% } %>
+              <% if (instructor.link) { %>
+                <a class="btn-secondary" href="<%= instructor.link %>" target="_blank" rel="noopener">CV / Profil</a>
+              <% } %>
+            </div>
+          </article>
+        <% }) %>
+      </div>
+    </div>
+  </section>
+
+  <section class="uv-section">
+    <div class="uv-shell">
+      <div class="section-title">
+        <p class="section-title__eyebrow">Rakamlarla Biz</p>
+        <h2 class="section-title__heading">Eğitim yolculuğumuzdan notlar</h2>
+      </div>
+      <div class="uv-counter-grid uv-counter-grid--about" data-counters>
+        <article>
+          <strong><span data-count="500">0</span><span aria-hidden="true">+</span></strong>
+          <span>Mezun</span>
+        </article>
+        <article>
+          <strong><span data-count="50">0</span><span aria-hidden="true">+</span></strong>
+          <span>Şirket Ortağı</span>
+        </article>
+        <article>
+          <strong><span aria-hidden="true">%</span><span data-count="85">0</span></strong>
+          <span>İşe Yerleşme</span>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="uv-section uv-section--white">
+    <div class="uv-shell">
+      <div class="section-title">
+        <p class="section-title__eyebrow">Değerlerimiz</p>
+        <h2 class="section-title__heading">Eğitim yaklaşımımız</h2>
+      </div>
+      <div class="uv-value-grid">
+        <article class="uv-value-card">
+          <span aria-hidden="true"><i class="fa fa-briefcase"></i></span>
+          <h3>Staj Garantisi</h3>
+          <p>Akademimiz, öğrencilerinin mezuniyet sonrasında da yanındadır.</p>
+        </article>
+        <article class="uv-value-card">
+          <span aria-hidden="true"><i class="fa fa-code"></i></span>
+          <h3>Güncel Müfredat</h3>
+          <p>Akademimizin misyonu, öğrencilerine en güncel ve kaliteli eğitimi sunmaktır.</p>
+        </article>
+        <article class="uv-value-card">
+          <span aria-hidden="true"><i class="fa fa-handshake-o"></i></span>
+          <h3>Sektör Bağlantısı</h3>
+          <p>Öğrencilerine iş bulma konusunda rehberlik eder ve onları sektördeki işverenlerle buluşturur.</p>
+        </article>
+        <article class="uv-value-card">
+          <span aria-hidden="true"><i class="fa fa-compass"></i></span>
+          <h3>Kariyer Desteği</h3>
+          <p>Mezunlarımız, hem ulusal hem de uluslararası şirketlerde çalışmakta veya kendi girişimlerini kurmaktadırlar.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="uv-section">
+    <div class="uv-shell">
+      <div class="section-title">
+        <p class="section-title__eyebrow">Kurumsal Referanslar</p>
+        <h2 class="section-title__heading">Mezunlarımızın kariyer yolculuğunda görünen markalar</h2>
+      </div>
+      <div class="uv-reference-marquee" aria-label="Kurumsal referanslar">
+        <div class="uv-reference-marquee__track">
+          <% const references = ['Lufthansa', 'Eczacıbaşı', 'LC Waikiki', 'Finalizer', 'Testinium', 'AYES Çelik']; %>
+          <% references.concat(references).forEach((name) => { %>
+            <span><%= name %></span>
+          <% }) %>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="uv-section uv-page-cta">
+    <div class="uv-shell">
+      <div class="uv-cta__inner">
+        <div>
+          <p class="uv-eyebrow">Başlangıç adımı</p>
+          <h2>Sen de geleceğini kodla</h2>
+          <p>Yazılım, oyun geliştirme, grafik tasarım ve modelleme eğitimleri hakkında ücretsiz bilgi al.</p>
+        </div>
+        <a class="btn-primary" href="/form/hemen-bilgi-al-1/">Ücretsiz Bilgi Al</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<%- include('../partials/footer') %>

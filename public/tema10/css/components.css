@@ -1,0 +1,398 @@
+/* Unityverse Academy reusable components
+   Source: index.html and public/tema10/css/unityverse-home.css.
+   Components intentionally depend on tokens.css only. Load tokens.css before
+   this file when using these primitives on EJS/static pages. */
+
+.container {
+  width: min(var(--uv-container-width), calc(100% - var(--uv-container-gutter)));
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.section-title {
+  max-width: 720px;
+  margin: 0 0 var(--uv-space-12);
+}
+
+.section-title__eyebrow {
+  margin: 0 0 var(--uv-space-4);
+  color: var(--uv-color-primary-dark);
+  font-family: var(--uv-font-family-base);
+  font-size: var(--uv-font-size-xs);
+  font-weight: var(--uv-font-weight-extrabold);
+  letter-spacing: 0;
+  line-height: var(--uv-line-height-tight);
+  text-transform: uppercase;
+}
+
+.section-title h1,
+.section-title h2,
+.section-title h3,
+.section-title__heading {
+  margin: 0;
+  color: var(--uv-color-text);
+  font-family: var(--uv-font-family-base);
+  font-size: var(--uv-font-size-section-title);
+  font-weight: var(--uv-font-weight-extrabold);
+  line-height: var(--uv-line-height-heading);
+}
+
+.section-title p,
+.section-title__description {
+  margin: var(--uv-space-5) 0 0;
+  color: var(--uv-color-text-muted);
+  font-family: var(--uv-font-family-base);
+  font-size: var(--uv-font-size-lg);
+  line-height: var(--uv-line-height-copy-loose);
+}
+
+.btn-primary,
+.btn-secondary {
+  display: inline-flex;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  gap: var(--uv-space-3);
+  padding: 0 var(--uv-space-8);
+  border: 1px solid transparent;
+  border-radius: var(--uv-radius-lg);
+  font-family: var(--uv-font-family-base);
+  font-size: var(--uv-font-size-base);
+  font-weight: var(--uv-font-weight-extrabold);
+  line-height: var(--uv-line-height-tight);
+  text-decoration: none !important;
+  transition:
+    transform var(--uv-transition-base),
+    box-shadow var(--uv-transition-base),
+    background var(--uv-transition-base),
+    border-color var(--uv-transition-base),
+    color var(--uv-transition-base);
+}
+
+.btn-primary::before,
+.btn-secondary::after {
+  display: inline-flex;
+  width: 22px;
+  height: 22px;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--uv-radius-circle);
+  font-size: var(--uv-font-size-base);
+  line-height: var(--uv-line-height-tight);
+}
+
+.btn-primary {
+  background: var(--uv-gradient-primary);
+  box-shadow: var(--uv-shadow-button);
+  color: var(--uv-color-white) !important;
+}
+
+.btn-primary::before {
+  content: "+";
+  background: rgba(255, 255, 255, 0.24);
+  color: var(--uv-color-white);
+}
+
+.btn-secondary {
+  background: var(--uv-color-surface);
+  border-color: var(--uv-color-line);
+  color: var(--uv-color-text-strong) !important;
+}
+
+.btn-secondary::after {
+  content: ">";
+  color: currentColor;
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-secondary:hover,
+.btn-secondary:focus {
+  transform: translateY(-1px);
+  text-decoration: none !important;
+}
+
+.btn-secondary:hover,
+.btn-secondary:focus {
+  border-color: var(--uv-color-primary-border);
+  background: var(--uv-color-primary-tint-08);
+  color: var(--uv-color-primary-dark) !important;
+}
+
+body:not(.member-logged-in) :is(
+  .uv-enroll-card__price,
+  .uv-mobile-enroll > span,
+  .uv-course-card__price,
+  .uv-catalog-card__price,
+  .uv-product-card__price
+) {
+  position: relative;
+  display: flex !important;
+  min-height: 34px;
+  align-items: center;
+  justify-content: center;
+  color: transparent !important;
+}
+
+body:not(.member-logged-in) :is(
+  .uv-enroll-card__price,
+  .uv-mobile-enroll > span,
+  .uv-course-card__price,
+  .uv-catalog-card__price,
+  .uv-product-card__price
+) > * {
+  visibility: hidden !important;
+}
+
+body:not(.member-logged-in) :is(
+  .uv-enroll-card__price,
+  .uv-mobile-enroll > span,
+  .uv-course-card__price,
+  .uv-catalog-card__price,
+  .uv-product-card__price
+)::after {
+  content: "Qiyməti görmək üçün giriş edin";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--uv-color-primary-dark);
+  font-size: var(--uv-font-size-sm);
+  font-weight: var(--uv-font-weight-bold);
+  line-height: var(--uv-line-height-tight);
+  text-align: center;
+}
+
+body:not(.member-logged-in) .uv-catalog__price-range {
+  display: none !important;
+}
+
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible {
+  outline: var(--uv-focus-ring);
+  outline-offset: var(--uv-focus-offset);
+}
+
+.btn-primary:disabled,
+.btn-secondary:disabled,
+.btn-primary[aria-disabled="true"],
+.btn-secondary[aria-disabled="true"],
+.btn-primary.disabled,
+.btn-secondary.disabled {
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 0.72;
+  pointer-events: none;
+  transform: none;
+}
+
+/* Shared by lightbox, filter drawer and instructor modal while a modal surface is open. */
+.uv-modal-open {
+  overflow: hidden;
+}
+
+.badge {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  padding: 0 11px;
+  border-radius: var(--uv-radius-pill);
+  background: var(--uv-color-accent);
+  box-shadow: var(--uv-shadow-badge);
+  color: var(--uv-color-white);
+  font-family: var(--uv-font-family-base);
+  font-size: var(--uv-font-size-xs);
+  font-weight: var(--uv-font-weight-black);
+  line-height: var(--uv-line-height-tight);
+}
+
+.badge--staj {
+  background: var(--uv-color-staj-badge);
+}
+
+.card {
+  min-width: 0;
+  border: 1px solid var(--uv-color-line);
+  border-radius: var(--uv-radius-lg);
+  background: var(--uv-color-surface);
+  box-shadow: var(--uv-shadow-card);
+  color: var(--uv-color-text);
+  font-family: var(--uv-font-family-base);
+  overflow: hidden;
+  transition:
+    transform var(--uv-transition-base),
+    box-shadow var(--uv-transition-base),
+    border-color var(--uv-transition-base);
+}
+
+.card:hover,
+.card:focus-within {
+  border-color: var(--uv-color-primary-border);
+  box-shadow: var(--uv-shadow-card-hover);
+  transform: translateY(-5px);
+}
+
+.card:focus {
+  outline: 3px solid rgba(0, 167, 255, 0.28);
+  outline-offset: var(--uv-focus-offset);
+}
+
+.card__media {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: var(--uv-color-text-strong);
+}
+
+.card__media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition:
+    transform var(--uv-transition-media),
+    opacity var(--uv-transition-media);
+}
+
+.card:hover .card__media img,
+.card:focus-within .card__media img {
+  opacity: 0.72;
+  transform: scale(1.04);
+}
+
+.card__body {
+  padding: var(--uv-space-8);
+}
+
+.card__title {
+  margin: 0;
+  color: var(--uv-color-text);
+  font-size: var(--uv-font-size-card-title);
+  font-weight: var(--uv-font-weight-black);
+  line-height: var(--uv-line-height-card-title);
+}
+
+.card__title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.card__title a:hover,
+.card__title a:focus {
+  color: var(--uv-color-primary-dark);
+  text-decoration: none;
+}
+
+.card__text {
+  margin: var(--uv-space-4) 0 0;
+  color: var(--uv-color-text-muted);
+  font-size: var(--uv-font-size-base);
+  line-height: var(--uv-line-height-copy);
+}
+
+.uv-course-card__fallback {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  background: var(--uv-gradient-hero-screen);
+  color: var(--uv-color-white);
+  font-size: var(--uv-font-size-hero);
+  font-weight: var(--uv-font-weight-black);
+}
+
+.uv-course-card__category {
+  position: absolute;
+  top: var(--uv-space-5);
+  left: var(--uv-space-5);
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  padding: 0 var(--uv-space-4);
+  border-radius: var(--uv-radius-pill);
+  background: var(--uv-color-primary);
+  color: var(--uv-color-white);
+  font-size: var(--uv-font-size-xs);
+  font-weight: var(--uv-font-weight-black);
+}
+
+.uv-course-card__badge--staj {
+  top: auto;
+  bottom: var(--uv-space-5);
+}
+
+.uv-course-card__body p {
+  margin: var(--uv-space-3) 0 0;
+  color: var(--uv-color-text-muted);
+  font-size: var(--uv-font-size-base);
+  line-height: var(--uv-line-height-copy);
+}
+
+.uv-course-card__footer strong {
+  display: grid;
+  gap: var(--uv-space-1);
+}
+
+.uv-course-card__footer strong s {
+  color: var(--uv-color-text-muted);
+  font-size: var(--uv-font-size-xs);
+  font-weight: var(--uv-font-weight-bold);
+}
+
+.uv-course-card__footer strong span {
+  color: var(--uv-color-text-strong);
+}
+
+.uv-navbar__main-menu a.is-active,
+.uv-navbar__dropdown a.is-active,
+.uv-navbar__menu-item.is-active > .uv-navbar__menu-trigger {
+  background: var(--uv-color-primary-tint-08);
+  color: var(--uv-color-primary-dark) !important;
+}
+
+.uv-navbar__menu-item.is-active > .uv-navbar__menu-trigger {
+  color: var(--uv-color-white) !important;
+}
+
+@media (max-width: 1120px) {
+  .uv-navbar__menu-item.is-active > .uv-navbar__menu-trigger {
+    color: var(--uv-color-primary-dark) !important;
+  }
+}
+
+@media (min-width: 992px) {
+  .section-title h1,
+  .section-title h2,
+  .section-title h3,
+  .section-title__heading {
+    font-size: var(--uv-font-size-section-title-lg);
+  }
+}
+
+@media (max-width: 420px) {
+  .container {
+    width: min(var(--uv-container-width), calc(100% - var(--uv-container-gutter-sm)));
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+  }
+
+  .section-title h1,
+  .section-title h2,
+  .section-title h3,
+  .section-title__heading {
+    font-size: 27px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-primary,
+  .btn-secondary,
+  .card,
+  .card__media img {
+    transition: none;
+  }
+}

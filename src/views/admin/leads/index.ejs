@@ -1,0 +1,96 @@
+<%- include('../partials/header') %>
+
+<div class="page-head">
+  <div>
+    <h1>Başvurular</h1>
+    <p class="page-subtitle">Toplam <%= totalCount %> kayıt listeleniyor.</p>
+  </div>
+</div>
+
+<section class="panel list-panel">
+  <div class="list-toolbar">
+    <strong>Başvuru Listesi</strong>
+    <form method="get" action="/admin/leads" class="search-form lead-filter-form">
+      <input name="q" value="<%= q %>" placeholder="Ad, telefon, e-posta, kaynak ara">
+      <select name="status">
+        <option value="">Tüm Durumlar</option>
+        <% Object.keys(statusLabels).forEach((key) => { %>
+          <option value="<%= key %>" <%= status === key ? 'selected' : '' %>><%= statusLabels[key] %></option>
+        <% }) %>
+      </select>
+      <select name="source">
+        <option value="">Tüm Kaynaklar</option>
+        <% sourceOptions.forEach((sourceOption) => { %>
+          <option value="<%= sourceOption %>" <%= source === sourceOption ? 'selected' : '' %>><%= sourceOption %></option>
+        <% }) %>
+      </select>
+      <select name="advisorId">
+        <option value="">Tüm Danışmanlar</option>
+        <% advisorOptions.forEach((advisor) => { %>
+          <option value="<%= advisor.id %>" <%= advisorId === String(advisor.id) ? 'selected' : '' %>><%= advisor.name %></option>
+        <% }) %>
+      </select>
+      <select name="followUp">
+        <option value="">Tüm Takipler</option>
+        <option value="today" <%= followUp === 'today' ? 'selected' : '' %>>Bugün aranacaklar</option>
+        <option value="overdue" <%= followUp === 'overdue' ? 'selected' : '' %>>Geciken takipler</option>
+        <option value="scheduled" <%= followUp === 'scheduled' ? 'selected' : '' %>>Planlı takipler</option>
+      </select>
+      <label class="filter-field">
+        <span>Başlangıç</span>
+        <input type="date" name="dateFrom" value="<%= dateFrom %>">
+      </label>
+      <label class="filter-field">
+        <span>Bitiş</span>
+        <input type="date" name="dateTo" value="<%= dateTo %>">
+      </label>
+      <button type="submit">Filtrele</button>
+      <% if (q || status || source || advisorId || followUp || dateFrom || dateTo) { %>
+        <a class="button button-secondary" href="/admin/leads">Temizle</a>
+      <% } %>
+    </form>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Ad</th>
+        <th>Telefon</th>
+        <th>E-posta</th>
+        <th>Kaynak</th>
+        <th>Danışman / Takip</th>
+        <th>Durum</th>
+        <th>Tarih</th>
+        <th>İşlem</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% leads.forEach((lead) => { %>
+        <tr>
+          <td><%= lead.name || '-' %></td>
+          <td><%= lead.phone || '-' %></td>
+          <td><%= lead.email || '-' %></td>
+          <td><%= lead.source %></td>
+          <td>
+            <%= lead.advisor ? lead.advisor.name : '-' %>
+            <small class="table-muted">
+              <%= lead.nextFollowUpAt ? lead.nextFollowUpAt.toLocaleString('tr-TR') : 'Takip yok' %>
+            </small>
+          </td>
+          <td>
+            <span class="status-pill status-lead-<%= lead.status.toLowerCase() %>">
+              <%= statusLabels[lead.status] || lead.status %>
+            </span>
+          </td>
+          <td><%= lead.createdAt.toLocaleString('tr-TR') %></td>
+          <td><a class="table-action" href="/admin/leads/<%= lead.id %>">Detay / Takip</a></td>
+        </tr>
+      <% }) %>
+      <% if (!leads.length) { %>
+        <tr><td colspan="8">Henüz başvuru yok.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+  <%- include('../partials/pagination', { pagination }) %>
+</section>
+
+<%- include('../partials/footer') %>

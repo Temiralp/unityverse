@@ -1,0 +1,164 @@
+<%- include('../partials/header') %>
+
+<%
+  const safeCourses = Array.isArray(coursesJson) ? coursesJson : [];
+  const safeCategories = Array.isArray(categories) ? categories : [];
+  const coursesPayload = JSON.stringify(safeCourses).replace(/</g, '\\u003c');
+  const currentPagination = pagination || { currentPage: 1, totalPages: 1, hasPrev: false, hasNext: false };
+  const currentCategorySlug = typeof categorySlug !== 'undefined' ? categorySlug : '';
+  const currentQuery = typeof q !== 'undefined' ? q : '';
+  const resultCount = typeof totalProducts !== 'undefined' ? totalProducts : safeCourses.length;
+  const pageHref = (page) => {
+    const params = [];
+    if (currentCategorySlug) params.push(`kategori=${encodeURIComponent(currentCategorySlug)}`);
+    if (currentQuery) params.push(`q=${encodeURIComponent(currentQuery)}`);
+    if (page > 1) params.push(`page=${page}`);
+    return `/tum-urunler/${params.length ? `?${params.join('&')}` : ''}`;
+  };
+%>
+
+<main class="uv-catalog" data-catalog-page>
+  <script nonce="<%= cspNonce %>" type="application/json" data-courses-json><%- coursesPayload %></script>
+
+  <section class="uv-catalog-hero">
+    <div class="container uv-catalog-hero__inner">
+      <nav class="uv-catalog-breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Ana Sayfa</a>
+        <span aria-hidden="true">/</span>
+        <span><%= selectedCategory ? selectedCategory.name : 'Tüm Eğitimler' %></span>
+      </nav>
+      <div>
+        <p class="uv-eyebrow">Unityverse Academy Eğitimleri</p>
+        <h1><%= selectedCategory ? selectedCategory.name : 'Tüm Eğitimler' %></h1>
+        <p><%= selectedCategory && selectedCategory.description ? selectedCategory.description : 'Kariyer hedeflerine göre yazılım, oyun geliştirme, grafik tasarım, 3D modelleme ve animasyon eğitimlerini keşfet.' %></p>
+      </div>
+      <strong class="uv-catalog__count" data-catalog-count><%= resultCount %> eğitim</strong>
+    </div>
+  </section>
+
+  <section class="uv-catalog-content">
+    <div class="container">
+      <button class="btn-secondary uv-catalog__filter-open" type="button" aria-controls="catalog-filter-drawer" aria-expanded="false" data-filter-open>Filtreleri Aç</button>
+
+      <div class="uv-catalog__layout">
+        <aside class="uv-catalog__drawer" id="catalog-filter-drawer" aria-labelledby="catalog-filter-title" data-filter-drawer>
+          <form class="uv-catalog__filters" method="get" action="/tum-urunler/" data-catalog-filters>
+            <div class="uv-catalog__filter-head">
+              <strong id="catalog-filter-title">Filtreler</strong>
+              <button class="uv-catalog__filter-close" type="button" aria-label="Filtreleri kapat" data-filter-close>×</button>
+            </div>
+
+            <label class="uv-catalog__field">
+              <span>Arama</span>
+              <input name="q" value="<%= currentQuery %>" placeholder="Kurs adı veya sertifika ara" autocomplete="off">
+            </label>
+
+            <fieldset class="uv-catalog__fieldset">
+              <legend>Kategori</legend>
+              <label class="uv-catalog__check">
+                <input type="checkbox" name="kategori" value="" <%= !currentCategorySlug ? 'checked' : '' %>>
+                <span>Tüm Kategoriler</span>
+              </label>
+              <% safeCategories.forEach((category) => { %>
+                <label class="uv-catalog__check">
+                  <input type="checkbox" name="kategori" value="<%= category.slug %>" <%= currentCategorySlug === category.slug ? 'checked' : '' %>>
+                  <span><%= category.name %></span>
+                </label>
+              <% }) %>
+            </fieldset>
+
+            <fieldset class="uv-catalog__fieldset">
+              <legend>Format</legend>
+              <label class="uv-catalog__check">
+                <input type="checkbox" name="format" value="online">
+                <span>Online</span>
+              </label>
+              <label class="uv-catalog__check">
+                <input type="checkbox" name="format" value="canli-online">
+                <span>Canlı Online</span>
+              </label>
+              <label class="uv-catalog__check">
+                <input type="checkbox" name="format" value="yuz-yuze">
+                <span>Yüz Yüze</span>
+              </label>
+              <label class="uv-catalog__check">
+                <input type="checkbox" name="format" value="ozel-ders">
+                <span>Özel Ders</span>
+              </label>
+            </fieldset>
+
+            <label class="uv-catalog__check uv-catalog__check--featured">
+              <input type="checkbox" name="staj">
+              <span>Staj garantili eğitimler</span>
+            </label>
+
+            <div class="uv-catalog__price-range">
+              <label class="uv-catalog__field">
+                <span>Min. Fiyat</span>
+                <input type="number" name="priceMin" min="0" step="100" placeholder="0">
+              </label>
+              <label class="uv-catalog__field">
+                <span>Max. Fiyat</span>
+                <input type="number" name="priceMax" min="0" step="100" placeholder="50000">
+              </label>
+            </div>
+
+            <label class="uv-catalog__field">
+              <span>Sıralama</span>
+              <select name="sort">
+                <option value="popular">Popülerlik</option>
+                <option value="price-asc">Fiyat ↑</option>
+                <option value="price-desc">Fiyat ↓</option>
+                <option value="newest">En Yeni</option>
+              </select>
+            </label>
+
+            <div class="uv-catalog__filter-actions">
+              <button class="btn-primary" type="submit">Filtrele</button>
+              <button class="btn-secondary" type="button" data-catalog-reset>Filtri Sıfırla</button>
+            </div>
+          </form>
+        </aside>
+
+        <section class="uv-catalog__results" aria-live="polite" aria-busy="false">
+          <div class="uv-catalog__results-head">
+            <div>
+              <p class="uv-eyebrow">Sonuçlar</p>
+              <h2><%= selectedCategory ? selectedCategory.name : 'Eğitim Kataloğu' %></h2>
+            </div>
+            <% if (currentPagination.totalPages > 1) { %>
+              <span>Sayfa <%= currentPagination.currentPage %> / <%= currentPagination.totalPages %></span>
+            <% } %>
+          </div>
+
+          <div class="uv-catalog__grid" data-catalog-grid></div>
+          <div class="uv-catalog__empty" data-catalog-empty hidden>
+            <strong>Bu kriterlere uygun eğitim bulunamadı</strong>
+            <p>Filtreleri sıfırlayarak tüm eğitimleri tekrar listeleyebilirsiniz.</p>
+            <button class="btn-secondary" type="button" data-catalog-reset>Filtri sıfırla</button>
+          </div>
+
+          <% if (currentPagination.totalPages > 1) { %>
+            <nav class="uv-catalog-pagination" aria-label="Eğitim sayfalama">
+              <% if (currentPagination.hasPrev) { %>
+                <a href="<%= pageHref(currentPagination.currentPage - 1) %>">Önceki</a>
+              <% } %>
+              <% for (let page = 1; page <= currentPagination.totalPages; page += 1) { %>
+                <% if (page === currentPagination.currentPage) { %>
+                  <span aria-current="page"><%= page %></span>
+                <% } else { %>
+                  <a href="<%= pageHref(page) %>"><%= page %></a>
+                <% } %>
+              <% } %>
+              <% if (currentPagination.hasNext) { %>
+                <a href="<%= pageHref(currentPagination.currentPage + 1) %>">Sonraki</a>
+              <% } %>
+            </nav>
+          <% } %>
+        </section>
+      </div>
+    </div>
+  </section>
+</main>
+
+<%- include('../partials/footer') %>

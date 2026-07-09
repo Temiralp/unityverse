@@ -1,0 +1,91 @@
+<%- include('../partials/header') %>
+
+<div class="page-head">
+  <div>
+    <h1>Üyeler</h1>
+    <p class="page-subtitle">Kayıt olan kişilerin listesi ve toplam sayısı.</p>
+  </div>
+  <a class="button" href="/admin">Panele Dön</a>
+</div>
+
+<section class="panel list-panel">
+  <% if (typeof warning !== 'undefined' && warning) { %>
+    <p class="panel-warning"><%= warning %></p>
+  <% } %>
+
+  <div class="list-toolbar">
+    <form method="get" action="/admin/members" class="search-form member-filter-form">
+      <input name="q" value="<%= q %>" placeholder="Üye adı, e-posta veya telefon ara">
+      <select name="status">
+        <option value="">Tüm Durumlar</option>
+        <% Object.keys(statusLabels).forEach((key) => { %>
+          <option value="<%= key %>" <%= status === key ? 'selected' : '' %>><%= statusLabels[key] %></option>
+        <% }) %>
+      </select>
+      <select name="mailList">
+        <option value="">E-posta İzni</option>
+        <option value="true" <%= mailList === 'true' ? 'selected' : '' %>>İzinli</option>
+        <option value="false" <%= mailList === 'false' ? 'selected' : '' %>>İzinsiz</option>
+      </select>
+      <select name="smsList">
+        <option value="">SMS İzni</option>
+        <option value="true" <%= smsList === 'true' ? 'selected' : '' %>>İzinli</option>
+        <option value="false" <%= smsList === 'false' ? 'selected' : '' %>>İzinsiz</option>
+      </select>
+      <label class="filter-field">
+        <span>Başlangıç</span>
+        <input type="date" name="dateFrom" value="<%= dateFrom %>">
+      </label>
+      <label class="filter-field">
+        <span>Bitiş</span>
+        <input type="date" name="dateTo" value="<%= dateTo %>">
+      </label>
+      <button type="submit">Filtrele</button>
+      <% if (q || status || mailList || smsList || dateFrom || dateTo) { %>
+        <a class="button button-secondary" href="/admin/members">Temizle</a>
+      <% } %>
+    </form>
+    <strong>Toplam Üye: <%= totalCount %></strong>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>S.K.</th>
+        <th>Üye Adı</th>
+        <th>E-posta</th>
+        <th>Telefon</th>
+        <th>Durumu</th>
+        <th>Kayıt Tarihi</th>
+        <th>İşlemler</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% members.forEach((member, index) => { %>
+        <tr>
+          <td>
+            <span class="member-avatar"><%= (member.name || 'U').charAt(0).toUpperCase() %></span>
+          </td>
+          <td>
+            <strong><%= [member.name, member.surname].filter(Boolean).join(' ') %></strong>
+          </td>
+          <td><%= member.email %></td>
+          <td><%= member.phone || '-' %></td>
+          <td>
+            <span class="status-pill <%= member.status === 'ACTIVE' ? 'is-active' : 'is-passive' %>">
+              <%= member.status === 'ACTIVE' ? 'Aktif' : 'Pasif' %>
+            </span>
+          </td>
+          <td><%= member.createdAt.toLocaleString('tr-TR') %></td>
+          <td><a class="table-action" href="/admin/members/<%= member.id %>">Detay / Notlar</a></td>
+        </tr>
+      <% }) %>
+      <% if (!members.length) { %>
+        <tr><td colspan="7">Henüz kayıtlı üye yok.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+  <%- include('../partials/pagination', { pagination }) %>
+</section>
+
+<%- include('../partials/footer') %>

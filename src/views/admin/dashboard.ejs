@@ -1,0 +1,240 @@
+<%- include('partials/header') %>
+
+<div class="page-head">
+  <div>
+    <h1>Yönetim Paneli</h1>
+    <p class="page-subtitle">Başvuru, kayıt, ödeme ve kurs ilgisini tek ekrandan takip edin.</p>
+  </div>
+  <div class="row-actions">
+    <a class="button button-secondary" href="/admin/leads">Başvurular</a>
+    <a class="button" href="/admin/registrations/new">Yeni Kayıt</a>
+  </div>
+</div>
+
+<section class="metric-grid">
+  <article class="metric-card">
+    <div class="metric-top">
+      <span>Bugünkü Başvurular</span>
+      <a href="/admin/leads">Listele</a>
+    </div>
+    <strong><%= stats.todayLeadCount %></strong>
+    <p>Toplam başvuru: <%= stats.leadCount %></p>
+    <small>Takip bekleyen: <%= stats.openLeadCount %></small>
+  </article>
+  <article class="metric-card">
+    <div class="metric-top">
+      <span>Aktif Eğitim Kayıtları</span>
+      <a href="/admin/registrations">Listele</a>
+    </div>
+    <strong><%= stats.activeRegistrationCount %></strong>
+    <p>Toplam kayıt: <%= stats.registrationCount %></p>
+    <small>Onaylanan: <%= stats.confirmedRegistrationCount %></small>
+  </article>
+  <article class="metric-card">
+    <div class="metric-top">
+      <span>Ödeme Bekleyen</span>
+      <a href="/admin/registrations">Takip Et</a>
+    </div>
+    <strong><%= stats.pendingPaymentCount %></strong>
+    <p>Bekleyen veya kısmi ödeme</p>
+    <small>Ödeme takibi</small>
+  </article>
+  <article class="metric-card">
+    <div class="metric-top">
+      <span>Yeni Üyeler</span>
+      <a href="/admin/members">Listele</a>
+    </div>
+    <strong><%= stats.monthlyMemberCount %></strong>
+    <p>Bu ay · toplam <%= stats.memberCount %> üye</p>
+    <small>Yayındaki kurs: <%= stats.publishedProductCount %></small>
+  </article>
+</section>
+
+<section class="metric-grid">
+  <article class="metric-card">
+    <div class="metric-top">
+      <span>Bugün Aranacaklar</span>
+      <a href="/admin/leads?followUp=today">Başvurular</a>
+    </div>
+    <strong><%= stats.todayFollowUpCount %></strong>
+    <p>Başvuru: <%= stats.todayLeadFollowUpCount %> · Kayıt: <%= stats.todayRegistrationFollowUpCount %></p>
+    <small><a href="/admin/registrations?followUp=today">Kayıt takiplerini aç</a></small>
+  </article>
+  <article class="metric-card">
+    <div class="metric-top">
+      <span>Geciken Takipler</span>
+      <a href="/admin/leads?followUp=overdue">Başvurular</a>
+    </div>
+    <strong><%= stats.overdueFollowUpCount %></strong>
+    <p>Başvuru: <%= stats.overdueLeadFollowUpCount %> · Kayıt: <%= stats.overdueRegistrationFollowUpCount %></p>
+    <small><a href="/admin/registrations?followUp=overdue">Geciken kayıtları aç</a></small>
+  </article>
+  <article class="metric-card">
+    <div class="metric-top">
+      <span>Blog Yazıları</span>
+      <a href="/admin/blog">Yönet</a>
+    </div>
+    <strong><%= stats.blogCount %></strong>
+    <p>Toplam blog yazısı</p>
+    <small><a href="/admin/blog">Yazıları listele</a></small>
+  </article>
+</section>
+
+<section class="dashboard-grid">
+  <article class="panel chart-panel chart-wide">
+    <div class="panel-head">
+      <div>
+        <h2>Aylık Eğitim Kayıtları</h2>
+        <p>Son 12 ayda oluşturulan kayıt sayıları</p>
+      </div>
+      <a href="/admin/registrations">Tümünü Gör</a>
+    </div>
+    <div class="bar-chart" aria-label="Aylık eğitim kayıtları grafiği">
+      <% registrationDistribution.forEach((item) => { %>
+        <div class="bar-item">
+          <div class="bar-track">
+            <span style="height:<%= item.value %>%;"></span>
+          </div>
+          <strong><%= item.count %></strong>
+          <em><%= item.label %></em>
+        </div>
+      <% }) %>
+    </div>
+  </article>
+
+  <article class="panel chart-panel">
+    <div class="panel-head">
+      <div>
+        <h2>En Çok İlgi Gören Kurslar</h2>
+        <p>Üye detail sayfasında işaretlenen kurs ilgileri</p>
+      </div>
+      <a href="/admin/members">Üyeler</a>
+    </div>
+    <div class="dashboard-list">
+      <% topInterestedCourses.forEach((item) => { %>
+        <article class="dashboard-list-item">
+          <strong><%= item.product ? item.product.title : 'Kurs silinmiş' %></strong>
+          <span><%= item.count %> ilgi</span>
+        </article>
+      <% }) %>
+      <% if (!topInterestedCourses.length) { %>
+        <p class="empty-state">Henüz kurs ilgisi eklenmedi.</p>
+      <% } %>
+    </div>
+  </article>
+</section>
+
+<section class="dashboard-grid">
+  <article class="panel">
+    <div class="panel-head">
+      <div>
+        <h2>Ödeme Takibi</h2>
+        <p>Bekleyen veya kısmi ödeme durumundaki son kayıtlar</p>
+      </div>
+      <a href="/admin/registrations">Tümünü Gör</a>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Öğrenci</th>
+          <th>Eğitim</th>
+          <th>Ödeme</th>
+          <th>İşlem</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% pendingPayments.forEach((registration) => { %>
+          <tr>
+            <td><%= [registration.name, registration.surname].filter(Boolean).join(' ') %></td>
+            <td><%= registration.courseTitle %></td>
+            <td>
+              <span class="status-pill status-payment-<%= (registration.paymentStatus || 'PENDING').toLowerCase() %>">
+                <%= paymentStatusLabels[registration.paymentStatus] || registration.paymentStatus %>
+              </span>
+            </td>
+            <td><a class="table-action" href="/admin/registrations/<%= registration.id %>">Takip</a></td>
+          </tr>
+        <% }) %>
+        <% if (!pendingPayments.length) { %>
+          <tr><td colspan="4">Ödeme bekleyen kayıt yok.</td></tr>
+        <% } %>
+      </tbody>
+    </table>
+  </article>
+
+  <article class="panel">
+    <div class="panel-head">
+      <div>
+        <h2>Son Eğitim Kayıtları</h2>
+        <p>En son oluşturulan kayıtlar</p>
+      </div>
+      <a href="/admin/registrations">Tümünü Gör</a>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Öğrenci</th>
+          <th>Eğitim</th>
+          <th>Durum</th>
+          <th>Tarih</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% latestRegistrations.forEach((registration) => { %>
+          <tr>
+            <td><%= [registration.name, registration.surname].filter(Boolean).join(' ') %></td>
+            <td><%= registration.courseTitle %></td>
+            <td>
+              <span class="status-pill status-registration-<%= registration.status.toLowerCase() %>">
+                <%= statusLabels[registration.status] || registration.status %>
+              </span>
+            </td>
+            <td><%= registration.createdAt.toLocaleDateString('tr-TR') %></td>
+          </tr>
+        <% }) %>
+        <% if (!latestRegistrations.length) { %>
+          <tr><td colspan="4">Henüz eğitim kaydı yok.</td></tr>
+        <% } %>
+      </tbody>
+    </table>
+  </article>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <div>
+      <h2>Son Başvurular</h2>
+      <p>Web sitesi formlarından gelen son başvurular</p>
+    </div>
+    <a href="/admin/leads">Tümünü Gör</a>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Ad</th>
+        <th>Telefon</th>
+        <th>Email</th>
+        <th>Durum</th>
+        <th>Tarih</th>
+        <th>İşlem</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% latestLeads.forEach((lead) => { %>
+        <tr>
+          <td><%= lead.name || '-' %></td>
+          <td><%= lead.phone || '-' %></td>
+          <td><%= lead.email || '-' %></td>
+          <td><span class="status-pill status-lead-<%= lead.status.toLowerCase() %>"><%= leadStatusLabels[lead.status] || lead.status %></span></td>
+          <td><%= lead.createdAt.toLocaleString('tr-TR') %></td>
+          <td><a class="table-action" href="/admin/leads/<%= lead.id %>">Takip</a></td>
+        </tr>
+      <% }) %>
+      <% if (!latestLeads.length) { %>
+        <tr><td colspan="6">Henüz başvuru yok.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+</section>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Profilim | Unityverse Academy</title>
+  <link rel="stylesheet" href="../public/tema10/css/member-profile.css">
+</head>
+<body class="member-profile-page">
+  <div class="member-profile-topbar">
+    <div class="member-profile-topbar__inner">
+      <a href="../form/hemen-bilgi-al-1/">Eğitimler Hakkında Bilgi Al</a>
+      <a href="tel:+902128072828">0212 807 28 28</a>
+      <a href="../siparis-takip/">Sipariş Takip</a>
+    </div>
+  </div>
+  <header class="member-profile-header">
+    <div class="member-profile-header__inner">
+      <a class="member-profile-brand" href="../" aria-label="Unityverse Academy ana sayfa">
+        <img src="../uploads/p/o/M8NILhl4t7HF.jpg?v=1701782743" alt="Unityverse Academy">
+      </a>
+      <nav class="member-profile-nav" aria-label="Üye bağlantıları">
+        <a class="member-profile-home" href="../">Ana Sayfaya Dön</a>
+        <button class="member-profile-logout" type="button" data-member-logout>Çıkış Yap</button>
+      </nav>
+    </div>
+  </header>
+  <main class="member-profile-main">
+    <section class="member-profile-card member-profile-card--dashboard" aria-live="polite">
+      <div class="member-profile-loading" data-member-loading>Profil bilgileriniz yükleniyor...</div>
+      <div class="member-profile-error" data-member-error hidden>Profil bilgileri yüklenemedi. Lütfen sayfayı yenileyin.</div>
+      <div data-member-profile hidden>
+        <div class="member-profile-card__intro">
+          <div class="member-profile-avatar" data-member-initial aria-hidden="true"></div>
+          <div>
+            <h1 data-member-name></h1>
+            <p>Üye profiliniz</p>
+          </div>
+        </div>
+        <div class="member-profile-message" data-member-message hidden></div>
+        <div class="member-dashboard">
+          <section class="member-dashboard__summary" aria-label="Özet">
+            <article><span>Eğitim</span><strong data-member-course-count>0</strong></article>
+            <article><span>Toplam Tutar</span><strong data-member-total-amount>0,00 TL</strong></article>
+            <article><span>Ödenen</span><strong data-member-paid-amount>0,00 TL</strong></article>
+            <article><span>Kalan</span><strong data-member-remaining-amount>0,00 TL</strong></article>
+          </section>
+
+          <section class="member-dashboard__layout">
+            <aside class="member-dashboard__sidebar">
+              <h2>Eğitimlerim</h2>
+              <div class="member-course-list" data-member-course-list></div>
+              <div class="member-empty-state" data-member-empty hidden>
+                Henüz satın alınmış eğitim kaydınız bulunmuyor.
+              </div>
+            </aside>
+
+            <section class="member-dashboard__content" data-member-course-detail hidden>
+              <div class="member-course-head">
+                <div>
+                  <span data-course-status></span>
+                  <h2 data-course-title></h2>
+                  <p data-course-meta></p>
+                </div>
+                <a class="member-course-link" data-course-link href="../tum-urunler/">Eğitime Git</a>
+              </div>
+
+              <div class="member-course-metrics">
+                <article><span>Tutar</span><strong data-course-total></strong></article>
+                <article><span>Ödenen</span><strong data-course-paid></strong></article>
+                <article><span>Kalan</span><strong data-course-remaining></strong></article>
+                <article><span>Kalan Taksit</span><strong data-course-installment-count></strong></article>
+              </div>
+
+              <div class="member-course-sections">
+                <article>
+                  <h3>Ders İçerikleri</h3>
+                  <ul class="member-course-listing" data-course-lessons></ul>
+                </article>
+                <article>
+                  <h3>Kazanımlar</h3>
+                  <ul class="member-course-listing" data-course-outcomes></ul>
+                </article>
+              </div>
+
+              <div class="member-course-tables">
+                <article>
+                  <h3>Ödeme Geçmişi</h3>
+                  <div data-course-payments></div>
+                </article>
+                <article>
+                  <h3>Taksit Planı</h3>
+                  <div data-course-installments></div>
+                </article>
+              </div>
+            </section>
+          </section>
+
+          <section class="member-profile-section">
+            <h2>Profil Bilgileri</h2>
+            <dl class="member-profile-details">
+              <div><dt>Adınız</dt><dd data-member-first-name></dd></div>
+              <div><dt>Soyadınız</dt><dd data-member-surname></dd></div>
+              <div><dt>E-posta</dt><dd data-member-email></dd></div>
+              <div><dt>Telefon</dt><dd data-member-phone></dd></div>
+            </dl>
+          </section>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer class="member-profile-footer">
+    <div class="member-profile-footer__inner">
+      <p>© Unityverse Academy. Tüm hakları saklıdır.</p>
+      <a href="../sayfa/iletisim-bilgileri-5/">İletişim Bilgileri</a>
+    </div>
+  </footer>
+  <script src="../public/tema10/js/member-profile.js" defer></script>
+</body>
+</html>

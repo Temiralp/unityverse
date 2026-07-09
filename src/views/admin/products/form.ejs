@@ -1,0 +1,194 @@
+<%- include('../partials/header') %>
+
+<div class="page-head">
+  <h1><%= pageTitle %></h1>
+  <a class="button button-secondary" href="/admin/products">Geri Dön</a>
+</div>
+
+<section class="panel">
+  <% if (error) { %>
+    <p class="alert" role="alert"><%= error %></p>
+  <% } %>
+
+  <form method="post" action="<%= action %>" class="form grid-form" enctype="multipart/form-data" data-product-form>
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <label class="wide">
+      Başlık
+      <input name="title" value="<%= product ? product.title || '' : '' %>" required>
+    </label>
+    <label>
+      Ürün Kodu
+      <input name="code" value="<%= product ? product.code || '' : '' %>" placeholder="Örn: UNITY-101">
+    </label>
+    <label>
+      Slug
+      <input name="slug" value="<%= product ? product.slug || '' : '' %>" placeholder="Boş bırakılırsa otomatik oluşturulur">
+    </label>
+    <label>
+      Kategori
+      <select name="categoryId">
+        <option value="">Seçilmedi</option>
+        <% categories.forEach((category) => { %>
+          <option value="<%= category.id %>" <%= String(product && product.categoryId || '') === String(category.id) ? 'selected' : '' %>><%= category.name %></option>
+        <% }) %>
+      </select>
+    </label>
+    <label>
+      Status
+      <select name="status">
+        <option value="DRAFT" <%= !product || product.status === 'DRAFT' ? 'selected' : '' %>>Draft</option>
+        <option value="PUBLISHED" <%= product && product.status === 'PUBLISHED' ? 'selected' : '' %>>Published</option>
+      </select>
+    </label>
+    <label>
+      Fiyat
+      <input name="price" type="number" step="0.01" value="<%= product && product.price != null ? product.price : '' %>">
+    </label>
+    <label>
+      İndirim Tipi
+      <select name="discountType">
+        <option value="" <%= !product || !product.discountType ? 'selected' : '' %>>İndirim yok</option>
+        <option value="PERCENT" <%= product && product.discountType === 'PERCENT' ? 'selected' : '' %>>Yüzde</option>
+        <option value="AMOUNT" <%= product && product.discountType === 'AMOUNT' ? 'selected' : '' %>>Tutar</option>
+      </select>
+    </label>
+    <label>
+      İndirim Değeri
+      <input name="discountValue" type="number" step="0.01" min="0" value="<%= product && product.discountValue != null ? product.discountValue : '' %>" placeholder="Yüzde için 20, tutar için 1500">
+    </label>
+    <label>
+      KDV (%)
+      <input name="vatRate" type="number" step="0.01" min="0" value="<%= product && product.vatRate != null ? product.vatRate : '20' %>">
+    </label>
+    <label>
+      Süre
+      <input name="duration" value="<%= product ? product.duration || '' : '' %>" placeholder="3 ay, 120 saat vb.">
+    </label>
+    <label>
+      Eğitim Tipi
+      <input name="lessonType" value="<%= product ? product.lessonType || '' : '' %>" placeholder="Online, yüz yüze">
+    </label>
+    <label>
+      Sertifikat
+      <input name="certificate" value="<%= product ? product.certificate || '' : '' %>">
+    </label>
+    <label>
+      Kurs Görseli
+      <input name="productImage" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif">
+      <span class="field-help">JPG, PNG, WebP, GIF veya AVIF · en fazla 5 MB</span>
+    </label>
+    <label>
+      Görsel URL <span class="field-help">Opsiyonel</span>
+      <input name="image" value="<%= product ? product.image || '' : '' %>" placeholder="Dosya seçmezseniz bu URL kullanılır">
+    </label>
+    <label>
+      Sıralama
+      <input name="sortOrder" type="number" value="<%= product ? product.sortOrder || 0 : 0 %>">
+    </label>
+    <% if (product && product.image) { %>
+      <div class="wide product-image-preview">
+        <span>Mevcut kurs görseli</span>
+        <img src="<%= product.image %>" alt="" width="320" height="180">
+        <small>Yeni dosya seçmezseniz mevcut görsel korunur.</small>
+      </div>
+    <% } %>
+    <label class="wide">
+      Kısa Metin
+      <textarea name="summary" rows="3"><%= product ? product.summary || '' : '' %></textarea>
+    </label>
+
+    <section class="wide product-content-builder" data-product-tabs>
+      <div class="product-content-builder__head">
+        <div>
+          <h2>İçerik Sekmeleri</h2>
+          <p>İlk üç sekmenin başlığı sabittir. Ek sekmeleri serbestçe yönetebilirsiniz.</p>
+        </div>
+        <button type="button" class="button button-secondary" data-add-tab>Tab Ekle</button>
+      </div>
+      <div data-tab-list>
+        <% productTabs.forEach((tab, index) => { %>
+          <section class="product-tab-editor" data-tab-editor data-system-key="<%= tab.systemKey || '' %>">
+            <div class="product-tab-editor__head">
+              <h3><%= tab.title %></h3>
+              <% if (!tab.systemKey) { %>
+                <div class="product-tab-editor__actions">
+                  <button type="button" class="button button-secondary" data-move-tab="up">Yukarı</button>
+                  <button type="button" class="button button-secondary" data-move-tab="down">Aşağı</button>
+                  <button type="button" class="button button-danger" data-remove-tab>Tab Sil</button>
+                </div>
+              <% } else { %>
+                <span class="field-help">Sabit sekme</span>
+              <% } %>
+            </div>
+            <input type="hidden" name="tabs[<%= index %>][systemKey]" value="<%= tab.systemKey || '' %>">
+            <% if (tab.systemKey) { %>
+              <input type="hidden" name="tabs[<%= index %>][title]" value="<%= tab.title %>">
+            <% } else { %>
+              <label>
+                Tab Başlığı
+                <input name="tabs[<%= index %>][title]" value="<%= tab.title || '' %>" required>
+              </label>
+            <% } %>
+            <label class="product-tab-editor__content">
+              İçerik
+              <textarea name="tabs[<%= index %>][content]" rows="14" data-product-editor><%= tab.content || '' %></textarea>
+            </label>
+          </section>
+        <% }) %>
+      </div>
+    </section>
+
+    <section class="wide product-outcomes" data-learning-outcomes>
+      <div class="product-content-builder__head">
+        <div>
+          <h2>Ne Öğreneceksiniz</h2>
+          <p>Kısa ve ölçülebilir kazanımları ayrı maddeler halinde ekleyin.</p>
+        </div>
+        <button type="button" class="button button-secondary" data-add-outcome>Madde Ekle</button>
+      </div>
+      <div data-outcome-list>
+        <% learningOutcomes.forEach((outcome, index) => { %>
+          <div class="product-outcome-row" data-outcome-row>
+            <input name="learningOutcomes[<%= index %>][text]" value="<%= outcome.text || '' %>" aria-label="Öğrenme kazanımı">
+            <button type="button" class="button button-danger" data-remove-outcome aria-label="Maddeyi sil">Sil</button>
+          </div>
+        <% }) %>
+      </div>
+    </section>
+
+    <button type="submit"><%= submitLabel %></button>
+  </form>
+</section>
+
+<template id="product-tab-template">
+  <section class="product-tab-editor" data-tab-editor>
+    <div class="product-tab-editor__head">
+      <h3>Ek Sekme</h3>
+      <div class="product-tab-editor__actions">
+        <button type="button" class="button button-secondary" data-move-tab="up">Yukarı</button>
+        <button type="button" class="button button-secondary" data-move-tab="down">Aşağı</button>
+        <button type="button" class="button button-danger" data-remove-tab>Tab Sil</button>
+      </div>
+    </div>
+    <input type="hidden" data-field="systemKey" value="">
+    <label>
+      Tab Başlığı
+      <input data-field="title" required>
+    </label>
+    <label class="product-tab-editor__content">
+      İçerik
+      <textarea data-field="content" rows="14" data-product-editor></textarea>
+    </label>
+  </section>
+</template>
+
+<template id="product-outcome-template">
+  <div class="product-outcome-row" data-outcome-row>
+    <input data-field="text" aria-label="Öğrenme kazanımı">
+    <button type="button" class="button button-danger" data-remove-outcome aria-label="Maddeyi sil">Sil</button>
+  </div>
+</template>
+
+<script src="/vendor/jodit/jodit.min.js"></script>
+<script src="/public/tema10/js/admin-product-editor.js?v=20260626-1"></script>
+<%- include('../partials/footer') %>

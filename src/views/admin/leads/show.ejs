@@ -1,0 +1,133 @@
+<%- include('../partials/header') %>
+
+<div class="page-head">
+  <div>
+    <h1><%= lead.name || 'İsimsiz Başvuru' %></h1>
+    <p class="page-subtitle"><%= lead.phone || 'Telefon yok' %> · <%= lead.email || 'E-posta yok' %></p>
+  </div>
+  <a class="button" href="/admin/leads">Başvurulara Dön</a>
+</div>
+
+<section class="detail-grid">
+  <article class="panel detail-panel">
+    <h2>Başvuru Bilgileri</h2>
+    <dl class="info-list">
+      <div><dt>Ad</dt><dd><%= lead.name || '-' %></dd></div>
+      <div><dt>Telefon</dt><dd><%= lead.phone || '-' %></dd></div>
+      <div><dt>E-posta</dt><dd><%= lead.email || '-' %></dd></div>
+      <div><dt>Kaynak</dt><dd><%= lead.source || '-' %></dd></div>
+      <div><dt>Danışman</dt><dd><%= lead.advisor ? lead.advisor.name : '-' %></dd></div>
+      <div><dt>Sonraki Takip</dt><dd><%= lead.nextFollowUpAt ? lead.nextFollowUpAt.toLocaleString('tr-TR') : '-' %></dd></div>
+      <div><dt>Durum</dt><dd><span class="status-pill status-lead-<%= lead.status.toLowerCase() %>"><%= statusLabels[lead.status] || lead.status %></span></dd></div>
+      <div><dt>Tarih</dt><dd><%= lead.createdAt.toLocaleString('tr-TR') %></dd></div>
+      <div><dt>Mesaj</dt><dd><%= lead.message || '-' %></dd></div>
+    </dl>
+  </article>
+
+  <article class="panel detail-panel">
+    <h2>Durum ve Takip</h2>
+    <% if (error) { %>
+      <p class="alert" role="alert"><%= error %></p>
+    <% } %>
+
+    <form method="post" action="/admin/leads/<%= lead.id %>/status" class="form status-form">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <label>
+        Başvuru Durumu
+        <select name="status">
+          <% Object.keys(statusLabels).forEach((key) => { %>
+            <option value="<%= key %>" <%= lead.status === key ? 'selected' : '' %>><%= statusLabels[key] %></option>
+          <% }) %>
+        </select>
+      </label>
+      <label>
+        Danışman
+        <select name="advisorId">
+          <option value="">Danışman atanmadı</option>
+          <% advisorOptions.forEach((advisor) => { %>
+            <option value="<%= advisor.id %>" <%= lead.advisorId === advisor.id ? 'selected' : '' %>><%= advisor.name %></option>
+          <% }) %>
+        </select>
+      </label>
+      <label>
+        Sonraki Takip
+        <input type="datetime-local" name="nextFollowUpAt" value="<%= followUpValue %>">
+      </label>
+      <label>
+        Durum Notu
+        <textarea name="statusNote" rows="3" placeholder="Durum değişikliği veya takip planı notu"></textarea>
+      </label>
+      <button type="submit">Durumu Güncelle</button>
+    </form>
+
+    <form method="post" action="/admin/leads/<%= lead.id %>/notes" class="form note-form">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <label>
+        Yeni Not
+        <textarea name="note" rows="6" placeholder="Arama, WhatsApp, ödeme veya kayıt takip notu yazın"></textarea>
+      </label>
+      <button type="submit">Not Ekle</button>
+    </form>
+  </article>
+</section>
+
+<section class="panel note-panel">
+  <div class="panel-head">
+    <div>
+      <h2>Status Tarihçesi</h2>
+      <p>Başvurunun satış sürecindeki durum değişiklikleri</p>
+    </div>
+  </div>
+
+  <div class="note-list">
+    <% lead.statusHistory.forEach((item) => { %>
+      <article class="note-item">
+        <p>
+          <%= item.fromStatus ? statusLabels[item.fromStatus] || item.fromStatus : 'İlk durum' %>
+          →
+          <%= statusLabels[item.toStatus] || item.toStatus %>
+        </p>
+        <% if (item.note) { %>
+          <p><%= item.note %></p>
+        <% } %>
+        <span><%= item.authorName || 'Admin' %> · <%= item.createdAt.toLocaleString('tr-TR') %></span>
+      </article>
+    <% }) %>
+    <% if (!lead.statusHistory.length) { %>
+      <p class="empty-state">Henüz status değişikliği kaydı yok.</p>
+    <% } %>
+  </div>
+</section>
+
+<section class="panel note-panel">
+  <div class="panel-head">
+    <div>
+      <h2>Form Verileri</h2>
+      <p>Başvuru formundan gelen ham alanlar</p>
+    </div>
+  </div>
+  <pre class="payload-box"><%= JSON.stringify(lead.payload, null, 2) %></pre>
+</section>
+
+<section class="panel note-panel">
+  <div class="panel-head">
+    <div>
+      <h2>Takip Notları</h2>
+      <p>Bu başvuru için eklenen görüşme ve takip notları</p>
+    </div>
+  </div>
+
+  <div class="note-list">
+    <% lead.notes.forEach((item) => { %>
+      <article class="note-item">
+        <p><%= item.note %></p>
+        <span><%= item.authorName || 'Admin' %> · <%= item.createdAt.toLocaleString('tr-TR') %></span>
+      </article>
+    <% }) %>
+    <% if (!lead.notes.length) { %>
+      <p class="empty-state">Henüz takip notu eklenmedi.</p>
+    <% } %>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

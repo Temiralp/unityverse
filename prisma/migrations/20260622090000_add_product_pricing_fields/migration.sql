@@ -1,0 +1,13 @@
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'DiscountType') THEN
+    CREATE TYPE "DiscountType" AS ENUM ('PERCENT', 'AMOUNT');
+  END IF;
+END
+$$;
+
+ALTER TABLE "Product"
+ADD COLUMN IF NOT EXISTS "discountType" "DiscountType",
+ADD COLUMN IF NOT EXISTS "discountValue" DECIMAL(10,2),
+ADD COLUMN IF NOT EXISTS "discountPrice" DECIMAL(10,2),
+ADD COLUMN IF NOT EXISTS "vatRate" DECIMAL(5,2) NOT NULL DEFAULT 20.00;

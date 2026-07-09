@@ -1,0 +1,79 @@
+<%- include('../partials/header') %>
+
+<div class="page-head">
+  <div>
+    <h1>Kategoriler</h1>
+    <p class="page-subtitle">Toplam <%= totalCount %> kategori listeleniyor.</p>
+  </div>
+  <a class="button" href="/admin/categories/new">Yeni Kategori</a>
+</div>
+
+<section class="panel list-panel">
+  <div class="list-toolbar">
+    <form method="get" action="/admin/categories" class="search-form category-filter-form">
+      <input name="q" value="<%= q %>" placeholder="Kategori adı, slug veya açıklama ara">
+      <select name="isActive">
+        <option value="">Tüm Durumlar</option>
+        <option value="true" <%= isActive === 'true' ? 'selected' : '' %>>Aktif</option>
+        <option value="false" <%= isActive === 'false' ? 'selected' : '' %>>Pasif</option>
+      </select>
+      <button type="submit">Filtrele</button>
+      <% if (q || isActive) { %>
+        <a class="button button-secondary" href="/admin/categories">Temizle</a>
+      <% } %>
+    </form>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Ad</th>
+        <th>Slug</th>
+        <th>Status</th>
+        <th>Sıralama</th>
+        <th>İşlem</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% categories.forEach((category) => { %>
+        <tr>
+          <td>
+            <strong><%= category.name %></strong>
+            <% if (category.description) { %>
+              <small class="table-muted"><%= category.description %></small>
+            <% } %>
+          </td>
+          <td><code><%= category.slug %></code></td>
+          <td>
+            <span class="status-pill <%= category.isActive ? 'is-active' : 'is-passive' %>">
+              <%= category.isActive ? 'Aktif' : 'Pasif' %>
+            </span>
+          </td>
+          <td><%= category.sortOrder %></td>
+          <td>
+            <div class="row-actions">
+              <a class="table-action" href="/admin/categories/<%= category.id %>/edit">Düzenle</a>
+              <form method="post" action="/admin/categories/<%= category.id %>/status" class="inline-form">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <input type="hidden" name="isActive" value="<%= category.isActive ? 'false' : 'true' %>">
+                <button type="submit" class="button-secondary">
+                  <%= category.isActive ? 'Pasifleştir' : 'Aktifleştir' %>
+                </button>
+              </form>
+              <form method="post" action="/admin/categories/<%= category.id %>/delete" class="inline-form" onsubmit="return confirm('Bu kategoriyi silmek istediğinize emin misiniz? Bu kategoriye bağlı kursların kategori bağlantısı kaldırılır.');">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <button type="submit" class="button-danger">Sil</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+      <% }) %>
+      <% if (!categories.length) { %>
+        <tr><td colspan="5">Henüz kategori yok.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+  <%- include('../partials/pagination', { pagination }) %>
+</section>
+
+<%- include('../partials/footer') %>

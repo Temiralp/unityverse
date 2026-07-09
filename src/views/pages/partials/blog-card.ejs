@@ -1,0 +1,22 @@
+<article class="uv-blog-card card">
+  <a class="uv-blog-card__media" href="<%= post.href %>" aria-label="<%= post.title %> yazısını oku">
+    <% if (post.image) { %>
+      <img src="<%= post.image %>" alt="<%= post.title %>" loading="lazy" width="420" height="260">
+    <% } else { %>
+      <span class="uv-blog-card__placeholder" aria-hidden="true">UV</span>
+    <% } %>
+  </a>
+
+  <div class="uv-blog-card__body">
+    <% if (post.formattedDate) { %>
+      <time class="uv-blog-card__date" datetime="<%= post.publishedAt ? post.publishedAt.toISOString() : '' %>"><%= post.formattedDate %></time>
+    <% } %>
+    <h2 class="uv-blog-card__title">
+      <a href="<%= post.href %>"><%= post.title %></a>
+    </h2>
+    <% if (post.excerpt) { %>
+      <p class="uv-blog-card__excerpt"><%= post.excerpt %></p>
+    <% } %>
+    <a class="btn-secondary uv-blog-card__link" href="<%= post.href %>">Devamını Oku</a>
+  </div>
+</article>

@@ -1,0 +1,143 @@
+<%- include('../partials/header') %>
+
+<main class="uv-page" data-contact-page>
+  <section class="uv-page-hero">
+    <div class="uv-shell uv-contact-hero">
+      <p class="uv-eyebrow">İletişim</p>
+      <h1>İletişim Bilgileri</h1>
+      <p>Bizimle iletişime geçin. Eğitim danışmanlarımız size en kısa sürede dönüş yapsın.</p>
+    </div>
+  </section>
+
+  <section class="uv-section">
+    <div class="uv-shell uv-contact-layout">
+      <form class="uv-contact-form" action="/ajax/sendCustomForm" method="post" data-contact-form novalidate>
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <input type="hidden" name="source_page" value="/sayfa/iletisim-5/">
+        <div class="uv-form-trap" data-form-trap="lead" aria-hidden="true">
+          <input id="contact-website" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+        </div>
+
+        <div class="section-title">
+          <p class="section-title__eyebrow">Form</p>
+          <h2 class="section-title__heading">Bize Ulaşın</h2>
+          <p class="section-title__description">Sorunuzu yazın, doğru eğitim ve kayıt süreci için sizinle iletişime geçelim.</p>
+        </div>
+
+        <div class="uv-contact-form__grid">
+          <div class="uv-field">
+            <label for="contact-name">Ad Soyad <span aria-hidden="true">*</span></label>
+            <input id="contact-name" name="name" type="text" autocomplete="name" required aria-describedby="contact-name-error">
+            <p class="uv-field__error" id="contact-name-error" data-error-for="name"></p>
+          </div>
+
+          <div class="uv-field">
+            <label for="contact-email">Email <span aria-hidden="true">*</span></label>
+            <input id="contact-email" name="email" type="email" autocomplete="email" required aria-describedby="contact-email-error">
+            <p class="uv-field__error" id="contact-email-error" data-error-for="email"></p>
+          </div>
+
+          <div class="uv-field">
+            <label for="contact-phone">Telefon <span aria-hidden="true">*</span></label>
+            <input id="contact-phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" required aria-describedby="contact-phone-error">
+            <p class="uv-field__error" id="contact-phone-error" data-error-for="phone"></p>
+          </div>
+
+          <div class="uv-field">
+            <label for="contact-subject">Konu <span aria-hidden="true">*</span></label>
+            <select id="contact-subject" name="konu" required aria-describedby="contact-subject-error">
+              <option value="">Konu seçiniz</option>
+              <option value="Eğitim Bilgisi">Eğitim Bilgisi</option>
+              <option value="Kayıt ve Ödeme">Kayıt ve Ödeme</option>
+              <option value="Kurumsal Eğitim">Kurumsal Eğitim</option>
+              <option value="Teknik Destek">Teknik Destek</option>
+              <option value="Diğer">Diğer</option>
+            </select>
+            <p class="uv-field__error" id="contact-subject-error" data-error-for="konu"></p>
+          </div>
+        </div>
+
+        <div class="uv-field">
+          <label for="contact-course">İlgilendiğiniz Eğitim</label>
+          <select id="contact-course" name="egitim" aria-describedby="contact-course-help">
+            <option value="">Eğitim seçiniz</option>
+            <% if (typeof contactCourses !== 'undefined' && Array.isArray(contactCourses)) { %>
+              <% contactCourses.forEach((course) => { %>
+                <option value="<%= course.title %>" data-slug="<%= course.slug %>"><%= course.title %></option>
+              <% }) %>
+            <% } %>
+          </select>
+          <p class="uv-field__hint" id="contact-course-help">İsteğe bağlıdır.</p>
+        </div>
+
+        <div class="uv-field">
+          <label for="contact-message">Mesaj <span aria-hidden="true">*</span></label>
+          <textarea id="contact-message" name="message" rows="6" required aria-describedby="contact-message-error"></textarea>
+          <p class="uv-field__error" id="contact-message-error" data-error-for="message"></p>
+        </div>
+
+        <div class="uv-field uv-field--checkbox">
+          <input id="contact-kvkk" name="kvkk" type="checkbox" value="on" required aria-describedby="contact-kvkk-error">
+          <label for="contact-kvkk">KVKK metnini okudum ve kişisel verilerimin iletişim amacıyla işlenmesini kabul ediyorum. <span aria-hidden="true">*</span></label>
+          <p class="uv-field__error" id="contact-kvkk-error" data-error-for="kvkk"></p>
+        </div>
+
+        <button class="btn-primary uv-contact-form__submit" type="submit">
+          <span data-submit-label>Gönder</span>
+          <span class="uv-spinner" hidden data-spinner aria-hidden="true"></span>
+        </button>
+        <p class="uv-form-status" role="status" aria-live="polite" data-form-status></p>
+      </form>
+
+      <aside class="uv-contact-info">
+        <div class="section-title">
+          <p class="section-title__eyebrow">Bilgiler</p>
+          <h2 class="section-title__heading">İletişim Bilgileri</h2>
+        </div>
+
+        <div class="uv-contact-info__list">
+          <article>
+            <span class="uv-contact-info__icon" aria-hidden="true"><i class="fa fa-map-marker"></i></span>
+            <div>
+              <strong>Adres</strong>
+              <p>Çifte Havuzlar Mah. Eski Londra Asfaltı Cad. Kuluçka Mrk. D2 Blok Esenler / İstanbul</p>
+            </div>
+          </article>
+          <article>
+            <span class="uv-contact-info__icon" aria-hidden="true"><i class="fa fa-phone"></i></span>
+            <div>
+              <strong>Telefon</strong>
+              <p><a href="tel:+902128072828">0212 807 28 28</a></p>
+            </div>
+          </article>
+          <article>
+            <span class="uv-contact-info__icon" aria-hidden="true"><i class="fa fa-envelope"></i></span>
+            <div>
+              <strong>Email</strong>
+              <p><a href="mailto:info@unityverseacademy.com">info@unityverseacademy.com</a></p>
+            </div>
+          </article>
+          <article>
+            <span class="uv-contact-info__icon" aria-hidden="true"><i class="fa fa-clock-o"></i></span>
+            <div>
+              <strong>Çalışma Saatleri</strong>
+              <p>Her gün 09:00 - 19:00 arası</p>
+            </div>
+          </article>
+        </div>
+
+        <iframe title="Unityverse Academy harita" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=Unityverse%20Academy%20Esenler%20Istanbul&output=embed"></iframe>
+
+        <div class="uv-contact-socials" aria-label="Sosyal medya hesapları">
+          <a href="https://mobile.twitter.com/semantik_soft" aria-label="Twitter" target="_blank" rel="noreferrer noopener"><i class="fa fa-twitter" aria-hidden="true"></i></a>
+          <a href="https://www.instagram.com/unityverse.akademi/?igshid=YmMyMTA2M2Y=" aria-label="Instagram" target="_blank" rel="noreferrer noopener"><i class="fa fa-instagram" aria-hidden="true"></i></a>
+          <a href="https://api.whatsapp.com/send?phone=905454228887&text=Merhaba,%20bilgi%20almak%20istiyorum" aria-label="WhatsApp" target="_blank" rel="noreferrer noopener"><i class="fa fa-whatsapp" aria-hidden="true"></i></a>
+          <a href="https://www.youtube.com/channel/UCmrjYQ72sDrKKaMHKq0Pa_Q/" aria-label="YouTube" target="_blank" rel="noreferrer noopener"><i class="fa fa-youtube-play" aria-hidden="true"></i></a>
+          <a href="https://www.linkedin.com/company/unityverse-academy/" aria-label="LinkedIn" target="_blank" rel="noreferrer noopener"><i class="fa fa-linkedin" aria-hidden="true"></i></a>
+        </div>
+      </aside>
+    </div>
+  </section>
+</main>
+
+<%- include('../partials/footer') %>

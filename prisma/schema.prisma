@@ -1,0 +1,419 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PublishStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  CLOSED
+}
+
+enum MemberStatus {
+  ACTIVE
+  PASSIVE
+}
+
+enum DiscountType {
+  PERCENT
+  AMOUNT
+}
+
+enum EducationRegistrationStatus {
+  NEW
+  CONTACTED
+  CONFIRMED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PARTIAL
+  PAID
+  REFUNDED
+}
+
+enum InvoiceStatus {
+  NOT_ISSUED
+  ISSUED
+  CANCELLED
+}
+
+enum InstallmentStatus {
+  PENDING
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+model AdminUser {
+  id                    Int                     @id @default(autoincrement())
+  email                 String                  @unique
+  passwordHash          String
+  name                  String                  @default("Admin")
+  assignedLeads         Lead[]                  @relation("LeadAdvisor")
+  assignedRegistrations EducationRegistration[] @relation("RegistrationAdvisor")
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+}
+
+model UserSession {
+  sid    String   @id(map: "session_pkey") @db.VarChar
+  sess   Json     @db.Json
+  expire DateTime @db.Timestamp(6)
+
+  @@index([expire], map: "IDX_session_expire")
+  @@map("user_sessions")
+}
+
+model RateLimitEntry {
+  id              Int      @id @default(autoincrement())
+  scope           String   @db.VarChar(50)
+  identifierHash  String   @db.VarChar(64)
+  hits            Int      @default(0)
+  windowStartedAt DateTime @default(now())
+  expiresAt       DateTime
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([scope, identifierHash])
+  @@index([expiresAt])
+}
+
+model Category {
+  id          Int       @id @default(autoincrement())
+  name        String
+  slug        String    @unique
+  description String?
+  image       String?
+  sortOrder   Int       @default(0)
+  isActive    Boolean   @default(true)
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Product {
+  id                     Int                     @id @default(autoincrement())
+  code                   String?                 @unique
+  title                  String
+  slug                   String                  @unique
+  summary                String?
+  content                String?
+  image                  String?
+  price                  Decimal?                @db.Decimal(10, 2)
+  discountType           DiscountType?
+  discountValue          Decimal?                @db.Decimal(10, 2)
+  discountPrice          Decimal?                @db.Decimal(10, 2)
+  vatRate                Decimal                 @default(20.00) @db.Decimal(5, 2)
+  duration               String?
+  lessonType             String?
+  certificate            String?
+  status                 PublishStatus           @default(DRAFT)
+  sortOrder              Int                     @default(0)
+  categoryId             Int?
+  category               Category?               @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  tabs                   ProductTab[]
+  learningOutcomes       ProductLearningOutcome[]
+  educationRegistrations EducationRegistration[]
+  memberInterests        MemberCourseInterest[]
+  couponProducts         CouponProduct[]
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+
+  @@index([status])
+  @@index([categoryId])
+}
+
+model ProductTab {
+  id        Int      @id @default(autoincrement())
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  systemKey String?  @db.VarChar(32)
+  title     String
+  content   String   @default("")
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([productId, systemKey])
+  @@index([productId, sortOrder])
+}
+
+model ProductLearningOutcome {
+  id        Int      @id @default(autoincrement())
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  text      String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([productId, sortOrder])
+}
+
+model BlogPost {
+  id          Int           @id @default(autoincrement())
+  title       String
+  slug        String        @unique
+  excerpt     String?
+  content     String?
+  image       String?
+  status      PublishStatus @default(DRAFT)
+  publishedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([status])
+}
+
+model Page {
+  id        Int           @id @default(autoincrement())
+  title     String
+  slug      String        @unique
+  content   String?
+  status    PublishStatus @default(DRAFT)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([status])
+}
+
+model Lead {
+  id             Int                 @id @default(autoincrement())
+  source         String
+  name           String?
+  email          String?
+  phone          String?
+  message        String?
+  payload        Json
+  status         LeadStatus          @default(NEW)
+  advisorId      Int?
+  advisor        AdminUser?          @relation("LeadAdvisor", fields: [advisorId], references: [id], onDelete: SetNull)
+  nextFollowUpAt DateTime?
+  notes          LeadNote[]
+  statusHistory  LeadStatusHistory[]
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  @@index([status])
+  @@index([advisorId])
+  @@index([nextFollowUpAt])
+  @@index([createdAt])
+}
+
+model LeadStatusHistory {
+  id         Int         @id @default(autoincrement())
+  leadId     Int
+  lead       Lead        @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  fromStatus LeadStatus?
+  toStatus   LeadStatus
+  authorName String?
+  note       String?
+  createdAt  DateTime    @default(now())
+
+  @@index([leadId])
+  @@index([createdAt])
+}
+
+model LeadNote {
+  id         Int      @id @default(autoincrement())
+  leadId     Int
+  lead       Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  note       String
+  authorName String?
+  createdAt  DateTime @default(now())
+
+  @@index([leadId])
+}
+
+model Member {
+  id                     Int                     @id @default(autoincrement())
+  name                   String
+  surname                String?
+  email                  String                  @unique
+  phone                  String?
+  gender                 String?
+  passwordHash           String?
+  mailList               Boolean                 @default(false)
+  smsList                Boolean                 @default(false)
+  status                 MemberStatus            @default(ACTIVE)
+  notes                  MemberNote[]
+  courseInterests        MemberCourseInterest[]
+  educationRegistrations EducationRegistration[]
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model MemberNote {
+  id         Int      @id @default(autoincrement())
+  memberId   Int
+  member     Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  note       String
+  authorName String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([memberId])
+  @@index([createdAt])
+}
+
+model MemberCourseInterest {
+  id        Int      @id @default(autoincrement())
+  memberId  Int
+  member    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@unique([memberId, productId])
+  @@index([memberId])
+  @@index([productId])
+}
+
+model Coupon {
+  id            Int             @id @default(autoincrement())
+  code          String          @unique
+  title         String
+  discountType  DiscountType
+  discountValue Decimal         @db.Decimal(10, 2)
+  usageLimit    Int?
+  usedCount     Int             @default(0)
+  startsAt      DateTime?
+  expiresAt     DateTime?
+  isActive      Boolean         @default(true)
+  products      CouponProduct[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@index([isActive])
+  @@index([expiresAt])
+}
+
+model CouponProduct {
+  id        Int      @id @default(autoincrement())
+  couponId  Int
+  coupon    Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([couponId, productId])
+  @@index([couponId])
+  @@index([productId])
+}
+
+model EducationRegistration {
+  id             Int                                  @id @default(autoincrement())
+  memberId       Int?
+  member         Member?                              @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  productId      Int?
+  product        Product?                             @relation(fields: [productId], references: [id], onDelete: SetNull)
+  courseTitle    String
+  name           String
+  surname        String?
+  email          String?
+  phone          String?
+  note           String?
+  advisorNote    String?
+  advisorId      Int?
+  advisor        AdminUser?                           @relation("RegistrationAdvisor", fields: [advisorId], references: [id], onDelete: SetNull)
+  nextFollowUpAt DateTime?
+  source         String                               @default("admin")
+  status         EducationRegistrationStatus          @default(NEW)
+  paymentStatus  PaymentStatus                        @default(PENDING)
+  totalAmount    Decimal?                             @db.Decimal(10, 2)
+  invoiceStatus  InvoiceStatus                        @default(NOT_ISSUED)
+  paymentNote    String?
+  startsAt       DateTime?
+  notes          EducationRegistrationNote[]
+  statusHistory  EducationRegistrationStatusHistory[]
+  payments       EducationPayment[]
+  installments   EducationInstallment[]
+  createdAt      DateTime                             @default(now())
+  updatedAt      DateTime                             @updatedAt
+
+  @@index([status])
+  @@index([paymentStatus])
+  @@index([invoiceStatus])
+  @@index([advisorId])
+  @@index([nextFollowUpAt])
+  @@index([startsAt])
+  @@index([memberId])
+  @@index([productId])
+  @@index([createdAt])
+}
+
+model EducationPayment {
+  id             Int                   @id @default(autoincrement())
+  registrationId Int
+  registration   EducationRegistration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  amount         Decimal               @db.Decimal(10, 2)
+  method         String?
+  paidAt         DateTime              @default(now())
+  note           String?
+  authorName     String?
+  createdAt      DateTime              @default(now())
+
+  @@index([registrationId])
+  @@index([paidAt])
+}
+
+model EducationInstallment {
+  id             Int                   @id @default(autoincrement())
+  registrationId Int
+  registration   EducationRegistration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  title          String?
+  amount         Decimal               @db.Decimal(10, 2)
+  dueDate        DateTime
+  status         InstallmentStatus     @default(PENDING)
+  note           String?
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+
+  @@index([registrationId])
+  @@index([dueDate])
+  @@index([status])
+}
+
+model EducationRegistrationStatusHistory {
+  id                Int                          @id @default(autoincrement())
+  registrationId    Int
+  registration      EducationRegistration        @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  fromStatus        EducationRegistrationStatus?
+  toStatus          EducationRegistrationStatus
+  fromPaymentStatus PaymentStatus?
+  toPaymentStatus   PaymentStatus?
+  authorName        String?
+  note              String?
+  createdAt         DateTime                     @default(now())
+
+  @@index([registrationId])
+  @@index([createdAt])
+}
+
+model EducationRegistrationNote {
+  id             Int                   @id @default(autoincrement())
+  registrationId Int
+  registration   EducationRegistration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  note           String
+  authorName     String?
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+
+  @@index([registrationId])
+  @@index([createdAt])
+}

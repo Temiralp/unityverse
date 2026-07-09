@@ -1,0 +1,244 @@
+/* Static lead form pages migrated from legacy form/* exports. */
+
+.uv-form-page,
+.uv-form-page * {
+  box-sizing: border-box;
+}
+
+.uv-form-page {
+  min-height: 100vh;
+  background: var(--uv-color-bg);
+  color: var(--uv-color-text);
+  font-family: var(--uv-font-family-base);
+}
+
+.uv-form-page main {
+  display: block;
+}
+
+.uv-lead-hero {
+  padding: var(--uv-space-section-lg) 0;
+  background: var(--uv-gradient-hero), var(--uv-color-bg);
+}
+
+.uv-lead-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(360px, 0.68fr);
+  gap: var(--uv-space-13);
+  align-items: start;
+}
+
+.uv-lead-copy {
+  display: grid;
+  gap: var(--uv-space-7);
+  padding-top: var(--uv-space-8);
+}
+
+.uv-lead-copy h1 {
+  max-width: 760px;
+  margin: 0;
+  color: var(--uv-color-text-strong);
+  font-size: var(--uv-font-size-hero);
+  font-weight: var(--uv-font-weight-black);
+  line-height: var(--uv-line-height-heading);
+}
+
+.uv-lead-copy p:not(.uv-eyebrow) {
+  max-width: 680px;
+  margin: 0;
+  color: var(--uv-color-text-muted);
+  font-size: var(--uv-font-size-lg);
+  line-height: var(--uv-line-height-copy-loose);
+}
+
+.uv-lead-points {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--uv-space-5);
+  margin: var(--uv-space-5) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.uv-lead-points li {
+  display: grid;
+  gap: var(--uv-space-3);
+  min-width: 0;
+  padding: var(--uv-space-7);
+  border: 1px solid var(--uv-color-line);
+  border-radius: var(--uv-radius-lg);
+  background: var(--uv-color-surface);
+  box-shadow: var(--uv-shadow-card);
+  color: var(--uv-color-text-muted);
+  font-size: var(--uv-font-size-sm);
+  font-weight: var(--uv-font-weight-bold);
+  line-height: var(--uv-line-height-copy);
+}
+
+.uv-lead-points span {
+  display: inline-flex;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--uv-radius-circle);
+  background: var(--uv-color-primary-tint-08);
+  color: var(--uv-color-primary-dark);
+  font-size: var(--uv-font-size-lg);
+}
+
+.uv-lead-card {
+  display: grid;
+  gap: var(--uv-space-7);
+  padding: var(--uv-space-10);
+  border: 1px solid var(--uv-color-line);
+  border-radius: var(--uv-radius-lg);
+  background: var(--uv-color-surface);
+  box-shadow: var(--uv-shadow-card-hover);
+}
+
+.uv-lead-card__header {
+  display: grid;
+  gap: var(--uv-space-4);
+}
+
+.uv-lead-card__header h2 {
+  margin: 0;
+  color: var(--uv-color-text-strong);
+  font-size: var(--uv-font-size-section-title);
+  font-weight: var(--uv-font-weight-extrabold);
+  line-height: var(--uv-line-height-heading);
+}
+
+.uv-lead-card__header p {
+  margin: 0;
+  color: var(--uv-color-text-muted);
+  font-size: var(--uv-font-size-md);
+  line-height: var(--uv-line-height-copy);
+}
+
+.uv-lead-form {
+  display: grid;
+  gap: var(--uv-space-6);
+}
+
+.uv-lead-field {
+  display: grid;
+  gap: var(--uv-space-2);
+}
+
+.uv-lead-field label,
+.uv-lead-checkbox span {
+  color: var(--uv-color-text-muted);
+  font-weight: var(--uv-font-weight-bold);
+}
+
+.uv-lead-field input,
+.uv-lead-field select,
+.uv-lead-field textarea {
+  width: 100%;
+  min-height: 46px;
+  padding: var(--uv-space-4) var(--uv-space-5);
+  border: 1px solid var(--uv-color-line);
+  border-radius: var(--uv-radius-md);
+  background: var(--uv-color-surface);
+  color: var(--uv-color-text);
+  font: inherit;
+  transition: border-color var(--uv-transition-base), box-shadow var(--uv-transition-base);
+}
+
+.uv-lead-field textarea {
+  resize: vertical;
+}
+
+.uv-lead-field input:focus-visible,
+.uv-lead-field select:focus-visible,
+.uv-lead-field textarea:focus-visible,
+.uv-lead-checkbox input:focus-visible,
+.uv-lead-checkbox a:focus-visible,
+.uv-lead-submit:focus-visible {
+  outline: var(--uv-focus-ring);
+  outline-offset: var(--uv-focus-offset);
+}
+
+.uv-lead-field input:focus-visible,
+.uv-lead-field select:focus-visible,
+.uv-lead-field textarea:focus-visible {
+  border-color: var(--uv-color-primary-border);
+}
+
+.uv-lead-checkbox {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--uv-space-4);
+  align-items: start;
+  margin: var(--uv-space-2) 0 0;
+}
+
+.uv-lead-checkbox input {
+  width: 18px;
+  height: 18px;
+  margin-top: 3px;
+  accent-color: var(--uv-color-primary);
+}
+
+.uv-lead-checkbox a {
+  color: var(--uv-color-primary-dark);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.uv-lead-submit {
+  justify-self: start;
+}
+
+.uv-lead-status {
+  min-height: 22px;
+  margin: 0;
+  color: var(--uv-color-primary-dark);
+  font-size: var(--uv-font-size-sm);
+  font-weight: var(--uv-font-weight-bold);
+  line-height: var(--uv-line-height-card-title);
+}
+
+.uv-lead-status.is-error {
+  color: var(--uv-color-accent);
+}
+
+.uv-lead-status.is-success {
+  color: var(--uv-color-success);
+}
+
+@media (max-width: 1024px) {
+  .uv-lead-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .uv-lead-copy {
+    padding-top: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .uv-lead-hero {
+    padding: var(--uv-space-section) 0;
+  }
+
+  .uv-lead-copy h1 {
+    font-size: var(--uv-font-size-section-title);
+  }
+
+  .uv-lead-points {
+    grid-template-columns: 1fr;
+  }
+
+  .uv-lead-card {
+    padding: var(--uv-space-9);
+  }
+}
+
+@media (max-width: 480px) {
+  .uv-lead-card {
+    padding: var(--uv-space-7);
+  }
+}

@@ -1,0 +1,77 @@
+<%- include('../partials/header') %>
+
+<div class="page-head">
+  <div>
+    <h1>Blog Yazıları</h1>
+    <p class="page-subtitle">Toplam <%= totalCount %> blog yazısı listeleniyor.</p>
+  </div>
+  <a class="button" href="/admin/blog/new">Yeni Blog Yazısı</a>
+</div>
+
+<section class="panel list-panel">
+  <div class="list-toolbar">
+    <form method="get" action="/admin/blog" class="search-form blog-filter-form">
+      <input name="q" value="<%= q %>" placeholder="Başlık veya slug ara" aria-label="Blog yazılarında ara">
+      <select name="status" aria-label="Yayın durumuna göre filtrele">
+        <option value="">Tüm Statuslar</option>
+        <option value="PUBLISHED" <%= status === 'PUBLISHED' ? 'selected' : '' %>>Yayında</option>
+        <option value="DRAFT" <%= status === 'DRAFT' ? 'selected' : '' %>>Taslak</option>
+      </select>
+      <button type="submit">Filtrele</button>
+      <% if (q || status) { %>
+        <a class="button button-secondary" href="/admin/blog">Temizle</a>
+      <% } %>
+    </form>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Başlık</th>
+        <th>Status</th>
+        <th>Yayın Tarihi</th>
+        <th>Güncellenme</th>
+        <th>İşlem</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% posts.forEach((post) => { %>
+        <tr>
+          <td>
+            <strong><%= post.title %></strong>
+            <small class="table-muted"><%= post.slug %></small>
+          </td>
+          <td>
+            <span class="status-pill <%= post.status === 'PUBLISHED' ? 'is-active' : 'is-passive' %>">
+              <%= post.status === 'PUBLISHED' ? 'Yayında' : 'Taslak' %>
+            </span>
+          </td>
+          <td><%= post.publishedAt ? post.publishedAt.toLocaleString('tr-TR') : '-' %></td>
+          <td><%= post.updatedAt.toLocaleString('tr-TR') %></td>
+          <td>
+            <div class="row-actions">
+              <a class="table-action" href="/admin/blog/<%= post.id %>/edit">Düzenle</a>
+              <form method="post" action="/admin/blog/<%= post.id %>/status" class="inline-form">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <input type="hidden" name="status" value="<%= post.status === 'PUBLISHED' ? 'DRAFT' : 'PUBLISHED' %>">
+                <button type="submit" class="button-secondary">
+                  <%= post.status === 'PUBLISHED' ? 'Yayından Al' : 'Yayınla' %>
+                </button>
+              </form>
+              <form method="post" action="/admin/blog/<%= post.id %>/delete" class="inline-form" onsubmit="return confirm('Bu blog yazısını silmek istediğinize emin misiniz?');">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <button type="submit" class="button-danger">Sil</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+      <% }) %>
+      <% if (!posts.length) { %>
+        <tr><td colspan="5">Filtrelere uygun blog yazısı bulunamadı.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+  <%- include('../partials/pagination', { pagination }) %>
+</section>
+
+<%- include('../partials/footer') %>

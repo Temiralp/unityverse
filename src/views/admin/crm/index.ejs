@@ -1,0 +1,158 @@
+<%- include('../partials/header') %>
+
+<div class="page-head">
+  <div>
+    <h1>CRM Takip</h1>
+    <p class="page-subtitle">Bugün aranacak, geciken ve planlı takipleri tek ekrandan yönetin.</p>
+  </div>
+  <div class="row-actions">
+    <a class="button button-secondary" href="/admin/leads">Başvurular</a>
+    <a class="button" href="/admin/registrations">Eğitim Kayıtları</a>
+  </div>
+</div>
+
+<section class="metric-grid">
+  <article class="metric-card">
+    <div class="metric-top">
+      <span>Bugün</span>
+      <a href="/admin/crm?followUp=today<%= advisorId ? `&advisorId=${advisorId}` : '' %>">Aç</a>
+    </div>
+    <strong><%= stats.todayCount %></strong>
+    <p>Başvuru: <%= stats.todayLeadCount %> · Kayıt: <%= stats.todayRegistrationCount %></p>
+    <small>Bugün aranacak takipler</small>
+  </article>
+  <article class="metric-card">
+    <div class="metric-top">
+      <span>Geciken</span>
+      <a href="/admin/crm?followUp=overdue<%= advisorId ? `&advisorId=${advisorId}` : '' %>">Aç</a>
+    </div>
+    <strong><%= stats.overdueCount %></strong>
+    <p>Başvuru: <%= stats.overdueLeadCount %> · Kayıt: <%= stats.overdueRegistrationCount %></p>
+    <small>Öncelikli dönüş bekleyenler</small>
+  </article>
+  <article class="metric-card">
+    <div class="metric-top">
+      <span>Planlı</span>
+      <a href="/admin/crm?followUp=scheduled<%= advisorId ? `&advisorId=${advisorId}` : '' %>">Aç</a>
+    </div>
+    <strong><%= stats.scheduledCount %></strong>
+    <p>Başvuru: <%= stats.scheduledLeadCount %> · Kayıt: <%= stats.scheduledRegistrationCount %></p>
+    <small>Takip tarihi olan tüm işler</small>
+  </article>
+</section>
+
+<section class="panel crm-filter-panel">
+  <form method="get" action="/admin/crm" class="search-form crm-filter-form">
+    <select name="followUp">
+      <option value="today" <%= followUp === 'today' ? 'selected' : '' %>>Bugün aranacaklar</option>
+      <option value="overdue" <%= followUp === 'overdue' ? 'selected' : '' %>>Geciken takipler</option>
+      <option value="scheduled" <%= followUp === 'scheduled' ? 'selected' : '' %>>Planlı takipler</option>
+      <option value="all" <%= followUp === 'all' ? 'selected' : '' %>>Tüm kayıtlar</option>
+    </select>
+    <select name="advisorId">
+      <option value="">Tüm Danışmanlar</option>
+      <% advisorOptions.forEach((advisor) => { %>
+        <option value="<%= advisor.id %>" <%= advisorId === String(advisor.id) ? 'selected' : '' %>><%= advisor.name %></option>
+      <% }) %>
+    </select>
+    <button type="submit">Filtrele</button>
+    <% if (followUp !== 'today' || advisorId) { %>
+      <a class="button button-secondary" href="/admin/crm">Temizle</a>
+    <% } %>
+  </form>
+</section>
+
+<section class="crm-board">
+  <article class="panel list-panel">
+    <div class="list-toolbar">
+      <strong>Başvurular</strong>
+      <span class="table-muted"><%= leadItems.length %> kayıt gösteriliyor</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Kişi</th>
+          <th>İletişim</th>
+          <th>Danışman</th>
+          <th>Takip</th>
+          <th>Durum</th>
+          <th>İşlem</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% leadItems.forEach((lead) => { %>
+          <tr>
+            <td>
+              <strong><%= lead.name || 'İsimsiz Başvuru' %></strong>
+              <small class="table-muted"><%= lead.source || '-' %></small>
+            </td>
+            <td>
+              <%= lead.phone || '-' %>
+              <small class="table-muted"><%= lead.email || '-' %></small>
+            </td>
+            <td><%= lead.advisor ? lead.advisor.name : '-' %></td>
+            <td><%= lead.nextFollowUpAt ? lead.nextFollowUpAt.toLocaleString('tr-TR') : '-' %></td>
+            <td>
+              <span class="status-pill status-lead-<%= lead.status.toLowerCase() %>">
+                <%= leadStatusLabels[lead.status] || lead.status %>
+              </span>
+            </td>
+            <td><a class="table-action" href="/admin/leads/<%= lead.id %>">Takip Et</a></td>
+          </tr>
+        <% }) %>
+        <% if (!leadItems.length) { %>
+          <tr><td colspan="6">Bu filtreye uygun başvuru yok.</td></tr>
+        <% } %>
+      </tbody>
+    </table>
+  </article>
+
+  <article class="panel list-panel">
+    <div class="list-toolbar">
+      <strong>Eğitim Kayıtları</strong>
+      <span class="table-muted"><%= registrationItems.length %> kayıt gösteriliyor</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Öğrenci</th>
+          <th>Eğitim</th>
+          <th>Danışman</th>
+          <th>Takip</th>
+          <th>Durum / Ödeme</th>
+          <th>İşlem</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% registrationItems.forEach((registration) => { %>
+          <tr>
+            <td>
+              <strong><%= [registration.name, registration.surname].filter(Boolean).join(' ') %></strong>
+              <small class="table-muted"><%= registration.phone || '-' %></small>
+            </td>
+            <td>
+              <%= registration.courseTitle %>
+              <% if (registration.product && registration.product.code) { %>
+                <small class="table-muted">Kod: <%= registration.product.code %></small>
+              <% } %>
+            </td>
+            <td><%= registration.advisor ? registration.advisor.name : '-' %></td>
+            <td><%= registration.nextFollowUpAt ? registration.nextFollowUpAt.toLocaleString('tr-TR') : '-' %></td>
+            <td>
+              <span class="status-pill status-registration-<%= registration.status.toLowerCase() %>">
+                <%= registrationStatusLabels[registration.status] || registration.status %>
+              </span>
+              <small class="table-muted"><%= paymentStatusLabels[registration.paymentStatus] || registration.paymentStatus %></small>
+            </td>
+            <td><a class="table-action" href="/admin/registrations/<%= registration.id %>">Takip Et</a></td>
+          </tr>
+        <% }) %>
+        <% if (!registrationItems.length) { %>
+          <tr><td colspan="6">Bu filtreye uygun eğitim kaydı yok.</td></tr>
+        <% } %>
+      </tbody>
+    </table>
+  </article>
+</section>
+
+<%- include('../partials/footer') %>

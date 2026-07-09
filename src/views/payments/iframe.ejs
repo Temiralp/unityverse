@@ -1,0 +1,189 @@
+<%- include('../partials/header', { useLegacyPaymentHeader: true }) %>
+<%
+  const paytrPaymentOptions = typeof paymentOptions === 'undefined' ? {} : paymentOptions;
+  const installmentsEnabled = paytrPaymentOptions.installmentsEnabled === true;
+  const maxInstallment = String(paytrPaymentOptions.maxInstallment || '0');
+  const installmentLabel = maxInstallment === '0' ? 'PayTR izin verilen taksitler' : `${maxInstallment} taksite kadar`;
+%>
+
+<main class="uv-payment-page">
+  <section class="uv-payment-hero">
+    <div class="uv-shell uv-payment-hero__inner">
+      <div>
+        <nav class="uv-payment-breadcrumb" aria-label="Breadcrumb">
+          <a href="/">Ana Sayfa</a>
+          <span aria-hidden="true">/</span>
+          <span>Güvenli Ödeme</span>
+        </nav>
+        <p class="uv-eyebrow">PayTR Güvencesiyle</p>
+        <h1>Güvenli ödeme</h1>
+        <p>Kart bilgileriniz PayTR güvenli ödeme altyapısı üzerinden işlenir.</p>
+      </div>
+      <span class="uv-payment-hero__badge">Kayıt #<%= registration.id %></span>
+    </div>
+  </section>
+
+  <section class="uv-payment-section">
+    <div class="uv-shell uv-payment-layout">
+      <aside class="uv-payment-summary" aria-labelledby="payment-summary-title">
+        <h2 id="payment-summary-title">Ödeme Özeti</h2>
+        <dl>
+          <div>
+            <dt>Eğitim</dt>
+            <dd><%= registration.courseTitle %></dd>
+          </div>
+          <div>
+            <dt>Kayıt No</dt>
+            <dd>#<%= registration.id %></dd>
+          </div>
+          <div>
+            <dt>Ödenecek Tutar</dt>
+            <dd><%= formattedAmount %> TL</dd>
+          </div>
+        </dl>
+        <ul class="uv-payment-trust">
+          <li><i class="fa fa-lock" aria-hidden="true"></i> Kart bilgileriniz saklanmaz.</li>
+          <li><i class="fa fa-shield" aria-hidden="true"></i> Ödeme PayTR ekranında tamamlanır.</li>
+          <li><i class="fa fa-check" aria-hidden="true"></i> Sonuç kaydınıza otomatik işlenir.</li>
+        </ul>
+        <div class="uv-payment-installment">
+          <% if (installmentsEnabled) { %>
+            <strong>Taksitli ödeme PayTR ile aktif</strong>
+            <p>Kartınıza uygun taksit seçenekleri PayTR ödeme ekranında otomatik gösterilir.</p>
+          <% } else { %>
+            <strong>Taksitli ödeme mi istiyorsunuz?</strong>
+            <p>Taksit seçenekleri için eğitim danışmanımızla WhatsApp üzerinden görüşebilirsiniz.</p>
+          <% } %>
+          <a class="btn-secondary" href="<%= installmentWhatsappUrl %>" target="_blank" rel="noopener">
+            Danışmanla görüş
+          </a>
+        </div>
+      </aside>
+
+      <section class="uv-payment-checkout" aria-labelledby="payment-checkout-title">
+        <div class="uv-payment-checkout__head">
+          <div>
+            <p class="uv-eyebrow">Ödeme yöntemi</p>
+            <h2 id="payment-checkout-title">Ödeme bilgileri</h2>
+          </div>
+          <span><%= installmentsEnabled ? installmentLabel : 'Tek çekim' %></span>
+        </div>
+        <div
+          class="uv-payment-frame"
+          aria-label="PayTR güvenli ödeme formu"
+          data-payment-checkout
+        >
+          <section class="uv-payment-agreements" aria-labelledby="payment-agreements-title">
+            <div class="uv-payment-agreements__head">
+              <h3 id="payment-agreements-title">Sözleşme onayları</h3>
+              <p>Kart bilgileri ve ödeme butonu, sözleşmeler onaylandıktan sonra aktif olur.</p>
+            </div>
+            <div class="uv-payment-agreements__list">
+              <label class="uv-payment-agreement">
+                <input type="checkbox" name="distanceSalesAgreement" data-payment-agreement required>
+                <span>
+                  <a href="/sayfa/mesafeli-satis-sozlesmesi-26/" target="_blank" rel="noopener">Mesafeli Satış Sözleşmesi</a>'ni okudum ve kabul ediyorum.
+                </span>
+              </label>
+              <label class="uv-payment-agreement">
+                <input type="checkbox" name="privacyAgreement" data-payment-agreement required>
+                <span>
+                  <a href="/sayfa/uyelik-sozlesmesi-ve-gizlilik-politikasi-27/" target="_blank" rel="noopener">Üyelik Sözleşmesi ve Gizlilik Politikası</a>'nı okudum ve kabul ediyorum.
+                </span>
+              </label>
+              <label class="uv-payment-agreement">
+                <input type="checkbox" name="refundAgreement" data-payment-agreement required>
+                <span>
+                  <a href="/sayfa/iptal-ve-iade-kosullari-28/" target="_blank" rel="noopener">İptal ve İade Koşulları</a>'nı okudum ve kabul ediyorum.
+                </span>
+              </label>
+            </div>
+          </section>
+
+          <div class="uv-payment-methods" role="tablist" aria-label="Ödeme yöntemi seçimi">
+            <button class="uv-payment-method is-active" type="button" id="payment-method-card" role="tab" aria-selected="true" aria-controls="payment-panel-card" data-payment-method="card">
+              <i class="fa fa-credit-card" aria-hidden="true"></i>
+              <span>Kart ile Ödeme</span>
+            </button>
+            <button class="uv-payment-method" type="button" id="payment-method-bank" role="tab" aria-selected="false" aria-controls="payment-panel-bank" data-payment-method="bank">
+              <i class="fa fa-bank" aria-hidden="true"></i>
+              <span>Havale / EFT</span>
+            </button>
+          </div>
+
+          <div class="uv-payment-method-panel is-active" id="payment-panel-card" role="tabpanel" aria-labelledby="payment-method-card" data-payment-panel="card">
+            <% if (iframeUrl) { %>
+              <div class="uv-payment-frame__shell is-disabled" data-payment-frame-shell aria-disabled="true">
+                <iframe
+                  id="paytriframe"
+                  src="<%= iframeUrl %>"
+                  title="PayTR güvenli ödeme formu"
+                  frameborder="0"
+                  scrolling="no"
+                  allow="payment"
+                  data-payment-iframe
+                  tabindex="-1"
+                ></iframe>
+                <div class="uv-payment-frame__lock" data-payment-lock aria-hidden="true">
+                  Sözleşmeleri onayladığınızda kartla ödeme alanı aktif olacaktır.
+                </div>
+              </div>
+            <% } else { %>
+              <div class="uv-payment-card-unavailable">
+                <i class="fa fa-credit-card" aria-hidden="true"></i>
+                <strong>Kartla ödeme şu anda başlatılamıyor</strong>
+                <p><%= cardPaymentError || 'Havale/EFT ile ödeme yapabilir veya daha sonra tekrar deneyebilirsiniz.' %></p>
+              </div>
+            <% } %>
+          </div>
+
+          <div class="uv-payment-method-panel" id="payment-panel-bank" role="tabpanel" aria-labelledby="payment-method-bank" data-payment-panel="bank" hidden>
+            <form class="uv-bank-transfer is-disabled" method="post" action="/odeme/<%= registration.id %>/havale" data-bank-transfer aria-disabled="true">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <input type="hidden" name="distanceSalesAgreement" value="0" data-payment-agreement-hidden="distanceSalesAgreement">
+              <input type="hidden" name="privacyAgreement" value="0" data-payment-agreement-hidden="privacyAgreement">
+              <input type="hidden" name="refundAgreement" value="0" data-payment-agreement-hidden="refundAgreement">
+              <div class="uv-bank-transfer__head">
+                <div>
+                  <h3>Havale / EFT Bilgileri</h3>
+                  <p>Ödeme açıklamasına kayıt numaranızı yazmanız, işlemin hızlı eşleşmesini sağlar.</p>
+                </div>
+                <span><%= bankTransfer.amount %> TL</span>
+              </div>
+              <dl class="uv-bank-transfer__details">
+                <div>
+                  <dt>Alıcı</dt>
+                  <dd><%= bankTransfer.accountName %></dd>
+                </div>
+                <div>
+                  <dt>Banka</dt>
+                  <dd><%= bankTransfer.bankName || 'Banka bilgisi danışman tarafından paylaşılacaktır.' %></dd>
+                </div>
+                <div>
+                  <dt>IBAN</dt>
+                  <dd><%= bankTransfer.iban || 'IBAN bilgisi danışman tarafından paylaşılacaktır.' %></dd>
+                </div>
+                <% if (bankTransfer.branch) { %>
+                  <div>
+                    <dt>Şube</dt>
+                    <dd><%= bankTransfer.branch %></dd>
+                  </div>
+                <% } %>
+                <div>
+                  <dt>Açıklama</dt>
+                  <dd><%= bankTransfer.reference %></dd>
+                </div>
+              </dl>
+              <button class="btn-primary" type="submit" data-bank-transfer-submit disabled aria-disabled="true">
+                Havale Bildirimi Gönder
+              </button>
+              <p class="uv-bank-transfer__note">Bildiriminiz admin paneline düşer; ödeme, banka hareketi kontrolünden sonra kaydınıza işlenir.</p>
+            </form>
+          </div>
+        </div>
+      </section>
+    </div>
+  </section>
+</main>
+
+<%- include('../partials/footer', { useLegacyPaymentFooter: true }) %>

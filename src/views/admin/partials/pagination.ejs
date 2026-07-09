@@ -1,0 +1,43 @@
+<% if (pagination) { %>
+  <nav class="pagination" aria-label="Sayfalama">
+    <div class="pagination-summary">
+      <p>
+        <%= pagination.startItem %>-<%= pagination.endItem %> / <%= pagination.totalCount %> kayıt
+      </p>
+      <div class="pagination-limit" aria-label="Sayfa başına kayıt">
+        <span>Sayfa başına</span>
+        <% pagination.limitOptions.forEach((option) => { %>
+          <% if (option.isCurrent) { %>
+            <span class="is-current" aria-current="true"><%= option.value %></span>
+          <% } else { %>
+            <a href="<%= option.href %>"><%= option.value %></a>
+          <% } %>
+        <% }) %>
+      </div>
+    </div>
+
+    <% if (pagination.totalPages > 1) { %>
+      <div class="pagination-links">
+        <% if (pagination.hasPrevious) { %>
+          <a href="<%= pagination.previousHref %>">Önceki</a>
+        <% } else { %>
+          <span aria-disabled="true">Önceki</span>
+        <% } %>
+
+        <% pagination.pages.forEach((page) => { %>
+          <% if (page.isCurrent) { %>
+            <span class="is-current" aria-current="page"><%= page.number %></span>
+          <% } else { %>
+            <a href="<%= page.href %>"><%= page.number %></a>
+          <% } %>
+        <% }) %>
+
+        <% if (pagination.hasNext) { %>
+          <a href="<%= pagination.nextHref %>">Sonraki</a>
+        <% } else { %>
+          <span aria-disabled="true">Sonraki</span>
+        <% } %>
+      </div>
+    <% } %>
+  </nav>
+<% } %>

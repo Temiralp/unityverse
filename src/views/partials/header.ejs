@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= typeof pageTitle !== 'undefined' ? pageTitle : 'Unityverse Academy' %></title>
+  <link rel="shortcut icon" href="/uploads/p/o/TVLxaOXSi7Bs.png?v=1660040600">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap">
+  <link rel="stylesheet" href="/public/tema10/css/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/public/tema10/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/public/tema10/css/tokens.css">
+  <link rel="stylesheet" href="/public/tema10/css/components.css?v=20260630-1">
+  <link rel="stylesheet" href="/public/tema10/css/unityverse-home.css">
+  <% if (typeof extraStyles !== 'undefined' && Array.isArray(extraStyles)) { %>
+    <% extraStyles.forEach((href) => { %>
+      <link rel="stylesheet" href="<%= href %>">
+    <% }) %>
+  <% } %>
+</head>
+<body>
+  <% if (typeof useLegacyPaymentHeader !== 'undefined' && useLegacyPaymentHeader) { %>
+    <header class="uv-payment-legacy-header" aria-label="Unityverse Academy">
+      <div class="uv-payment-legacy-header__top">
+        <div class="uv-shell uv-payment-legacy-header__top-inner">
+          <a href="/form/hemen-bilgi-al-1/">Eğitimler Hakkında Bilgi Al</a>
+          <a href="tel:+902128072828">0212 807 28 28</a>
+          <a href="https://api.whatsapp.com/send?phone=905454228887&text=Merhaba,%20e%C4%9Fitimler%20hakk%C4%B1nda%20bilgi%20almak%20istiyorum" target="_blank" rel="noopener">Bize Sorun</a>
+          <a class="uv-payment-legacy-header__profile" href="/uye-girisi/" aria-label="Üye girişi">
+            <i class="fa fa-user-circle" aria-hidden="true"></i>
+          </a>
+        </div>
+      </div>
+      <div class="uv-payment-legacy-header__brand">
+        <div class="uv-shell uv-payment-legacy-header__brand-inner">
+          <a class="uv-payment-legacy-header__logo" href="/" aria-label="Unityverse Academy ana sayfa">
+            <img src="/uploads/p/o/M8NILhl4t7HF.jpg?v=1701782743" alt="Unityverse Academy" width="290" height="95" decoding="async" fetchpriority="high">
+          </a>
+        </div>
+      </div>
+      <nav class="uv-payment-legacy-header__nav" aria-label="Ana navigasyon">
+        <div class="uv-shell uv-payment-legacy-header__nav-inner">
+          <a href="/tum-urunler/">Eğitimlerimiz</a>
+          <a href="/os/KURUMSAL-EGITIMLER-10/">Kurumsal Eğitimler</a>
+          <a href="/sayfa/hakkimizda-25/">Hakkımızda</a>
+          <a href="/sayfa/egitmenler-10/">Eğitmenler</a>
+          <a href="/form/hemen-bilgi-al-1/">Bilgi/Randevu Al</a>
+          <a href="/sayfa/iletisim-5/">İletişim</a>
+          <a href="/blog/">Blog</a>
+          <a href="/os/yazilim-cozumleri-20/">Yazılım Çözümleri</a>
+          <a class="uv-payment-legacy-header__all-courses" href="/tum-urunler/">
+            <i class="fa fa-bars" aria-hidden="true"></i>
+            <span>Tüm Kurslarımız</span>
+            <i class="fa fa-chevron-circle-up" aria-hidden="true"></i>
+          </a>
+        </div>
+      </nav>
+    </header>
+  <% } else { %>
+  <%
+    const activeKey = typeof activeNav !== 'undefined' ? activeNav : '';
+    const isActive = (key) => activeKey === key;
+    const navItems = [
+      {
+        key: 'game',
+        label: 'Oyun Geliştirme',
+        href: '/kategori/oyun-gelistirme-egitimleri-244/',
+        children: [
+          { label: 'Unity Eğitimleri', href: '/kategori/oyun-gelistirme-egitimleri-244/' },
+          { label: 'Unreal Engine', href: '/kategori/oyun-gelistirme-263/' },
+          { label: 'Çocuk ve Gençler', href: '/urun/cocuk-ve-gencler-icin-unity-ile-oyun-gelistirme-canli-online-egitimi-8-ay-1382/' }
+        ]
+      },
+      {
+        key: 'software',
+        label: 'Yazılım',
+        href: '/kategori/yazilim-egitimleri-245/',
+        children: [
+          { label: 'Yazılım Test Otomasyonu', href: '/urun/yazilim-test-otomasyonu-egitimi-canli-online-egitimi-staj-garantili-7/' },
+          { label: 'Full Stack Development', href: '/urun/full-stack-development-canli-online-egitim-1563/' },
+          { label: 'Python Bootcamp', href: '/urun/2026-python-bootcamp-sifirdan-python-canli-online-egitimi-8/' }
+        ]
+      },
+      {
+        key: 'design',
+        label: 'Grafik-Tasarım',
+        href: '/kategori/grafik-tasarim-egitimleri-246/',
+        children: [
+          { label: 'Grafik Tasarım', href: '/kategori/grafik-tasarim-egitimleri-246/' },
+          { label: 'UI/UX Tasarım', href: '/urun/uiux-tasarim-egitimi-canli-online-egitimi-4-ay-1515/' },
+          { label: 'Video Efekt', href: '/urun/grafik-tasarim-ve-video-efekt-uzmanligi-yuz-yuze-egitimi-staj-garantili-613/' }
+        ]
+      },
+      {
+        key: 'modeling',
+        label: '3D Modelleme',
+        href: '/kategori/3d-modelleme-egitimleri-247/',
+        children: [
+          { label: 'Blender', href: '/urun/blender-ile-3d-modelleme-ve-animasyon-egitimi-online-1594/' },
+          { label: 'ZBrush', href: '/urun/zbrush-ile-organik-modelleme-online-egitimi-1528/' },
+          { label: '3ds Max', href: '/urun/3ds-max-yuz-yuze-egitimi-615/' }
+        ]
+      },
+      {
+        key: 'animation',
+        label: 'Animasyon',
+        href: '/kategori/animasyon-egitimleri-248/',
+        children: [
+          { label: '2B Animasyon', href: '/urun/2b-cizgi-film-ve-animasyon-yuz-yuze-egitimi-614/' },
+          { label: 'After Effects', href: '/urun/after-effects-ile-dijital-produksiyon-ve-kurgu-uzmanligi-canli-online-egitim-3/' },
+          { label: 'StoryBoard', href: '/urun/film-ve-animasyon-icin-storyboard-yuz-yuze-egitimi-ozel-ders-1287/' }
+        ]
+      }
+    ];
+    const mainItems = [
+      { key: 'courses', label: 'Eğitimlerimiz', href: '/tum-urunler/' },
+      { key: 'corporate', label: 'Kurumsal Eğitimler', href: '/os/KURUMSAL-EGITIMLER-10/' },
+      { key: 'about', label: 'Hakkımızda', href: '/sayfa/hakkimizda-25/' },
+      { key: 'trainers', label: 'Eğitmenler', href: '/sayfa/egitmenler-10/' },
+      { key: 'appointment', label: 'Bilgi/Randevu Al', href: '/form/hemen-bilgi-al-1/' },
+      { key: 'contact', label: 'İletişim', href: '/sayfa/iletisim-5/' },
+      { key: 'blog', label: 'Blog', href: '/blog/' },
+      { key: 'solutions', label: 'Yazılım Çözümleri', href: '/os/yazilim-cozumleri-20/' }
+    ];
+  %>
+  <header class="uv-navbar" data-navbar data-close-label="Menüyü kapat">
+    <div class="uv-shell uv-navbar__top">
+      <a class="uv-navbar__logo" href="/" aria-label="Unityverse Academy ana sayfa">
+        <img src="/uploads/p/o/M8NILhl4t7HF.jpg?v=1701782743" alt="Unityverse Academy" width="156" height="51" decoding="async" fetchpriority="high">
+      </a>
+      <div class="uv-navbar__actions">
+        <a class="uv-navbar__phone" href="tel:+902128072828">0 212 807 28 28</a>
+        <a class="uv-navbar__auth uv-navbar__auth--register" href="/uye-ol/">
+          <i class="fa fa-user-plus" aria-hidden="true"></i>
+          <span>Üye Ol</span>
+        </a>
+        <a class="uv-navbar__auth uv-navbar__auth--login" href="/uye-girisi/">
+          <i class="fa fa-sign-in" aria-hidden="true"></i>
+          <span>Giriş Yap</span>
+        </a>
+        <a class="uv-button uv-button--primary" href="/form/hemen-bilgi-al-1/">
+          <span class="uv-button__icon" aria-hidden="true">+</span>
+          <span>Bilgi Al</span>
+        </a>
+        <a class="uv-navbar__cart" href="/uye/sepet/" aria-label="Sepete git">
+          <span class="uv-navbar__cart-icon" aria-hidden="true"></span>
+        </a>
+        <button class="uv-navbar__toggle" type="button" aria-label="Menüyü aç" aria-controls="site-navigation" aria-expanded="false" data-navbar-toggle>
+          <span aria-hidden="true"></span>
+          <span aria-hidden="true"></span>
+          <span aria-hidden="true"></span>
+        </button>
+      </div>
+    </div>
+    <div class="uv-navbar__nav-row" data-navbar-drawer>
+      <nav class="uv-shell uv-navbar__nav" id="site-navigation" aria-label="Ana navigasyon">
+        <ul class="uv-navbar__main-menu">
+          <li class="uv-navbar__menu-item uv-navbar__menu-item--dropdown uv-navbar__menu-item--more">
+            <button class="uv-navbar__menu-trigger uv-navbar__menu-trigger--more" type="button" aria-expanded="false" aria-controls="site-more-menu">
+              <span>Menü</span>
+              <span class="uv-navbar__chevron" aria-hidden="true"></span>
+            </button>
+            <ul class="uv-navbar__dropdown" id="site-more-menu">
+              <% mainItems.forEach((item) => { %>
+                <li>
+                  <a href="<%= item.href %>" class="<%= isActive(item.key) ? 'is-active' : '' %>" <%= isActive(item.key) ? 'aria-current="page"' : '' %>><%= item.label %></a>
+                </li>
+              <% }) %>
+            </ul>
+          </li>
+          <li class="uv-navbar__main-item uv-navbar__main-item--featured">
+            <a href="/tum-urunler/" class="<%= isActive('courses') ? 'is-active' : '' %>" <%= isActive('courses') ? 'aria-current="page"' : '' %>>
+              <i class="fa fa-bars" aria-hidden="true"></i>
+              <span>Tüm Kurslarımız</span>
+            </a>
+          </li>
+        </ul>
+        <ul class="uv-navbar__menu">
+          <% navItems.forEach((item) => { %>
+            <li class="uv-navbar__menu-item uv-navbar__menu-item--dropdown <%= isActive(item.key) ? 'is-active' : '' %>">
+              <button class="uv-navbar__menu-trigger" type="button" aria-expanded="false" aria-controls="site-nav-<%= item.key %>">
+                <span><%= item.label %></span>
+                <span class="uv-navbar__chevron" aria-hidden="true"></span>
+              </button>
+              <ul class="uv-navbar__dropdown" id="site-nav-<%= item.key %>">
+                <li><a href="<%= item.href %>" <%= isActive(item.key) ? 'aria-current="page"' : '' %>>Tüm <%= item.label %></a></li>
+                <% item.children.forEach((child) => { %>
+                  <li><a href="<%= child.href %>"><%= child.label %></a></li>
+                <% }) %>
+              </ul>
+            </li>
+          <% }) %>
+        </ul>
+      </nav>
+    </div>
+  </header>
+  <% } %>
