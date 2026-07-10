@@ -150,7 +150,7 @@
                 </div>
                 <span><%= bankTransfer.amount %> TL</span>
               </div>
-              <dl class="uv-bank-transfer__details">
+              <!-- <dl class="uv-bank-transfer__details">
                 <div>
                   <dt>Alıcı</dt>
                   <dd><%= bankTransfer.accountName %></dd>
@@ -169,6 +169,32 @@
                     <dd><%= bankTransfer.branch %></dd>
                   </div>
                 <% } %>
+                <div>
+                  <dt>Açıklama</dt>
+                  <dd><%= bankTransfer.reference %></dd>
+                </div>
+              </dl> -->
+              <dl class="uv-bank-transfer__details">
+                <div>
+                  <dt>Ünvan</dt>
+                  <dd><%= bankTransfer.accountName %></dd>
+                </div>
+                <div>
+                  <dt>Banka Adı</dt>
+                  <dd><%= bankTransfer.bankName || 'Banka bilgisi danışman tarafından paylaşılacaktır.' %></dd>
+                </div>
+                <div>
+                  <dt>Şube</dt>
+                  <dd><%= bankTransfer.branch || 'Şube bilgisi danışman tarafından paylaşılacaktır.' %></dd>
+                </div>
+                <div>
+                  <dt>Hesap No</dt>
+                  <dd><%= bankTransfer.accountNo || 'Hesap numarası danışman tarafından paylaşılacaktır.' %></dd>
+                </div>
+                <div>
+                  <dt>IBAN</dt>
+                  <dd><%= bankTransfer.iban || 'IBAN bilgisi danışman tarafından paylaşılacaktır.' %></dd>
+                </div>
                 <div>
                   <dt>Açıklama</dt>
                   <dd><%= bankTransfer.reference %></dd>

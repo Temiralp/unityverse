@@ -81,14 +81,16 @@ function hasRequiredAgreements(body) {
 function bankTransferDetails(registration) {
   const amount = registration ? formatMoney(registration.totalAmount) : '';
 
-  return {
-    accountName: String(process.env.BANK_TRANSFER_ACCOUNT_NAME || 'Unityverse Academy').trim(),
-    bankName: String(process.env.BANK_TRANSFER_BANK_NAME || '').trim(),
-    iban: String(process.env.BANK_TRANSFER_IBAN || '').trim(),
-    branch: String(process.env.BANK_TRANSFER_BRANCH || '').trim(),
-    reference: registration ? `UV-${registration.id}` : '',
-    amount
-  };
+return {
+  accountName: String(process.env.BANK_TRANSFER_ACCOUNT_NAME || 'Unityverse Academy').trim(),
+  bankName: String(process.env.BANK_TRANSFER_BANK_NAME || '').trim(),
+  accountNo: String(process.env.BANK_TRANSFER_ACCOUNT_NO || '').trim(),
+  iban: String(process.env.BANK_TRANSFER_IBAN || '').trim(),
+  branch: String(process.env.BANK_TRANSFER_BRANCH || '').trim(),
+  reference: registration ? `UV-${registration.id}` : '',
+  amount
+};
+
 }
 
 function whatsappInstallmentUrl(registration) {
