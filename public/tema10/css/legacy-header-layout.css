@@ -1,0 +1,50 @@
+/* Legacy desktop header: keep the logo and utility links in one compact row. */
+@media (min-width: 1200px) {
+    #header.type_8 {
+        position: relative;
+    }
+
+    #header.type_8 .header-top {
+        height: 140px;
+    }
+
+    #header.type_8 .header-center {
+        position: absolute;
+        z-index: 2;
+        top: 0;
+        right: 0;
+        left: 0;
+        height: 140px;
+        box-sizing: border-box;
+        padding: 18px 0;
+        pointer-events: none;
+    }
+
+    #header.type_8 .header-center > .container,
+    #header.type_8 .header-center > .container > .row {
+        height: 100%;
+    }
+
+    #header.type_8 .header-center .navbar-logo.desktop_logo {
+        display: flex;
+        align-items: center;
+        margin: 0;
+        pointer-events: auto;
+    }
+
+    #header.type_8 .header-top-right .uv-header-profile-button {
+        width: clamp(38px, 2.1vw, 42px);
+        height: clamp(38px, 2.1vw, 42px);
+        padding: 6px;
+        flex: 0 0 auto;
+    }
+
+    #header.type_8 .header-top-right .uv-header-profile-button svg {
+        width: clamp(26px, 1.4vw, 28px);
+        height: clamp(26px, 1.4vw, 28px);
+    }
+
+    #header.type_8 .header-bottom {
+        position: relative;
+    }
+}

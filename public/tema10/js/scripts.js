@@ -733,17 +733,63 @@ var searchRequest = null;
   	return true;
   }
 
+  function socialLoginReturnPath(p)
+  {
+      try {
+          var legacyParams = new URLSearchParams(p || '');
+          var requestedReturn = legacyParams.get('r') || window.location.pathname;
+          var resolvedReturn = new URL(requestedReturn, window.location.href);
+
+          if (resolvedReturn.origin === window.location.origin)
+              return resolvedReturn.pathname + resolvedReturn.search + resolvedReturn.hash;
+      }
+      catch (error) {}
+
+      return '/';
+  }
+
+  function socialLogin(provider, p)
+  {
+      var returnTo = encodeURIComponent(socialLoginReturnPath(p));
+      document.location.href = '/auth/' + provider + '?returnTo=' + returnTo;
+      return false;
+  }
+
   function loginwithfacebook(p)
   {
-      document.location.href = "https://e-eticaret.net/social/facebook/login.php?" + p;
-      return false;
+      return socialLogin('facebook', p);
   }
 
   function loginwithgoogle(p)
   {
-  	document.location.href = "https://e-eticaret.net/social/google/login.php?" + p;
-  	return false;
+	return socialLogin('google', p);
   }
+
+  function showSocialLoginError()
+  {
+      var params = new URLSearchParams(window.location.search);
+      var errorCode = params.get('oauth_error');
+      if (!errorCode) return;
+
+      var messages = {
+          provider_not_configured: 'Sosyal giriş henüz yapılandırılmamış. Lütfen site yöneticisine bildirin.',
+          invalid_state: 'Giriş isteğinin süresi doldu veya doğrulanamadı. Lütfen tekrar deneyin.',
+          access_denied: 'Sosyal giriş işlemi iptal edildi.',
+          email_required: 'Hesabınızdan doğrulanmış bir e-posta adresi alınamadı. Lütfen e-posta iznini verin veya normal giriş kullanın.',
+          member_inactive: 'Üyeliğiniz aktif değildir.',
+          provider_unavailable: 'Sosyal giriş servisine şu anda ulaşılamıyor. Lütfen tekrar deneyin.',
+          login_failed: 'Sosyal giriş tamamlanamadı. Lütfen tekrar deneyin.'
+      };
+
+      _error('', messages[errorCode] || messages.login_failed);
+      params.delete('oauth_error');
+      params.delete('provider');
+      var cleanQuery = params.toString();
+      window.history.replaceState({}, document.title,
+          window.location.pathname + (cleanQuery ? '?' + cleanQuery : '') + window.location.hash);
+  }
+
+  $(document).ready(showSocialLoginError);
 
   function changeLang(url) {
       if(url != 0)

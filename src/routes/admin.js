@@ -19,6 +19,7 @@ const {
   buildProductFormTabs,
   replaceProductContentStructure
 } = require('../services/product-tabs');
+const { validateBlogContentImages } = require('../services/blog-images');
 
 const router = express.Router();
 const ADMIN_LOGIN_SCOPE = 'admin-login';
@@ -712,6 +713,9 @@ function validateBlogForm(body) {
   if (body.publishedAt && !parseOptionalDate(body.publishedAt)) {
     return 'Yayın tarihi geçerli bir tarih olmalıdır.';
   }
+
+  const imageError = validateBlogContentImages(body.content);
+  if (imageError) return imageError;
 
   return null;
 }

@@ -2664,8 +2664,7 @@ function postForm() {
 		dataType: 'json',
 		success: function(result) {
 			if(result.status =="success") {
-					$('#custom_form_1').trigger("reset");
-					_success('','Başarılı bir şekilde gönderildi.')
+				window.location.assign('/form/tesekkur/');
 			}
 			else
 				_error('', result.message);

@@ -19,11 +19,18 @@ const legacyFilterRoutes = require('./routes/legacy-filters');
 const legacyCatalogRoutes = require('./routes/legacy-catalog');
 const legacyProductDetailRoutes = require('./routes/legacy-product-detail');
 const memberRoutes = require('./routes/members');
+const createSocialAuthRouter = require('./routes/social-auth');
 const paymentRoutes = require('./routes/payments');
 const paytrRoutes = require('./routes/paytr');
 const { cspNonce, enforceEjsCsp, enforceLegacyCsp } = require('./config/csp');
 const { requireSessionSecret } = require('./config/session');
 const { parseTrustProxy } = require('./config/trust-proxy');
+const {
+  injectLegacyWhatsappIntoHtmlResponses,
+  sendLegacyHtmlFile,
+  serveLegacyHtmlWithWhatsapp
+} = require('./middleware/legacy-whatsapp');
+const { redirectLegacyBlogImage } = require('./services/blog-images');
 
 const app = express();
 const port = process.env.PORT || 8000;
@@ -167,6 +174,9 @@ app.use('/vendor/jodit', express.static(path.join(rootDir, 'node_modules/jodit/e
 
 app.use('/admin', adminRoutes);
 app.use('/api', apiRoutes);
+if (legacyFrontendMode) {
+  app.use(injectLegacyWhatsappIntoHtmlResponses);
+}
 // In legacy frontend mode, keep the original course-listing interface while
 // rendering its product cards from admin-managed DB records.
 if (legacyFrontendMode) {
@@ -179,6 +189,7 @@ app.use('/ajax', legacyFilterRoutes);
 app.use('/ajax', leadRoutes);
 app.use('/ajax/enroll', enrollmentRoutes);
 app.use('/ajax/member', memberRoutes);
+app.use('/auth', createSocialAuthRouter());
 app.use('/ajax/paytr', paytrRoutes);
 
 app.get(['/uye-ol', '/uye-ol/'], (req, res) => {
@@ -192,16 +203,40 @@ const legacyStaticOptions = {
 };
 
 staticRootFiles.forEach((fileName, routePath) => {
-  app.get(routePath, (req, res, next) => {
+  app.get(routePath, async (req, res, next) => {
     const filePath = path.join(rootDir, fileName);
+    if (legacyFrontendMode && path.extname(filePath).toLowerCase() === '.html') {
+      try {
+        return await sendLegacyHtmlFile(res, filePath, setStaticCacheHeaders);
+      } catch (error) {
+        return next(error);
+      }
+    }
+
     setStaticCacheHeaders(res, filePath);
-    res.sendFile(filePath, (error) => {
+    return res.sendFile(filePath, (error) => {
       if (error) next(error);
     });
   });
 });
 
+app.use('/uploads', redirectLegacyBlogImage);
+
+if (legacyFrontendMode) {
+  app.use('/urun', (req, res, next) => {
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    next();
+  });
+}
+
 legacyStaticDirectories.forEach((directory) => {
+  if (legacyFrontendMode) {
+    app.use(`/${directory}`, serveLegacyHtmlWithWhatsapp(
+      path.join(rootDir, directory),
+      setStaticCacheHeaders
+    ));
+  }
+
   app.use(`/${directory}`, express.static(path.join(rootDir, directory), legacyStaticOptions));
 });
 

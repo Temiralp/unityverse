@@ -2,6 +2,7 @@ const fs = require('fs/promises');
 const path = require('path');
 const express = require('express');
 const prisma = require('../db');
+const { ensureLegacyWhatsappButton } = require('../services/legacy-whatsapp');
 
 const router = express.Router();
 const rootDir = path.resolve(__dirname, '../..');
@@ -393,22 +394,6 @@ function normalizeLegacyBlogPaths(html) {
   return html
     .replace(/\b(href|src|action)=(["'])(\.\.\/)+/g, '$1=$2/')
     .replace(/url\((["']?)(\.\.\/)+/g, 'url($1/');
-}
-
-function ensureLegacyWhatsappButton(html) {
-  if (html.includes('legacy-whatsapp-appointment')) return html;
-
-  const style = `<style>
-a.legacy-whatsapp-appointment{position:fixed;display:flex;align-items:center;justify-content:center;gap:10px;height:45px;bottom:75px;right:24px;left:inherit;background-color:#25d366;color:#fff!important;border-radius:40px;text-align:center;box-shadow:0 8px 24px rgba(37,211,102,.35);z-index:9999;padding:0 22px;font-size:16px;font-weight:600;line-height:1;text-decoration:none!important;webkit-transition:all 200ms ease 0s;-moz-transition:all 200ms ease 0s;-ms-transition:all 200ms ease 0s;-o-transition:all 200ms ease 0s;transition:all 200ms ease 0s;}
-a.legacy-whatsapp-appointment i{font-size:24px;line-height:1;}
-a.legacy-whatsapp-appointment:hover{background-color:#1ebe5d;color:#fff!important;}
-@media (max-width:767px){a.legacy-whatsapp-appointment{right:15px;bottom:78px;height:42px;padding:0 16px;font-size:14px;}a.legacy-whatsapp-appointment i{font-size:22px;}}
-</style>`;
-  const button = '<a class="legacy-whatsapp-appointment" href="https://api.whatsapp.com/send?phone=905454228887&text=Merhaba,%20e%C4%9Fitimler%20hakk%C4%B1nda%20bilgi%20almak%20istiyorum" aria-label="WhatsApp ile iletişime geç" target="_blank" rel="noreferrer noopener"><i class="fa fa-whatsapp" aria-hidden="true"></i><span>Bir uzman ile görüşün</span></a>';
-
-  return html
-    .replace('</head>', `${style}\n</head>`)
-    .replace('</body>', `${button}\n</body>`);
 }
 
 async function detectLegacyBlogTotalPages() {

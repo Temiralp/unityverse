@@ -139,14 +139,17 @@ function parseCourseFile(filePath) {
 
     const label = normalizeWhitespace($(tab).text()) || 'Eğitim Detayı';
     const cleaned = cleanContentHtml(pane.html() || '');
-    const hasTextOrImage = Boolean(normalizeWhitespace(cheerio.load(cleaned).text()) || /<img\b/i.test(cleaned));
+    const hasSupportedContent = Boolean(
+      normalizeWhitespace(cheerio.load(cleaned).text())
+      || /<(?:img|iframe|video)\b/i.test(cleaned)
+    );
 
     if (isCurriculumLabel(label)) {
       curriculumTabFound = true;
-      if (hasTextOrImage) curriculumHasContent = true;
+      if (hasSupportedContent) curriculumHasContent = true;
     }
 
-    if (hasTextOrImage) {
+    if (hasSupportedContent) {
       tabSections.push(`<section data-source-tab="${tabId}"><h2>${label}</h2>${cleaned}</section>`);
       tabs.push({
         systemKey: tabSystemKey(label),

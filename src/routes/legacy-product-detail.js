@@ -2,6 +2,7 @@ const fs = require('fs/promises');
 const path = require('path');
 const express = require('express');
 const prisma = require('../db');
+const { prepareLegacyTabContent } = require('../services/youtube-embeds');
 
 const router = express.Router();
 const rootDir = path.resolve(__dirname, '../..');
@@ -108,7 +109,7 @@ function renderBreadcrumb(product) {
 		</ul>`;
 }
 
-function renderLegacyProductDetails(product) {
+function renderLegacyProductDetails(product, pageOrigin) {
   const title = escapeHtml(product.title);
   const summary = escapeHtml(product.summary || '');
   const image = normalizeLegacyAssetPath(product.image);
@@ -121,9 +122,24 @@ function renderLegacyProductDetails(product) {
   const price = effectivePrice(product);
   const formattedPrice = price > 0 ? `${formatMoney(price)} TL` : 'Fiyat bilgisi için giriş yapın';
   const productHref = `../../urun/${encodeURIComponent(product.slug)}/`;
-  const overview = renderTabContent(product, 'OVERVIEW', 0, renderFallbackOverview);
-  const curriculum = renderTabContent(product, 'CURRICULUM', 1, renderFallbackCurriculum);
-  const why = renderTabContent(product, 'WHY', 2, renderFallbackWhy);
+  const overview = prepareLegacyTabContent(
+    renderTabContent(product, 'OVERVIEW', 0, renderFallbackOverview),
+    product.content,
+    'tab-info',
+    pageOrigin
+  );
+  const curriculum = prepareLegacyTabContent(
+    renderTabContent(product, 'CURRICULUM', 1, renderFallbackCurriculum),
+    product.content,
+    'tab-additional-content2',
+    pageOrigin
+  );
+  const why = prepareLegacyTabContent(
+    renderTabContent(product, 'WHY', 2, renderFallbackWhy),
+    product.content,
+    'tab-additional-content3',
+    pageOrigin
+  );
 
   return `<div class="product-view row" id="product_details_content">
 <div class="left-content-product col-lg-12 col-xs-12">
@@ -275,12 +291,12 @@ async function loadHomeFooterTemplate() {
   return homeFooterTemplate;
 }
 
-function renderPage(template, footer, product) {
+function renderPage(template, footer, product, pageOrigin) {
   const title = escapeHtml(product.title);
   let html = template
     .replace(/<title>[\s\S]*?<\/title>/i, `<title>${title}</title>`)
     .replace(breadcrumbPattern, renderBreadcrumb(product))
-    .replace(productDetailsPattern, renderLegacyProductDetails(product));
+    .replace(productDetailsPattern, renderLegacyProductDetails(product, pageOrigin));
 
   if (footer) {
     html = html.replace(footerPattern, footer);
@@ -312,8 +328,10 @@ router.get(['/urun/:slug', '/urun/:slug/'], async (req, res, next) => {
       loadLegacyProductTemplate(),
       loadHomeFooterTemplate()
     ]);
+    const pageOrigin = `${req.protocol}://${req.get('host')}`;
     res.setHeader('Cache-Control', 'no-cache');
-    res.send(renderPage(template, footer, product));
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    res.send(renderPage(template, footer, product, pageOrigin));
   } catch (error) {
     next(error);
   }
