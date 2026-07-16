@@ -8,14 +8,13 @@ const {
   callbackUrl,
   consumeFlow,
   createFlow,
-  facebookProfile,
   findOrCreateMember,
   googleProfile,
   normalizeReturnTo,
   providerConfig
 } = require('../services/social-oauth');
 
-const SUPPORTED_PROVIDERS = new Set(['google', 'facebook']);
+const SUPPORTED_PROVIDERS = new Set(['google']);
 
 function sessionMember(member) {
   return {
@@ -121,9 +120,7 @@ function createSocialAuthRouter({
       if (!config) return res.redirect(303, oauthErrorUrl(provider, 'provider_not_configured'));
 
       const redirectUri = callbackUrl(req, provider, env);
-      const profile = provider === 'google'
-        ? await googleProfile(config, redirectUri, code, flow.codeVerifier, fetchImpl)
-        : await facebookProfile(config, redirectUri, code, fetchImpl);
+      const profile = await googleProfile(config, redirectUri, code, flow.codeVerifier, fetchImpl);
       const member = await findOrCreateMember(prisma, provider, profile);
 
       if (!member || member.status !== 'ACTIVE') {

@@ -162,18 +162,34 @@ model ProductLearningOutcome {
 }
 
 model BlogPost {
-  id          Int           @id @default(autoincrement())
-  title       String
-  slug        String        @unique
-  excerpt     String?
-  content     String?
-  image       String?
-  status      PublishStatus @default(DRAFT)
-  publishedAt DateTime?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id             Int           @id @default(autoincrement())
+  title          String
+  slug           String        @unique
+  excerpt        String?
+  content        String?
+  image          String?
+  status         PublishStatus @default(DRAFT)
+  publishedAt    DateTime?
+  blogCategoryId Int?
+  blogCategory   BlogCategory? @relation(fields: [blogCategoryId], references: [id], onDelete: Restrict)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
   @@index([status])
+  @@index([blogCategoryId])
+}
+
+model BlogCategory {
+  id        Int        @id @default(autoincrement())
+  legacyId  Int        @unique
+  name      String
+  sortOrder Int        @default(0)
+  isActive  Boolean    @default(true)
+  posts     BlogPost[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([isActive, sortOrder])
 }
 
 model Page {

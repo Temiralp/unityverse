@@ -6,6 +6,7 @@ const path = require('path');
 const multer = require('multer');
 
 const prisma = require('../db');
+const { BLOG_CATEGORIES, blogCategoryByLegacyId } = require('../config/blog-categories');
 const { requireAdmin, redirectIfLoggedIn } = require('../middleware/auth');
 const {
   clearLoginFailures,
@@ -714,10 +715,31 @@ function validateBlogForm(body) {
     return 'Yayın tarihi geçerli bir tarih olmalıdır.';
   }
 
+  const category = blogCategoryByLegacyId(body.blogCategoryLegacyId);
+  if (normalizePublishStatus(body.status) === 'PUBLISHED' && !category) {
+    return 'Yayınlanan blog yazıları için kategori seçimi zorunludur.';
+  }
+
   const imageError = validateBlogContentImages(body.content);
   if (imageError) return imageError;
 
   return null;
+}
+
+async function resolveBlogCategoryId(body) {
+  const category = blogCategoryByLegacyId(body.blogCategoryLegacyId);
+  if (!category) return null;
+
+  const storedCategory = await prisma.blogCategory.findUnique({
+    where: { legacyId: category.legacyId },
+    select: { id: true, isActive: true }
+  });
+
+  if (!storedCategory || !storedCategory.isActive) {
+    throw new Error(`Blog category ${category.legacyId} is not available.`);
+  }
+
+  return storedCategory.id;
 }
 
 function buildBlogData(body, imagePath) {
@@ -750,6 +772,7 @@ function renderBlogForm(res, options) {
     pageTitle: options.pageTitle || 'Yeni Blog Yazısı',
     submitLabel: options.submitLabel || 'Kaydet',
     error: options.error || null,
+    blogCategories: BLOG_CATEGORIES,
     publishedAtValue: formatDateTimeLocal(options.post && options.post.publishedAt)
   });
 }
@@ -1425,6 +1448,7 @@ router.get('/blog', requireAdmin, async (req, res, next) => {
     const pagination = createPagination(req, totalCount, paginationRequest(req));
     const posts = await prisma.blogPost.findMany({
       where,
+      include: { blogCategory: true },
       orderBy: [{ publishedAt: 'desc' }, { id: 'desc' }],
       skip: pagination.skip,
       take: pagination.take
@@ -1478,6 +1502,7 @@ router.post('/blog', requireAdmin, handleBlogImageUpload, requireMultipartCsrf, 
       });
     }
 
+    data.blogCategoryId = await resolveBlogCategoryId(req.body);
     data.image = await saveUploadedBlogImage(req);
     await prisma.blogPost.create({ data });
     return res.redirect('/admin/blog');
@@ -1565,7 +1590,10 @@ router.post('/products/image', requireAdmin, handleProductImageUpload, requireMu
 
 router.get('/blog/:id/edit', requireAdmin, async (req, res, next) => {
   try {
-    const post = await prisma.blogPost.findUnique({ where: { id: Number(req.params.id) } });
+    const post = await prisma.blogPost.findUnique({
+      where: { id: Number(req.params.id) },
+      include: { blogCategory: true }
+    });
 
     if (!post) {
       return res.status(404).send('Blog yazısı bulunamadı');
@@ -1617,6 +1645,7 @@ router.post('/blog/:id', requireAdmin, handleBlogImageUpload, requireMultipartCs
       });
     }
 
+    data.blogCategoryId = await resolveBlogCategoryId(req.body);
     const uploadedImagePath = await saveUploadedBlogImage(req);
     if (uploadedImagePath) data.image = uploadedImagePath;
 
@@ -1644,9 +1673,23 @@ router.post('/blog/:id', requireAdmin, handleBlogImageUpload, requireMultipartCs
 
 router.post('/blog/:id/status', requireAdmin, async (req, res, next) => {
   try {
+    const nextStatus = normalizePublishStatus(req.body.status);
+    const currentPost = await prisma.blogPost.findUnique({
+      where: { id: Number(req.params.id) },
+      select: {
+        blogCategoryId: true,
+        blogCategory: { select: { isActive: true } }
+      }
+    });
+
+    if (!currentPost) return res.status(404).send('Blog yazısı bulunamadı');
+    if (nextStatus === 'PUBLISHED' && (!currentPost.blogCategoryId || !currentPost.blogCategory?.isActive)) {
+      return res.status(400).send('Blog yazısını yayınlamadan önce kategori seçmelisiniz.');
+    }
+
     await prisma.blogPost.update({
       where: { id: Number(req.params.id) },
-      data: { status: normalizePublishStatus(req.body.status) }
+      data: { status: nextStatus }
     });
 
     return res.redirect('/admin/blog');

@@ -755,11 +755,6 @@ var searchRequest = null;
       return false;
   }
 
-  function loginwithfacebook(p)
-  {
-      return socialLogin('facebook', p);
-  }
-
   function loginwithgoogle(p)
   {
 	return socialLogin('google', p);

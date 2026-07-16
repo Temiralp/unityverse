@@ -28,6 +28,23 @@
       </select>
     </label>
     <label>
+      Blog Kategorisi
+      <%
+        const selectedBlogCategoryLegacyId = post && post.blogCategoryLegacyId
+          ? Number(post.blogCategoryLegacyId)
+          : post && post.blogCategory
+            ? post.blogCategory.legacyId
+            : null;
+      %>
+      <select name="blogCategoryLegacyId">
+        <option value="">Kategori seçin</option>
+        <% blogCategories.forEach((category) => { %>
+          <option value="<%= category.legacyId %>" <%= selectedBlogCategoryLegacyId === category.legacyId ? 'selected' : '' %>>[<%= category.legacyId %>] <%= category.name %></option>
+        <% }) %>
+      </select>
+      <span class="field-help">Yayındaki yazılar için zorunludur; mevcut /blog/{id}/ adresleri korunur.</span>
+    </label>
+    <label>
       Kapak Görseli
       <input name="coverImage" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif">
       <span class="field-help">JPG, PNG, WebP, GIF veya AVIF · en fazla 5 MB</span>

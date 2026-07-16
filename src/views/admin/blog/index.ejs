@@ -28,6 +28,7 @@
     <thead>
       <tr>
         <th>Başlık</th>
+        <th>Kategori</th>
         <th>Status</th>
         <th>Yayın Tarihi</th>
         <th>Güncellenme</th>
@@ -41,6 +42,7 @@
             <strong><%= post.title %></strong>
             <small class="table-muted"><%= post.slug %></small>
           </td>
+          <td><%= post.blogCategory ? post.blogCategory.name : 'Atanmamış' %></td>
           <td>
             <span class="status-pill <%= post.status === 'PUBLISHED' ? 'is-active' : 'is-passive' %>">
               <%= post.status === 'PUBLISHED' ? 'Yayında' : 'Taslak' %>
@@ -67,7 +69,7 @@
         </tr>
       <% }) %>
       <% if (!posts.length) { %>
-        <tr><td colspan="5">Filtrelere uygun blog yazısı bulunamadı.</td></tr>
+        <tr><td colspan="6">Filtrelere uygun blog yazısı bulunamadı.</td></tr>
       <% } %>
     </tbody>
   </table>

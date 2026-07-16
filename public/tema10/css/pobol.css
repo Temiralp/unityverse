@@ -2498,17 +2498,40 @@ body:not(.member-logged-in) .legacy-static-filter-fallback .legacy-price-filter 
     flex-wrap: wrap;
 }
 
-.category-top-bar-item[data-item="course-search-item"] {
-    flex: 1 1 320px;
-    min-width: 260px;
+html.pbl-tum-urunler .category-page-title--with-search {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 24px;
+    padding-bottom: 10px;
 }
 
-.course-search-form {
+html.pbl-tum-urunler .category-page-title--with-search h1.modtitle {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+html.pbl-tum-urunler .category-page-search {
+    min-width: 0;
+}
+
+html.pbl-tum-urunler .category-page-title--with-search #search_result {
+    white-space: nowrap;
+}
+
+html.pbl-tum-urunler .course-search-form {
     margin: 0;
     width: 100%;
 }
 
-.course-search-control {
+html.pbl-tum-urunler .course-search-control {
     position: relative;
     display: flex;
     align-items: center;
@@ -2516,7 +2539,7 @@ body:not(.member-logged-in) .legacy-static-filter-fallback .legacy-price-filter 
     height: 42px;
 }
 
-.course-search-control .fa {
+html.pbl-tum-urunler .course-search-control .fa {
     position: absolute;
     left: 14px;
     color: #6f6a86;
@@ -2524,7 +2547,7 @@ body:not(.member-logged-in) .legacy-static-filter-fallback .legacy-price-filter 
     pointer-events: none;
 }
 
-.course-search-control input {
+html.pbl-tum-urunler .course-search-control input {
     width: 100%;
     height: 42px;
     border: 1px solid #dedbea;
@@ -2537,17 +2560,17 @@ body:not(.member-logged-in) .legacy-static-filter-fallback .legacy-price-filter 
     transition: border-color .2s ease, box-shadow .2s ease;
 }
 
-.course-search-control input::placeholder {
+html.pbl-tum-urunler .course-search-control input::placeholder {
     color: #8c889b;
     font-weight: 400;
 }
 
-.course-search-control input:focus {
+html.pbl-tum-urunler .course-search-control input:focus {
     border-color: var(--renk1, #0b075f);
     box-shadow: 0 0 0 3px rgba(11, 7, 95, .09);
 }
 
-.course-search-control button {
+html.pbl-tum-urunler .course-search-control button {
     position: absolute;
     right: 5px;
     height: 32px;
@@ -2562,31 +2585,34 @@ body:not(.member-logged-in) .legacy-static-filter-fallback .legacy-price-filter 
     padding: 0 13px;
 }
 
-.course-search-control button:hover,
-.course-search-control button:focus {
+html.pbl-tum-urunler .course-search-control button:hover,
+html.pbl-tum-urunler .course-search-control button:focus {
     background: var(--renk2, #202020);
 }
 
-@media (max-width: 1199.98px) {
-    .category-top-bar-item[data-item="course-search-item"] {
-        order: 4;
-        flex: 1 1 100%;
-        min-width: 100%;
+@media (max-width: 767.98px) {
+    html.pbl-tum-urunler .category-page-title--with-search {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 8px;
+    }
+
+    html.pbl-tum-urunler .category-page-title--with-search #search_result {
+        justify-self: end;
     }
 }
 
 @media (max-width: 575.98px) {
-    .course-search-control {
+    html.pbl-tum-urunler .course-search-control {
         height: 40px;
     }
 
-    .course-search-control input {
+    html.pbl-tum-urunler .course-search-control input {
         height: 40px;
         font-size: 13px;
         padding-right: 62px;
     }
 
-    .course-search-control button {
+    html.pbl-tum-urunler .course-search-control button {
         min-width: 50px;
         padding: 0 10px;
     }

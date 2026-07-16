@@ -82,6 +82,16 @@ function jsonResponse(payload, status = 200) {
   });
 }
 
+function htmlFiles(directory, results = []) {
+  for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+    if (entry.name === 'node_modules' || entry.name === '.git') continue;
+    const entryPath = path.join(directory, entry.name);
+    if (entry.isDirectory()) htmlFiles(entryPath, results);
+    else if (entry.isFile() && entry.name.endsWith('.html')) results.push(entryPath);
+  }
+  return results;
+}
+
 async function googleFlowTest() {
   const providerRequests = [];
   const fetchImpl = async (url, options) => {
@@ -141,35 +151,16 @@ async function googleFlowTest() {
   }
 }
 
-async function facebookMissingEmailTest() {
-  const fetchImpl = async (url) => String(url).includes('access_token')
-    ? jsonResponse({ access_token: 'facebook-access-token' })
-    : jsonResponse({ id: 'facebook-user-1', name: 'Test User' });
-  const server = await startTestServer({
-    env: {
-      FACEBOOK_APP_ID: 'facebook-app-id',
-      FACEBOOK_APP_SECRET: 'facebook-app-secret',
-      FACEBOOK_GRAPH_VERSION: 'v23.0'
-    },
-    fetchImpl
-  });
-
+async function unsupportedProviderTest() {
+  const server = await startTestServer({ env: {}, fetchImpl: async () => jsonResponse({}) });
   try {
     const start = await fetch(`${server.baseUrl}/auth/facebook?returnTo=%2F`, { redirect: 'manual' });
-    const cookie = cookieFrom(start);
-    const authorization = new URL(start.headers.get('location'));
-    assert.equal(authorization.searchParams.get('scope'), 'email,public_profile');
+    assert.equal(start.status, 404);
 
-    const callback = new URL(`${server.baseUrl}/auth/facebook/callback`);
-    callback.searchParams.set('code', 'facebook-code');
-    callback.searchParams.set('state', authorization.searchParams.get('state'));
-    const completed = await fetch(callback, {
-      headers: { Cookie: cookie },
+    const callback = await fetch(`${server.baseUrl}/auth/facebook/callback?code=x&state=y`, {
       redirect: 'manual'
     });
-    assert.equal(completed.status, 303);
-    assert.match(completed.headers.get('location'), /oauth_error=email_required/);
-    assert.equal(server.members.size, 0);
+    assert.equal(callback.status, 404);
   } finally {
     await server.close();
   }
@@ -201,20 +192,34 @@ async function guardTests() {
 function frontendWiringTest() {
   const root = path.resolve(__dirname, '..');
   const scriptsSource = fs.readFileSync(path.join(root, 'public/tema10/js/scripts.js'), 'utf8');
+  const cssSource = fs.readFileSync(path.join(root, 'public/tema10/css/home2.css'), 'utf8');
+  const oauthSource = fs.readFileSync(path.join(root, 'src/services/social-oauth.js'), 'utf8');
+  const routerSource = fs.readFileSync(path.join(root, 'src/routes/social-auth.js'), 'utf8');
   const loginPage = fs.readFileSync(path.join(root, 'uye-girisi/index.html'), 'utf8');
   const registerPage = fs.readFileSync(path.join(root, 'uye-ol/index.html'), 'utf8');
 
   assert.doesNotMatch(scriptsSource, /e-eticaret\.net\/social\/(google|facebook)/);
+  assert.doesNotMatch(scriptsSource, /loginwithfacebook/);
+  assert.doesNotMatch(oauthSource, /facebookProfile|FACEBOOK_APP_/);
+  assert.doesNotMatch(routerSource, /facebookProfile|['"]facebook['"]/);
+  assert.match(cssSource, /social-login\[onclick\*="loginwithgoogle"\]/);
   assert.match(scriptsSource, /'\/auth\/' \+ provider/);
   assert.match(loginPage, /loginwithgoogle/);
-  assert.match(loginPage, /loginwithfacebook/);
+  assert.doesNotMatch(loginPage, /loginwithfacebook|pbl-social-facebook/);
   assert.match(registerPage, /loginwithgoogle/);
-  assert.match(registerPage, /loginwithfacebook/);
+  assert.doesNotMatch(registerPage, /loginwithfacebook|pbl-social-facebook/);
+
+  for (const filePath of htmlFiles(root)) {
+    const html = fs.readFileSync(filePath, 'utf8');
+    assert.doesNotMatch(html, /loginwithfacebook|pbl-social-facebook/, filePath);
+    if (html.includes('home2.css?v=')) assert.match(html, /home2\.css\?v=5\.4\.96/, filePath);
+    if (html.includes('scripts.js?v=')) assert.match(html, /scripts\.js\?v=5\.4\.105/, filePath);
+  }
 }
 
 async function run() {
   await googleFlowTest();
-  await facebookMissingEmailTest();
+  await unsupportedProviderTest();
   await guardTests();
   frontendWiringTest();
   console.log('Social OAuth tests passed.');

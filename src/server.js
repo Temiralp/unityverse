@@ -62,7 +62,8 @@ const staticRootFiles = new Map([
   ['/index.html', 'index.html'],
   ['/admin.css', 'admin.css'],
   ['/filters.js', 'filters.js'],
-  ['/googleec1b8b1917d61361.html', 'googleec1b8b1917d61361.html'],
+  // ['/googleec1b8b1917d61361.html', 'googleec1b8b1917d61361.html'],
+  ['/googlebccf539627981dfd.html', 'googlebccf539627981dfd.html'],
   ['/robots.txt', 'robots.txt'],
   ['/sitemap.xml', 'sitemap.xml']
 ]);

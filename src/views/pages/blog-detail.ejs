@@ -9,6 +9,10 @@
           <span aria-hidden="true">/</span>
           <a href="/blog/">Blog</a>
           <span aria-hidden="true">/</span>
+          <% if (post.blogCategory) { %>
+            <a href="/blog/<%= post.blogCategory.legacyId %>/"><%= post.blogCategory.name %></a>
+            <span aria-hidden="true">/</span>
+          <% } %>
           <span><%= post.title %></span>
         </nav>
 

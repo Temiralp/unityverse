@@ -87,16 +87,33 @@ router.get(['/sayfa/iletisim-5', '/sayfa/iletisim-5/', '/sayfa/iletisim-bilgiler
   });
 });
 
-router.get(['/blog', '/blog/', '/blog/:page(\\d+)', '/blog/:page(\\d+)/'], async (req, res, next) => {
+router.get(['/blog', '/blog/', '/blog/:categoryId(\\d+)', '/blog/:categoryId(\\d+)/'], async (req, res, next) => {
   try {
-    const pageRequest = blogPageRequest(req);
-    const { currentPage, pageSize, usesQueryPagination } = pageRequest;
+    const legacyCategoryId = req.params.categoryId
+      ? blogPageInteger(req.params.categoryId, null)
+      : null;
+    const categories = await prisma.blogCategory.findMany({
+      where: { isActive: true },
+      orderBy: [{ sortOrder: 'asc' }, { legacyId: 'asc' }]
+    });
+    const selectedCategory = legacyCategoryId
+      ? categories.find((category) => category.legacyId === legacyCategoryId) || null
+      : null;
+
+    if (legacyCategoryId && !selectedCategory) {
+      return res.status(404).send('404 File Not Found');
+    }
+
+    const basePath = selectedCategory ? `/blog/${selectedCategory.legacyId}/` : '/blog/';
+    const pageRequest = blogPageRequest(req, basePath);
+    const { currentPage, pageSize } = pageRequest;
     const where = { status: 'PUBLISHED' };
+    if (selectedCategory) where.blogCategoryId = selectedCategory.id;
     const totalPosts = await prisma.blogPost.count({ where });
     const totalPages = Math.max(1, Math.ceil(totalPosts / pageSize));
 
-    if (totalPosts > 0 && currentPage > totalPages) {
-      return res.redirect(blogPageHref(totalPages, pageSize, usesQueryPagination));
+    if (currentPage > totalPages) {
+      return res.redirect(blogPageHref(totalPages, pageSize, basePath));
     }
 
     const posts = totalPosts === 0
@@ -112,10 +129,15 @@ router.get(['/blog', '/blog/', '/blog/:page(\\d+)', '/blog/:page(\\d+)/'], async
 
     return res.render('pages/blog', {
       activeNav: 'blog',
-      pageTitle: 'Blog | Unityverse Academy',
+      pageTitle: selectedCategory
+        ? `${selectedCategory.name} | Unityverse Academy`
+        : 'Blog | Unityverse Academy',
+      canonicalUrl: `https://unityverseacademy.com${basePath}`,
       extraStyles: ['/public/tema10/css/blog.css'],
       blogCards: pagedPosts.map(createBlogCard),
       totalPosts,
+      categories,
+      selectedCategory,
       pagination: blogPagination(currentPage, totalPages, pageRequest)
     });
   } catch (error) {
@@ -130,7 +152,8 @@ router.get(['/blog-detay/:slug', '/blog-detay/:slug/'], async (req, res, next) =
       where: {
         slug,
         status: 'PUBLISHED'
-      }
+      },
+      include: { blogCategory: true }
     });
 
     if (!post) {
@@ -148,6 +171,7 @@ router.get(['/blog-detay/:slug', '/blog-detay/:slug/'], async (req, res, next) =
     return res.render('pages/blog-detail', {
       activeNav: 'blog',
       pageTitle: `${post.title} | Unityverse Academy`,
+      canonicalUrl: `https://unityverseacademy.com/blog-detay/${post.slug}/`,
       extraStyles: ['/public/tema10/css/blog.css'],
       extraScripts: ['/public/tema10/js/blog.js'],
       post: {
@@ -289,29 +313,24 @@ function blogPageInteger(value, fallback) {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
-function blogPageRequest(req) {
-  const usesQueryPagination = req.query.pg !== undefined || req.query.ps !== undefined;
-  const currentPage = blogPageInteger(req.query.pg || req.params.page, 1);
+function blogPageRequest(req, basePath = '/blog/') {
+  const currentPage = blogPageInteger(req.query.pg, 1);
   const pageSize = Math.min(48, blogPageInteger(req.query.ps, BLOG_PAGE_SIZE));
 
   return {
     currentPage,
     pageSize,
-    usesQueryPagination
+    basePath
   };
 }
 
-function blogPageHref(page, pageSize, usesQueryPagination) {
-  if (usesQueryPagination) {
-    return `/blog/?pg=${page}&ps=${pageSize}`;
-  }
-
-  return page === 1 ? '/blog/' : `/blog/${page}/`;
+function blogPageHref(page, pageSize, basePath = '/blog/') {
+  return `${basePath}?pg=${page}&ps=${pageSize}`;
 }
 
 function blogPagination(currentPage, totalPages, options = {}) {
   const pageSize = options.pageSize || BLOG_PAGE_SIZE;
-  const usesQueryPagination = Boolean(options.usesQueryPagination);
+  const basePath = options.basePath || '/blog/';
   const pages = [];
   const start = Math.max(1, currentPage - 2);
   const end = Math.min(totalPages, currentPage + 2);
@@ -319,7 +338,7 @@ function blogPagination(currentPage, totalPages, options = {}) {
   for (let page = start; page <= end; page += 1) {
     pages.push({
       number: page,
-      href: blogPageHref(page, pageSize, usesQueryPagination),
+      href: blogPageHref(page, pageSize, basePath),
       isCurrent: page === currentPage
     });
   }
@@ -329,8 +348,8 @@ function blogPagination(currentPage, totalPages, options = {}) {
     totalPages,
     hasPrev: currentPage > 1,
     hasNext: currentPage < totalPages,
-    prevHref: blogPageHref(currentPage - 1, pageSize, usesQueryPagination),
-    nextHref: blogPageHref(currentPage + 1, pageSize, usesQueryPagination),
+    prevHref: blogPageHref(currentPage - 1, pageSize, basePath),
+    nextHref: blogPageHref(currentPage + 1, pageSize, basePath),
     pages
   };
 }

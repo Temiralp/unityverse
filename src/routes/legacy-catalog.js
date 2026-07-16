@@ -2,6 +2,7 @@ const fs = require('fs/promises');
 const path = require('path');
 const express = require('express');
 const prisma = require('../db');
+const { normalizeLegacyBlogDetailContent } = require('../services/legacy-blog-detail');
 const { ensureLegacyWhatsappButton } = require('../services/legacy-whatsapp');
 
 const router = express.Router();
@@ -17,13 +18,14 @@ const blogDetailMetaTitlePattern = /<title>[\s\S]*?<\/title>/i;
 const blogDetailMetaNameTitlePattern = /<meta name='title' content='[^']*' \/>/i;
 const blogDetailMetaDescriptionPattern = /<meta name='description' content='[^']*' \/>/i;
 const blogDetailCanonicalPattern = /<link rel="canonical" href="[^"]*" \/>/i;
+const blogDetailBreadcrumbCategoryPattern = /<li><a href=["'](?:\.\.\/)+blog\/\d+\/["']>[\s\S]*?<\/a><\/li>/i;
 const blogDetailBreadcrumbCurrentPattern = /<li><a href="#">[\s\S]*?<\/a><\/li>/i;
 const blogDetailArticleDatePattern = /<span class="article-date">[\s\S]*?<\/span>/i;
 const blogDetailBannerPattern = /<div class="banners">[\s\S]*?<\/div>\s*<\/div>/i;
 const blogDetailContentPattern = /(<div class="row blog-icerik">\s*<div class="col-md-12">\s*)[\s\S]*?(\s*<\/div>\s*<\/div>\s*<\/div>\s*<\/div>\s*<\/div>\s*<div class="modal fade" id="bize_sorun")/i;
 
 let allProductsTemplate = null;
-let legacyBlogTotalPages = null;
+let legacyBlogCategoryTemplateMaxId = null;
 let legacyStaticBlogCards = null;
 let legacyBlogDetailTemplate = null;
 
@@ -172,12 +174,18 @@ function legacyPageInteger(value, fallback) {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
-function legacyBlogPaginationItem(page, currentPage, label = String(page)) {
+function legacyBlogPageHref(basePath, page, pageSize) {
+  return `${basePath}?pg=${page}&ps=${pageSize}`;
+}
+
+function legacyBlogPaginationItem(page, currentPage, basePath, pageSize, label = String(page)) {
+  const href = legacyBlogPageHref(basePath, page, pageSize);
+
   if (page === currentPage) {
-    return `<li onclick="return false" class="active"><a href="#">${label}</a></li>`;
+    return `<li class="active"><a href="${href}" aria-current="page">${label}</a></li>`;
   }
 
-  return `<li onclick="return getresults(${page})"><a href="#!">${label}</a></li>`;
+  return `<li><a href="${href}">${label}</a></li>`;
 }
 
 function legacyBlogPaginationPages(currentPage, totalPages) {
@@ -196,21 +204,33 @@ function legacyBlogPaginationPages(currentPage, totalPages) {
   return [1, 'ellipsis-prev', currentPage - 2, currentPage - 1, currentPage, currentPage + 1, currentPage + 2, 'ellipsis-next', totalPages];
 }
 
-function renderLegacyBlogPagination(currentPage, totalPages) {
+function renderLegacyBlogPagination(currentPage, totalPages, basePath, pageSize) {
   const items = legacyBlogPaginationPages(currentPage, totalPages).map((page) => {
     if (page === 'ellipsis' || page === 'ellipsis-next') {
-      return legacyBlogPaginationItem(Math.min(totalPages, currentPage + 4), currentPage, '...');
+      return legacyBlogPaginationItem(
+        Math.min(totalPages, currentPage + 4),
+        currentPage,
+        basePath,
+        pageSize,
+        '...'
+      );
     }
 
     if (page === 'ellipsis-prev') {
-      return legacyBlogPaginationItem(Math.max(1, currentPage - 4), currentPage, '...');
+      return legacyBlogPaginationItem(
+        Math.max(1, currentPage - 4),
+        currentPage,
+        basePath,
+        pageSize,
+        '...'
+      );
     }
 
-    return legacyBlogPaginationItem(page, currentPage);
+    return legacyBlogPaginationItem(page, currentPage, basePath, pageSize);
   });
 
   if (currentPage < totalPages) {
-    items.push(`<li onclick="return getresults(${currentPage + 1})"><a href="#">&gt;</a></li>`);
+    items.push(legacyBlogPaginationItem(currentPage + 1, currentPage, basePath, pageSize, '&gt;'));
   }
 
   return `<div class="box-pagination col-md-6 col-sm-6 text-right"><ul class="pagination">${items.join('')}</ul></div>`;
@@ -252,25 +272,29 @@ function renderLegacyBlogDetailBanner(post) {
   const image = normalizeAssetPath(post.image, '');
   if (!image) return '';
 
-  return `<div class="banners">
-									<div>
-											<img src="${escapeAttribute(image)}" alt="${escapeAttribute(post.title)}">
+  return `<div class="banners uv-blog-detail-hero">
+									<div class="uv-blog-detail-hero__frame">
+											<img class="uv-blog-detail-hero__image" src="${escapeAttribute(image)}" alt="${escapeAttribute(post.title)}" width="1600" height="720" fetchpriority="high" decoding="async">
 									</div>
 								</div>
 							</div>`;
 }
 
-async function renderLegacyBlogDetail(post, req) {
+async function renderLegacyBlogDetail(post) {
   const template = await loadLegacyBlogDetailTemplate();
   const title = escapeHtml(post.title);
   const description = escapeAttribute(blogExcerpt(post, 160));
-  const canonical = `${req.protocol}://${req.get('host')}/blog-detay/${post.slug}/`;
-  const content = post.content || '';
+  const canonical = `https://unityverseacademy.com/blog-detay/${post.slug}/`;
+  const content = normalizeLegacyBlogDetailContent(post.content || '', post.title);
+  const categoryBreadcrumb = post.blogCategory
+    ? `<li><a href="/blog/${post.blogCategory.legacyId}/">${escapeHtml(post.blogCategory.name)}</a></li>`
+    : '';
   const renderedHtml = template
     .replace(blogDetailMetaTitlePattern, `<title>${title}</title>`)
     .replace(blogDetailMetaNameTitlePattern, `<meta name='title' content='${escapeAttribute(post.title)}' />`)
     .replace(blogDetailMetaDescriptionPattern, `<meta name='description' content='${description}' />`)
     .replace(blogDetailCanonicalPattern, `<link rel="canonical" href="${canonical}" />`)
+    .replace(blogDetailBreadcrumbCategoryPattern, categoryBreadcrumb)
     .replace(blogDetailBreadcrumbCurrentPattern, `<li><a href="#">${title}</a></li>`)
     .replace(blogDetailTitlePattern, `<h1 class="modtitle">${title}</h1>`)
     .replace(blogDetailArticleDatePattern, `<span class="article-date">${escapeHtml(formatBlogDate(post.publishedAt || post.createdAt))}</span>`)
@@ -318,10 +342,13 @@ function renderLegacyBlogEmptySearch(query) {
 async function collectLegacyBlogCards() {
   if (legacyStaticBlogCards) return legacyStaticBlogCards;
 
-  const totalPages = await detectLegacyBlogTotalPages();
+  const categoryTemplateMaxId = await detectLegacyBlogCategoryTemplateMaxId();
   const pagePaths = [
     path.join(rootDir, 'blog', 'index.html'),
-    ...Array.from({ length: totalPages }, (_, index) => path.join(rootDir, 'blog', String(index + 1), 'index.html'))
+    ...Array.from(
+      { length: categoryTemplateMaxId },
+      (_, index) => path.join(rootDir, 'blog', String(index + 1), 'index.html')
+    )
   ];
   const cardsByKey = new Map();
 
@@ -368,14 +395,70 @@ function replaceLegacyBlogGrid(html, cards) {
   return html.replace(blogGridPattern, `$1\n${cards.join('\n')}\n$3`);
 }
 
-async function renderLegacyBlogList(html, currentPage, pageSize) {
+async function renderLegacyBlogList(html, currentPage, pageSize, basePath = '/blog/') {
   const cards = await collectAllBlogCards();
   const totalPages = Math.max(1, Math.ceil(cards.length / pageSize));
   const safeCurrentPage = Math.min(currentPage, totalPages);
   const pagedCards = cards.slice((safeCurrentPage - 1) * pageSize, safeCurrentPage * pageSize);
 
   return replaceLegacyBlogGrid(html, pagedCards)
-    .replace(blogPaginationPattern, renderLegacyBlogPagination(safeCurrentPage, totalPages));
+    .replace(blogPaginationPattern, renderLegacyBlogPagination(safeCurrentPage, totalPages, basePath, pageSize));
+}
+
+function blogPostSearchText(post) {
+  return normalizeSearchText([
+    post.title,
+    post.excerpt,
+    stripHtml(post.content),
+    post.slug
+  ].filter(Boolean).join(' '));
+}
+
+function renderLegacyBlogEmptyCategory() {
+  return '<div class="col-xs-12"><div class="alert alert-info" role="status">Bu kategoride henüz yayınlanmış yazı bulunmuyor.</div></div>';
+}
+
+async function renderLegacyBlogCategory(html, category, currentPage, pageSize, query = '') {
+  const posts = await prisma.blogPost.findMany({
+    where: {
+      status: 'PUBLISHED',
+      blogCategoryId: category.id
+    },
+    orderBy: [{ publishedAt: 'desc' }, { createdAt: 'desc' }, { id: 'desc' }]
+  });
+  const matchingPosts = query
+    ? posts.filter((post) => blogPostSearchText(post).includes(normalizeSearchText(query)))
+    : posts;
+
+  if (query) {
+    const results = matchingPosts.length
+      ? matchingPosts.map(renderAdminBlogCard).join('\n')
+      : renderLegacyBlogEmptySearch(query);
+
+    return html
+      .replace(blogGridPattern, `$1\n${results}\n$3`)
+      .replace(blogPaginationPattern, '')
+      .replace(blogSearchInputPattern, `$1${escapeAttribute(query)}$2`);
+  }
+
+  const totalPages = Math.max(1, Math.ceil(matchingPosts.length / pageSize));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const pagePosts = matchingPosts.slice(
+    (safeCurrentPage - 1) * pageSize,
+    safeCurrentPage * pageSize
+  );
+  const cards = pagePosts.length
+    ? pagePosts.map(renderAdminBlogCard)
+    : [renderLegacyBlogEmptyCategory()];
+  const basePath = `/blog/${category.legacyId}/`;
+
+  return replaceLegacyBlogGrid(html, cards)
+    .replace(blogPaginationPattern, renderLegacyBlogPagination(
+      safeCurrentPage,
+      totalPages,
+      basePath,
+      pageSize
+    ));
 }
 
 async function renderLegacyBlogSearch(html, query) {
@@ -396,8 +479,8 @@ function normalizeLegacyBlogPaths(html) {
     .replace(/url\((["']?)(\.\.\/)+/g, 'url($1/');
 }
 
-async function detectLegacyBlogTotalPages() {
-  if (legacyBlogTotalPages) return legacyBlogTotalPages;
+async function detectLegacyBlogCategoryTemplateMaxId() {
+  if (legacyBlogCategoryTemplateMaxId) return legacyBlogCategoryTemplateMaxId;
 
   const blogRoot = path.join(rootDir, 'blog');
   const entries = await fs.readdir(blogRoot, { withFileTypes: true }).catch(() => []);
@@ -405,32 +488,38 @@ async function detectLegacyBlogTotalPages() {
     .filter((entry) => entry.isDirectory() && /^\d+$/.test(entry.name))
     .map((entry) => Number.parseInt(entry.name, 10));
 
-  legacyBlogTotalPages = Math.max(1, ...pagesFromFolders);
-  return legacyBlogTotalPages;
+  legacyBlogCategoryTemplateMaxId = Math.max(1, ...pagesFromFolders);
+  return legacyBlogCategoryTemplateMaxId;
 }
 
-async function legacyBlogPagePath(page, preferNumberedPage = false) {
-  const pagePath = page === 1 && !preferNumberedPage
-    ? path.join(rootDir, 'blog', 'index.html')
-    : path.join(rootDir, 'blog', String(page), 'index.html');
-
-  await fs.access(pagePath);
-  return pagePath;
-}
-
-router.get(['/blog', '/blog/', '/blog/:page(\\d+)', '/blog/:page(\\d+)/'], async (req, res, next) => {
+router.get(['/blog', '/blog/', '/blog/:categoryId(\\d+)', '/blog/:categoryId(\\d+)/'], async (req, res, next) => {
   try {
-    const requestedPage = legacyPageInteger(req.query.pg || req.params.page, 1);
+    const requestedPage = legacyPageInteger(req.query.pg, 1);
     const pageSize = Math.min(48, legacyPageInteger(req.query.ps, 12));
     const currentPage = requestedPage;
-    const staticTotalPages = await detectLegacyBlogTotalPages();
-    const templatePage = Math.min(currentPage, staticTotalPages);
-    const pagePath = await legacyBlogPagePath(templatePage, req.params.page !== undefined);
+    const legacyCategoryId = req.params.categoryId
+      ? legacyPageInteger(req.params.categoryId, null)
+      : null;
+    const category = legacyCategoryId
+      ? await prisma.blogCategory.findFirst({
+        where: { legacyId: legacyCategoryId, isActive: true }
+      })
+      : null;
+
+    if (legacyCategoryId && !category) {
+      return res.status(404).send('404 File Not Found');
+    }
+
+    const pagePath = category
+      ? path.join(rootDir, 'blog', String(category.legacyId), 'index.html')
+      : path.join(rootDir, 'blog', 'index.html');
     const template = await fs.readFile(pagePath, 'utf8');
     const blogQuery = String(req.query.blog_query || '').trim();
-    const renderedHtml = blogQuery
-      ? await renderLegacyBlogSearch(template, blogQuery)
-      : await renderLegacyBlogList(template, currentPage, pageSize);
+    const renderedHtml = category
+      ? await renderLegacyBlogCategory(template, category, currentPage, pageSize, blogQuery)
+      : blogQuery
+        ? await renderLegacyBlogSearch(template, blogQuery)
+        : await renderLegacyBlogList(template, currentPage, pageSize, '/blog/');
     const html = ensureLegacyWhatsappButton(normalizeLegacyBlogPaths(renderedHtml));
 
     res.setHeader('Cache-Control', 'no-cache');
@@ -447,13 +536,14 @@ router.get(['/blog-detay/:slug', '/blog-detay/:slug/'], async (req, res, next) =
       where: {
         slug,
         status: 'PUBLISHED'
-      }
+      },
+      include: { blogCategory: true }
     });
 
     if (!post) return next();
 
     res.setHeader('Cache-Control', 'no-cache');
-    return res.send(await renderLegacyBlogDetail(post, req));
+    return res.send(await renderLegacyBlogDetail(post));
   } catch (error) {
     return next(error);
   }

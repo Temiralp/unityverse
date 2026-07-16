@@ -4,6 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><%= typeof pageTitle !== 'undefined' ? pageTitle : 'Unityverse Academy' %></title>
+  <% if (typeof canonicalUrl !== 'undefined' && canonicalUrl) { %>
+    <link rel="canonical" href="<%= canonicalUrl %>">
+  <% } %>
   <link rel="shortcut icon" href="/uploads/p/o/TVLxaOXSi7Bs.png?v=1660040600">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

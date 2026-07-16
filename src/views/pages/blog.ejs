@@ -4,7 +4,7 @@
   <section class="uv-page-hero uv-blog-hero">
     <div class="uv-shell">
       <p class="uv-eyebrow">Blog</p>
-      <h1>Unityverse Academy Blog</h1>
+      <h1><%= selectedCategory ? selectedCategory.name : 'Unityverse Academy Blog' %></h1>
       <p>Yazılım, oyun geliştirme, tasarım ve kariyer yolculuğuna dair güncel içerikler.</p>
     </div>
   </section>
@@ -16,7 +16,13 @@
           <p class="uv-blog-toolbar__label">Yazılar</p>
           <strong><%= totalPosts %> içerik</strong>
         </div>
-        <a class="uv-blog-filter is-active" href="/blog/" aria-current="page">Tüm Yazılar</a>
+        <div class="uv-blog-filters">
+          <a class="uv-blog-filter <%= selectedCategory ? '' : 'is-active' %>" href="/blog/" <%- selectedCategory ? '' : 'aria-current="page"' %>>Tüm Yazılar</a>
+          <% categories.forEach((category) => { %>
+            <% const isSelected = selectedCategory && selectedCategory.id === category.id; %>
+            <a class="uv-blog-filter <%= isSelected ? 'is-active' : '' %>" href="/blog/<%= category.legacyId %>/" <%- isSelected ? 'aria-current="page"' : '' %>><%= category.name %></a>
+          <% }) %>
+        </div>
       </div>
 
       <% if (blogCards.length) { %>

@@ -165,6 +165,7 @@ router.get('/blog-posts', async (req, res, next) => {
   try {
     const posts = await prisma.blogPost.findMany({
       where: { status: 'PUBLISHED' },
+      include: { blogCategory: true },
       orderBy: [{ publishedAt: 'desc' }, { id: 'desc' }]
     });
     res.json({ data: posts });

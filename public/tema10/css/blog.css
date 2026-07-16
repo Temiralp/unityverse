@@ -29,6 +29,13 @@
   margin: 0 0 var(--uv-space-1);
 }
 
+.uv-blog-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--uv-space-2);
+  justify-content: flex-end;
+}
+
 .uv-blog-filter {
   border: 1px solid var(--uv-color-primary);
   border-radius: var(--uv-radius-pill);
@@ -416,6 +423,10 @@
   .uv-blog-cta {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .uv-blog-filters {
+    justify-content: flex-start;
   }
 
   .uv-blog-grid,

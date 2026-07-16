@@ -22,6 +22,10 @@
     "test:legacy-homepage": "node scripts/test-legacy-homepage-responsive.js",
     "test:form-success": "node scripts/test-form-success-redirect.js",
     "test:blog-images": "node scripts/test-blog-images.js",
+    "test:blog-categories": "node scripts/test-blog-categories.js",
+    "test:blog-categories-route": "node scripts/test-legacy-blog-category-route.js",
+    "test:blog-categories-browser": "node scripts/blog-category-browser-smoke.js",
+    "audit:blog-categories-db": "node scripts/audit-blog-category-db.js",
     "test:social-oauth": "node scripts/test-social-oauth.js",
     "seed": "node prisma/seed.js"
   },

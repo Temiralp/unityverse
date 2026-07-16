@@ -3,8 +3,7 @@ const crypto = require('crypto');
 const FLOW_TTL_MS = 10 * 60 * 1000;
 const REQUEST_TIMEOUT_MS = 10 * 1000;
 const PROVIDERS = Object.freeze({
-  google: 'GOOGLE',
-  facebook: 'FACEBOOK'
+  google: 'GOOGLE'
 });
 
 class OAuthRequestError extends Error {
@@ -79,23 +78,6 @@ function providerConfig(provider, env = process.env) {
     };
   }
 
-  if (provider === 'facebook') {
-    const clientId = asText(env.FACEBOOK_APP_ID);
-    const clientSecret = asText(env.FACEBOOK_APP_SECRET);
-    const graphVersion = asText(env.FACEBOOK_GRAPH_VERSION);
-    if (!clientId || !clientSecret || !/^v\d+\.\d+$/.test(graphVersion)) return null;
-
-    return {
-      provider: PROVIDERS.facebook,
-      clientId,
-      clientSecret,
-      graphVersion,
-      authorizationUrl: `https://www.facebook.com/${graphVersion}/dialog/oauth`,
-      tokenUrl: `https://graph.facebook.com/${graphVersion}/oauth/access_token`,
-      userInfoUrl: `https://graph.facebook.com/${graphVersion}/me`
-    };
-  }
-
   return null;
 }
 
@@ -162,8 +144,6 @@ function authorizationUrl(provider, config, redirectUri, flow) {
       'code_challenge',
       base64Url(crypto.createHash('sha256').update(flow.codeVerifier).digest())
     );
-  } else {
-    url.searchParams.set('scope', 'email,public_profile');
   }
 
   return url.toString();
@@ -235,41 +215,6 @@ async function googleProfile(config, redirectUri, code, codeVerifier, fetchImpl)
     email: profile.email,
     name: profile.given_name || profile.name,
     surname: profile.family_name
-  });
-}
-
-async function facebookProfile(config, redirectUri, code, fetchImpl) {
-  const tokenBody = new URLSearchParams({
-    client_id: config.clientId,
-    client_secret: config.clientSecret,
-    code,
-    redirect_uri: redirectUri
-  });
-  const token = await fetchJson(config.tokenUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: tokenBody
-  }, fetchImpl);
-
-  if (!asText(token.access_token)) {
-    throw new OAuthRequestError('Facebook access token döndürmedi.');
-  }
-
-  const profileUrl = new URL(config.userInfoUrl);
-  profileUrl.searchParams.set('fields', 'id,name,first_name,last_name,email');
-  profileUrl.searchParams.set(
-    'appsecret_proof',
-    crypto.createHmac('sha256', config.clientSecret).update(token.access_token).digest('hex')
-  );
-  const profile = await fetchJson(profileUrl, {
-    headers: { Authorization: `Bearer ${token.access_token}` }
-  }, fetchImpl);
-
-  return normalizeProfile({
-    subject: profile.id,
-    email: profile.email,
-    name: profile.first_name || profile.name,
-    surname: profile.last_name
   });
 }
 
@@ -358,7 +303,6 @@ module.exports = {
   callbackUrl,
   consumeFlow,
   createFlow,
-  facebookProfile,
   findOrCreateMember,
   googleProfile,
   normalizeProfile,

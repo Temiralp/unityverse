@@ -86,7 +86,11 @@ function parseBlogFile(filePath) {
   const excerpt = normalizeWhitespace($('meta[name="description"]').attr('content')) || null;
   const image = $('.category-derc .banners img[src]').first().attr('src') || null;
   const rawPublishedAt = normalizeWhitespace($('.article-sub-title .article-date').first().text());
-  const category = normalizeWhitespace($('ul.breadcrumb li a[href*="/blog/"]').last().text()) || null;
+  const categoryLink = $('ul.breadcrumb li a[href*="/blog/"]').last();
+  const category = normalizeWhitespace(categoryLink.text()) || null;
+  const categoryHref = categoryLink.attr('href') || '';
+  const categoryIdMatch = categoryHref.match(/\/blog\/(\d+)\/?/);
+  const legacyCategoryId = categoryIdMatch ? Number.parseInt(categoryIdMatch[1], 10) : null;
   const contentSource = $('.blog-icerik > .col-md-12').first();
   const content = cleanContentHtml(contentSource.html() || '');
 
@@ -110,6 +114,7 @@ function parseBlogFile(filePath) {
     meta: {
       rawPublishedAt: rawPublishedAt || null,
       category,
+      legacyCategoryId,
     },
   };
 }
@@ -232,6 +237,9 @@ async function writePosts(posts) {
           image: post.image,
           status: post.status,
           publishedAt: post.publishedAt ? new Date(post.publishedAt) : null,
+          ...(post.meta.legacyCategoryId
+            ? { blogCategory: { connect: { legacyId: post.meta.legacyCategoryId } } }
+            : {}),
         };
 
         await prisma.blogPost.upsert({
