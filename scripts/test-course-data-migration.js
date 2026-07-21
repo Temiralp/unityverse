@@ -82,20 +82,51 @@ async function run() {
     await client.query(migrationSql);
     await assertAppliedState(client);
 
-    // A changed target status must stop the migration instead of being skipped.
-    const guardedSlug = titleUpdates[0].slug;
-    await client.query('SAVEPOINT invalid_target');
+    // Publication state differs between environments; DRAFT targets stay untouched.
+    const draftSlug = titleUpdates[0].slug;
+    await client.query('SAVEPOINT draft_target');
     await client.query('UPDATE "Product" SET "status" = $1 WHERE "slug" = $2', [
       'DRAFT',
-      guardedSlug
+      draftSlug
     ]);
+    await client.query('UPDATE "Product" SET "title" = $1 WHERE "slug" = $2', [
+      'Draft title must stay unchanged',
+      draftSlug
+    ]);
+    await client.query(migrationSql);
+    const draftResult = await client.query(
+      'SELECT "title", "status" FROM "Product" WHERE "slug" = $1',
+      [draftSlug]
+    );
+    assert.deepEqual(draftResult.rows[0], {
+      title: 'Draft title must stay unchanged',
+      status: 'DRAFT'
+    });
+    await client.query('ROLLBACK TO SAVEPOINT draft_target');
 
+    // Missing products are also valid on a fresh or differently published dataset.
+    const durationSlug = 'unity-ile-oyun-gelistirme-yuz-yuze-egitimi-1481';
+    await client.query('SAVEPOINT missing_target');
+    await client.query('DELETE FROM "Product" WHERE "slug" = $1', [durationSlug]);
+    await client.query(migrationSql);
+    const missingResult = await client.query(
+      'SELECT COUNT(*)::INTEGER AS "count" FROM "Product" WHERE "slug" = $1',
+      [durationSlug]
+    );
+    assert.equal(missingResult.rows[0].count, 0);
+    await client.query('ROLLBACK TO SAVEPOINT missing_target');
+
+    // Existing unexpected duration values still stop the migration safely.
+    await client.query('SAVEPOINT unexpected_duration');
+    await client.query('UPDATE "Product" SET "duration" = $1 WHERE "slug" = $2', [
+      '4 ay',
+      durationSlug
+    ]);
     await assert.rejects(
       () => client.query(migrationSql),
-      (error) => error.message.includes('missing or non-published targets')
-        && error.message.includes(guardedSlug)
+      (error) => error.message.includes('unexpected value: 4 ay')
     );
-    await client.query('ROLLBACK TO SAVEPOINT invalid_target');
+    await client.query('ROLLBACK TO SAVEPOINT unexpected_duration');
 
     console.log('Course title and duration migration tests passed.');
   } finally {

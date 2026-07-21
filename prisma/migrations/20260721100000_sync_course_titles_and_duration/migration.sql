@@ -1,6 +1,7 @@
 -- Reproduce the approved SEO H1 title changes using stable product slugs.
--- The temporary table and validation block make this migration deterministic:
--- it stops if the audited set is incomplete or a target is no longer PUBLISHED.
+-- The temporary table keeps the audited mapping deterministic. Exact slug matching
+-- updates only PUBLISHED products; missing and DRAFT records are intentionally skipped
+-- because product publication state can differ between environments.
 
 CREATE TEMPORARY TABLE "_CourseTitleUpdate" (
     "slug" TEXT PRIMARY KEY,
@@ -181,21 +182,9 @@ INSERT INTO "_CourseTitleUpdate" ("slug", "newTitle") VALUES
     ('mikroservis-mimarisi-ile-dagitik-sistemler-gelistirme-egitimi-1532', 'Mikroservis Mimarisi & Dağıtık Sistemler Kursu – Docker, Kubernetes & API Gateway');
 
 DO $$
-DECLARE
-    invalid_targets TEXT;
 BEGIN
     IF (SELECT COUNT(*) FROM "_CourseTitleUpdate") <> 164 THEN
         RAISE EXCEPTION 'Course title migration expected 164 unique slugs.';
-    END IF;
-
-    SELECT STRING_AGG(update_row."slug", ', ' ORDER BY update_row."slug")
-    INTO invalid_targets
-    FROM "_CourseTitleUpdate" update_row
-    LEFT JOIN "Product" product ON product."slug" = update_row."slug"
-    WHERE product."id" IS NULL OR product."status"::TEXT <> 'PUBLISHED';
-
-    IF invalid_targets IS NOT NULL THEN
-        RAISE EXCEPTION 'Course title migration has missing or non-published targets: %', invalid_targets;
     END IF;
 END $$;
 
@@ -210,20 +199,15 @@ WHERE product."slug" = update_row."slug"
 
 DO $$
 DECLARE
-    target_count INTEGER;
     target_duration TEXT;
 BEGIN
-    SELECT COUNT(*), MAX("duration")
-    INTO target_count, target_duration
+    SELECT "duration"
+    INTO target_duration
     FROM "Product"
     WHERE "slug" = 'unity-ile-oyun-gelistirme-yuz-yuze-egitimi-1481'
       AND "status"::TEXT = 'PUBLISHED';
 
-    IF target_count <> 1 THEN
-        RAISE EXCEPTION 'Duration migration expected one published target product.';
-    END IF;
-
-    IF target_duration IS NOT NULL AND target_duration <> '8 ay' THEN
+    IF FOUND AND target_duration IS NOT NULL AND target_duration <> '8 ay' THEN
         RAISE EXCEPTION 'Duration migration found unexpected value: %', target_duration;
     END IF;
 END $$;
