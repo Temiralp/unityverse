@@ -227,7 +227,6 @@ async function main() {
       document.getElementById('gsm').value = '5550000000';
       document.getElementById('reg_password').value = 'TestPass123!';
       document.getElementById('reg_password_confirm').value = 'TestPass123!';
-      document.getElementById('member_security_code').value = 'ABC123';
       document.getElementById('member_contrat').checked = true;
       document.getElementById('kvkk_contrat').checked = true;
       window.register();

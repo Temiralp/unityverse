@@ -33,6 +33,7 @@
     "audit:blog-categories-db": "node scripts/audit-blog-category-db.js",
     "test:social-oauth": "node scripts/test-social-oauth.js",
     "test:profile-completion": "node scripts/test-profile-completion.js",
+    "test:member-registration": "node scripts/test-member-registration.js",
     "seed": "node prisma/seed.js"
   },
   "dependencies": {
