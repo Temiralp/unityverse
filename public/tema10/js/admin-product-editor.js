@@ -79,6 +79,27 @@
       row.querySelector('[data-field="text"], input[name$="[text]"]')
         .setAttribute('name', 'learningOutcomes[' + index + '][text]');
     });
+
+    var variantRows = Array.prototype.slice.call(form.querySelectorAll('[data-variant-row]'));
+    variantRows.forEach(function (row, index) {
+      row.querySelector('[data-field="variantProductId"]')
+        .setAttribute('name', 'variants[' + index + '][variantProductId]');
+      row.querySelector('[data-field="label"]')
+        .setAttribute('name', 'variants[' + index + '][label]');
+      row.querySelector('[data-field="sortOrder"]')
+        .setAttribute('name', 'variants[' + index + '][sortOrder]');
+      row.querySelector('[data-field="isActivePresent"]')
+        .setAttribute('name', 'variants[' + index + '][isActivePresent]');
+      row.querySelector('[data-field="isActive"]')
+        .setAttribute('name', 'variants[' + index + '][isActive]');
+      row.querySelector('[data-field="isDefault"]').value = String(index);
+    });
+
+    if (variantRows.length && !variantRows.some(function (row) {
+      return row.querySelector('[data-field="isDefault"]').checked;
+    })) {
+      variantRows[0].querySelector('[data-field="isDefault"]').checked = true;
+    }
   }
 
   function moveCustomTab(form, tab, direction) {
@@ -101,8 +122,12 @@
   function initForm(form) {
     var tabList = form.querySelector('[data-tab-list]');
     var outcomeList = form.querySelector('[data-outcome-list]');
+    var variantList = form.querySelector('[data-variant-list]');
+    var variantSection = form.querySelector('[data-product-variants]');
     var tabTemplate = document.getElementById('product-tab-template');
     var outcomeTemplate = document.getElementById('product-outcome-template');
+    var variantTemplate = document.getElementById('product-variant-template');
+    var variantCandidates = [];
 
     form.querySelectorAll('[data-product-editor]').forEach(initEditor);
     refreshNames(form);
@@ -122,6 +147,107 @@
       outcomeList.lastElementChild.querySelector('[data-field="text"]').focus();
     });
 
+    function candidateMatchesSearch(candidate, searchTerm) {
+      var normalizedSearch = String(searchTerm || '').trim().toLocaleLowerCase('tr-TR');
+      if (!normalizedSearch) return true;
+
+      return [
+        candidate.id,
+        candidate.title,
+        candidate.duration,
+        candidate.status
+      ].some(function (value) {
+        return String(value || '').toLocaleLowerCase('tr-TR').indexOf(normalizedSearch) >= 0;
+      });
+    }
+
+    function updateVariantSelect(select, searchTerm) {
+      var selectedValue = select.value;
+      while (select.options.length > 1) select.remove(1);
+
+      variantCandidates.forEach(function (candidate) {
+        var isSelected = String(candidate.id) === String(selectedValue);
+        if (!isSelected && !candidateMatchesSearch(candidate, searchTerm)) return;
+
+        var option = document.createElement('option');
+        option.value = String(candidate.id);
+        option.textContent = candidate.title
+          + (candidate.duration ? ' — ' + candidate.duration : '')
+          + ' [' + candidate.status + ']';
+        option.selected = isSelected;
+        select.appendChild(option);
+      });
+    }
+
+    function refreshVariantCandidates() {
+      if (!variantSection || !variantSection.dataset.variantCandidatesUrl) {
+        return Promise.resolve();
+      }
+
+      var query = variantSection.dataset.productId
+        ? '?excludeId=' + encodeURIComponent(variantSection.dataset.productId)
+        : '';
+
+      return fetch(variantSection.dataset.variantCandidatesUrl + query, {
+        credentials: 'same-origin',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      })
+        .then(function (response) {
+          if (!response.ok) throw new Error('Kurs seçenekleri alınamadı.');
+          return response.json();
+        })
+        .then(function (payload) {
+          if (payload.status !== 'success' || !Array.isArray(payload.products)) {
+            throw new Error('Kurs seçenekleri alınamadı.');
+          }
+
+          variantCandidates = payload.products;
+          form.querySelectorAll('[data-variant-row]').forEach(function (row) {
+            updateVariantSelect(
+              row.querySelector('[data-field="variantProductId"]'),
+              row.querySelector('[data-variant-search]').value
+            );
+          });
+        })
+        .catch(function () {
+          // Server-rendered options remain available if a live refresh fails.
+        });
+    }
+
+    form.querySelector('[data-add-variant]').addEventListener('click', function () {
+      var appendVariant = function () {
+        var fragment = variantTemplate.content.cloneNode(true);
+        variantList.appendChild(fragment);
+        var row = variantList.lastElementChild;
+        var select = row.querySelector('[data-field="variantProductId"]');
+        if (variantCandidates.length) updateVariantSelect(select, '');
+        refreshNames(form);
+        row.querySelector('[data-variant-search]').focus();
+      };
+
+      if (variantCandidates.length) appendVariant();
+      else refreshVariantCandidates().then(appendVariant);
+    });
+
+    form.addEventListener('focusin', function (event) {
+      if (event.target.matches('[data-field="variantProductId"]')) {
+        refreshVariantCandidates();
+      }
+    });
+
+    form.addEventListener('input', function (event) {
+      if (!event.target.matches('[data-variant-search]')) return;
+      if (!variantCandidates.length) return;
+
+      var row = event.target.closest('[data-variant-row]');
+      updateVariantSelect(
+        row.querySelector('[data-field="variantProductId"]'),
+        event.target.value
+      );
+    });
+
+    refreshVariantCandidates();
+
     form.addEventListener('click', function (event) {
       var removeTab = event.target.closest('[data-remove-tab]');
       if (removeTab) {
@@ -139,6 +265,13 @@
       var removeOutcome = event.target.closest('[data-remove-outcome]');
       if (removeOutcome) {
         removeOutcome.closest('[data-outcome-row]').remove();
+        refreshNames(form);
+        return;
+      }
+
+      var removeVariant = event.target.closest('[data-remove-variant]');
+      if (removeVariant) {
+        removeVariant.closest('[data-variant-row]').remove();
         refreshNames(form);
       }
     });

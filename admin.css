@@ -846,7 +846,8 @@ textarea {
 }
 
 .product-content-builder,
-.product-outcomes {
+.product-outcomes,
+.product-variants {
   border-top: 1px solid var(--line);
   display: grid;
   gap: 16px;
@@ -885,6 +886,7 @@ textarea {
 }
 
 [data-tab-list],
+[data-variant-list],
 [data-outcome-list] {
   display: grid;
   gap: 14px;
@@ -931,6 +933,37 @@ textarea {
 
 .product-outcome-row {
   align-items: flex-start;
+}
+
+.product-variant-list {
+  display: grid;
+  gap: 12px;
+}
+
+.product-variant-row {
+  align-items: end;
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(220px, 2fr) minmax(160px, 1fr) 100px auto auto auto;
+  padding: 14px;
+}
+
+.product-variant-default {
+  align-self: center;
+  white-space: nowrap;
+}
+
+.product-variant-active {
+  align-self: center;
+  white-space: nowrap;
+}
+
+.product-variant-course {
+  display: grid;
+  gap: 6px;
 }
 
 .product-outcome-row input {
@@ -1207,7 +1240,8 @@ th {
 
   .product-content-builder__head,
   .product-tab-editor__head,
-  .product-outcome-row {
+  .product-outcome-row,
+  .product-variant-row {
     align-items: stretch;
     flex-direction: column;
   }
@@ -1217,8 +1251,13 @@ th {
   }
 
   .product-tab-editor__actions .button,
-  .product-outcome-row .button-danger {
+  .product-outcome-row .button-danger,
+  .product-variant-row .button-danger {
     width: 100%;
+  }
+
+  .product-variant-row {
+    display: flex;
   }
 }
 

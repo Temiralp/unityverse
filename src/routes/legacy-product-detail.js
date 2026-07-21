@@ -2,6 +2,7 @@ const fs = require('fs/promises');
 const path = require('path');
 const express = require('express');
 const prisma = require('../db');
+const { productVariantLabel } = require('../services/product-variants');
 const { prepareLegacyTabContent } = require('../services/youtube-embeds');
 
 const router = express.Router();
@@ -109,7 +110,113 @@ function renderBreadcrumb(product) {
 		</ul>`;
 }
 
-function renderLegacyProductDetails(product, pageOrigin) {
+function publicProductVariants(variants) {
+  return (Array.isArray(variants) ? variants : [])
+    .filter((variant) => (
+      variant
+      && variant.isActive !== false
+      && variant.variantProduct
+      && variant.variantProduct.status === 'PUBLISHED'
+    ))
+    .sort((left, right) => (
+      Number(left.sortOrder || 0) - Number(right.sortOrder || 0)
+      || Number(left.id || 0) - Number(right.id || 0)
+    ));
+}
+
+function renderProductVariantOptions(product, variants) {
+  const visibleVariants = publicProductVariants(variants);
+  const rows = visibleVariants.length
+    ? visibleVariants
+    : [{
+      id: product.id,
+      variantProductId: product.id,
+      variantProduct: product,
+      label: product.duration || 'Eğitim',
+      isDefault: true
+    }];
+
+  return rows.map((variant) => {
+    const variantProduct = variant.variantProduct;
+    const label = escapeHtml(productVariantLabel(variant));
+    const optionUrl = escapeHtml(`../../urun/${variantProduct.slug}`);
+    const isActive = Number(variantProduct.id) === Number(product.id);
+
+    return `<li data-product-id="${variantProduct.id}" producturl="${optionUrl}" value="${variantProduct.id}" class="${isActive ? 'active ' : ''}" data-bs-toggle="tooltip" data-bs-title="${label}"><a href="${optionUrl}">${label}</a></li>`;
+  }).join('\n');
+}
+
+function selectDefaultVariantProduct(product, variants) {
+  const visibleVariants = publicProductVariants(variants);
+  if (!visibleVariants.length) return product;
+
+  const requestedVariant = visibleVariants.find((variant) => (
+    Number(variant.variantProductId) === Number(product.id)
+  ));
+  if (requestedVariant) return product;
+
+  const defaultVariant = visibleVariants.find((variant) => variant.isDefault) || visibleVariants[0];
+  return defaultVariant.variantProduct;
+}
+
+async function loadProductVariantContext(prismaClient, slug) {
+  const product = await prismaClient.product.findFirst({
+    where: {
+      slug,
+      status: 'PUBLISHED'
+    },
+    include: {
+      category: true,
+      tabs: { orderBy: { sortOrder: 'asc' } },
+      learningOutcomes: { orderBy: { sortOrder: 'asc' } },
+      productVariants: {
+        include: { variantProduct: true },
+        orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }]
+      },
+      variantOfProducts: {
+        where: { isActive: true },
+        select: { parentProductId: true },
+        orderBy: { id: 'asc' },
+        take: 1
+      }
+    }
+  });
+
+  if (!product) return null;
+
+  let variants = product.productVariants;
+  if (!variants.length && product.variantOfProducts.length) {
+    variants = await prismaClient.productVariant.findMany({
+      where: { parentProductId: product.variantOfProducts[0].parentProductId },
+      include: { variantProduct: true },
+      orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }]
+    });
+  }
+
+  const selectedProduct = selectDefaultVariantProduct(product, variants);
+  if (Number(selectedProduct.id) === Number(product.id)) {
+    return { product, variants: publicProductVariants(variants) };
+  }
+
+  const productDetails = await prismaClient.product.findFirst({
+    where: {
+      id: selectedProduct.id,
+      status: 'PUBLISHED'
+    },
+    include: {
+      category: true,
+      tabs: { orderBy: { sortOrder: 'asc' } },
+      learningOutcomes: { orderBy: { sortOrder: 'asc' } }
+    }
+  });
+
+  return {
+    product: productDetails || product,
+    variants: publicProductVariants(variants)
+  };
+}
+
+function renderLegacyProductDetails(product, pageOrigin, variants = []) {
   const title = escapeHtml(product.title);
   const summary = escapeHtml(product.summary || '');
   const image = normalizeLegacyAssetPath(product.image);
@@ -117,8 +224,6 @@ function renderLegacyProductDetails(product, pageOrigin) {
   const code = escapeHtml(productCode(product));
   const category = escapeHtml(categoryName(product));
   const categoryHref = escapeHtml(categoryUrl(product));
-  const duration = escapeHtml(product.duration || 'Eğitim');
-  const optionUrl = escapeHtml(`../../urun/${product.slug}`);
   const price = effectivePrice(product);
   const formattedPrice = price > 0 ? `${formatMoney(price)} TL` : 'Fiyat bilgisi için giriş yapın';
   const productHref = `../../urun/${encodeURIComponent(product.slug)}/`;
@@ -165,7 +270,7 @@ function renderLegacyProductDetails(product, pageOrigin) {
 		<div class="content-product-right col-sm-7 col-xs-12">
 			<div class="title-product"><h1>${title}</h1></div>
 			<div class="pbl-stock-code"><span>Eğitim Kodu :</span><a href="javascript:void(0)" onclick="return copyToClipboard('${code}')"> ${code}</a></div>
-			<div class="product_page_price price"><span class="price-new">${formattedPrice}</span></div>
+			<div class="product-label form-group"><div class="product_page_price price"><span class="price-new">${formattedPrice}</span></div></div>
 			<div class="d-flex flex-row" style="gap:10px">
 				<button onclick="return alarmWhenPriceDrop(${product.id})" class="pbl-notifyme-price-drops"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 15 15"><path fill="currentColor" fill-rule="evenodd" d="m6.448.436l-1.13 1.129a.5.5 0 0 1-.344.143H3.196c-.822 0-1.488.666-1.488 1.488v1.778a.5.5 0 0 1-.143.345L.435 6.448a1.49 1.49 0 0 0 0 2.104l1.13 1.13a.5.5 0 0 1 .143.344v1.778c0 .822.666 1.488 1.488 1.488h1.778a.5.5 0 0 1 .345.143l1.129 1.13a1.49 1.49 0 0 0 2.104 0l1.13-1.13a.5.5 0 0 1 .344-.143h1.778c.822 0 1.488-.666 1.488-1.488v-1.778a.5.5 0 0 1 .143-.345l1.13-1.129a1.49 1.49 0 0 0 0-2.104l-1.13-1.13a.5.5 0 0 1-.143-.344V3.196c0-.822-.666-1.488-1.488-1.488h-1.778a.5.5 0 0 1-.345-.143L8.552.435a1.49 1.49 0 0 0-2.104 0m-1.802 9.21l5-5l.708.708l-5 5zM5 5v1h1V5zm4 5h1V9H9z" clip-rule="evenodd" /></svg> Fiyatı Düşünce Haber Ver</button>
 				<button onclick="return openRecommendProduct(${product.id})" class="pbl-notifyme-price-drops"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="currentColor"><path d="M22 7.535V17a3 3 0 0 1-2.824 2.995L19 20H5a3 3 0 0 1-2.995-2.824L2 17V7.535l9.445 6.297l.116.066a1 1 0 0 0 .878 0l.116-.066z"/><path d="M19 4c1.08 0 2.027.57 2.555 1.427L12 11.797l-9.555-6.37a3 3 0 0 1 2.354-1.42L5 4z"/></g></svg> Ürünü Tavsiye Et</button>
@@ -183,7 +288,7 @@ function renderLegacyProductDetails(product, pageOrigin) {
 					<div class="attr-detail attr-size ">
 						<strong class="mr-10">Eğitim Saatleri: </strong>
 						<ul class="list-filter size-filter font-small " name="poptions1_${product.id}" id="poptions1_${product.id}">
-							<li data-product-id="${product.id}" producturl="${optionUrl}" value="${product.id}" class="active " data-bs-toggle="tooltip" data-bs-title="${duration}"><a href="javascript:void(0);">${duration}</a></li>
+							${renderProductVariantOptions(product, variants)}
 						</ul>
 					</div>
 				</div>
@@ -291,12 +396,12 @@ async function loadHomeFooterTemplate() {
   return homeFooterTemplate;
 }
 
-function renderPage(template, footer, product, pageOrigin) {
+function renderPage(template, footer, product, pageOrigin, variants = []) {
   const title = escapeHtml(product.title);
   let html = template
     .replace(/<title>[\s\S]*?<\/title>/i, `<title>${title}</title>`)
     .replace(breadcrumbPattern, renderBreadcrumb(product))
-    .replace(productDetailsPattern, renderLegacyProductDetails(product, pageOrigin));
+    .replace(productDetailsPattern, renderLegacyProductDetails(product, pageOrigin, variants));
 
   if (footer) {
     html = html.replace(footerPattern, footer);
@@ -307,19 +412,9 @@ function renderPage(template, footer, product, pageOrigin) {
 
 router.get(['/urun/:slug', '/urun/:slug/'], async (req, res, next) => {
   try {
-    const product = await prisma.product.findFirst({
-      where: {
-        slug: req.params.slug,
-        status: 'PUBLISHED'
-      },
-      include: {
-        category: true,
-        tabs: { orderBy: { sortOrder: 'asc' } },
-        learningOutcomes: { orderBy: { sortOrder: 'asc' } }
-      }
-    });
+    const context = await loadProductVariantContext(prisma, req.params.slug);
 
-    if (!product) {
+    if (!context) {
       res.status(404).send('404 File Not Found');
       return;
     }
@@ -331,10 +426,14 @@ router.get(['/urun/:slug', '/urun/:slug/'], async (req, res, next) => {
     const pageOrigin = `${req.protocol}://${req.get('host')}`;
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-    res.send(renderPage(template, footer, product, pageOrigin));
+    res.send(renderPage(template, footer, context.product, pageOrigin, context.variants));
   } catch (error) {
     next(error);
   }
 });
 
 module.exports = router;
+module.exports.loadProductVariantContext = loadProductVariantContext;
+module.exports.publicProductVariants = publicProductVariants;
+module.exports.renderProductVariantOptions = renderProductVariantOptions;
+module.exports.selectDefaultVariantProduct = selectDefaultVariantProduct;

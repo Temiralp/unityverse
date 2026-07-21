@@ -1,5 +1,7 @@
 const fs = require('fs/promises');
 const path = require('path');
+const { filterLegacyDraftProductCards } = require('./legacy-product-visibility');
+const { ensureLegacyAssetVersions } = require('../services/legacy-assets');
 const { ensureLegacyHeaderLayout } = require('../services/legacy-header-layout');
 const { ensureLegacyHomepageLocalAssets } = require('../services/legacy-homepage');
 const { ensureLegacyWhatsappButton } = require('../services/legacy-whatsapp');
@@ -21,8 +23,10 @@ function isPublicPageRequest(req) {
   ));
 }
 
-function enhanceLegacyHtml(html) {
-  const withLocalHomepageAssets = ensureLegacyHomepageLocalAssets(html);
+function enhanceLegacyHtml(html, draftProducts = []) {
+  const withVisibleProducts = filterLegacyDraftProductCards(html, draftProducts);
+  const withCurrentAssets = ensureLegacyAssetVersions(withVisibleProducts);
+  const withLocalHomepageAssets = ensureLegacyHomepageLocalAssets(withCurrentAssets);
   return ensureLegacyWhatsappButton(ensureLegacyHeaderLayout(withLocalHomepageAssets));
 }
 
@@ -32,12 +36,12 @@ function injectLegacyWhatsappIntoHtmlResponses(req, res, next) {
   const send = res.send.bind(res);
   res.send = function sendWithLegacyWhatsapp(body) {
     if (typeof body === 'string') {
-      return send(enhanceLegacyHtml(body));
+      return send(enhanceLegacyHtml(body, res.locals.legacyDraftProducts));
     }
 
     if (Buffer.isBuffer(body)) {
       const source = body.toString('utf8');
-      const transformed = enhanceLegacyHtml(source);
+      const transformed = enhanceLegacyHtml(source, res.locals.legacyDraftProducts);
       return send(transformed === source ? body : Buffer.from(transformed));
     }
 

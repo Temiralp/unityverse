@@ -1753,6 +1753,44 @@ function filterPhoneCountries(searchTerm) {
     });
 }
 
+function legacyVariantProductUrl(productId)
+{
+	var normalizedId = String(productId || '');
+	if(!/^[1-9]\d*$/.test(normalizedId))
+		return '';
+
+	var $option = $('[id^="poptions"] li[data-product-id="' + normalizedId + '"][producturl]').first();
+	var productUrl = $.trim($option.attr('producturl') || '');
+	if(!productUrl)
+		return '';
+
+	try {
+		var resolvedUrl = new URL(productUrl, window.location.href);
+		return resolvedUrl.origin === window.location.origin ? resolvedUrl.href : '';
+	}
+	catch(error) {
+		return '';
+	}
+}
+
+function navigateToLegacyVariant(productId)
+{
+	var productUrl = legacyVariantProductUrl(productId);
+	if(!productUrl)
+		return false;
+
+	hideSiteLoading();
+
+	var targetUrl = new URL(productUrl);
+	var currentPath = window.location.pathname.replace(/\/+$/, '');
+	var targetPath = targetUrl.pathname.replace(/\/+$/, '');
+	if(currentPath === targetPath)
+		return true;
+
+	window.location.assign(productUrl);
+	return true;
+}
+
 function openProductDetailsModal(product_id, modal = true)
 {
 	if(product_id == 0 || product_id == undefined)
@@ -1760,6 +1798,9 @@ function openProductDetailsModal(product_id, modal = true)
         $(".site_loading").hide();
 		return false;
 	}
+
+	if(modal === false && navigateToLegacyVariant(product_id))
+		return false;
 
 	params = JSON.stringify({product_id:product_id,modal:modal});
 	$.ajax({
@@ -2180,9 +2221,11 @@ $( document ).ready(function() {
 		next();
 	}
 
-	function renderLegacyDetailPrice(productsBySlug) {
+	function renderLegacyDetailPrice(productsById, productsBySlug) {
 		var slug = currentLegacyProductSlug();
-		var product = slug && productsBySlug[slug];
+		var linkedProductId = Number(window.legacy_detail_price_product_id);
+		var hasLinkedProduct = Number.isInteger(linkedProductId) && linkedProductId > 0;
+		var product = hasLinkedProduct ? productsById[linkedProductId] : (slug && productsBySlug[slug]);
 		var html = productPriceHtml(product);
 		var $target;
 
@@ -2221,7 +2264,7 @@ $( document ).ready(function() {
 				});
 
 				renderLegacyListingPrices(productsById, productsBySlug);
-				renderLegacyDetailPrice(productsBySlug);
+				renderLegacyDetailPrice(productsById, productsBySlug);
 			}
 		});
 	}
@@ -2307,6 +2350,46 @@ $( document ).ready(function() {
 	$(document).ready(refreshMemberState);
 })(window, document);
 
+(function disableLegacyProductVideoLinks(document) {
+    'use strict';
+
+    var videoLinkSelector = '.pbl-product-page-pictures .swiper-slide.video-product > a';
+
+    function disableVideoLink(link) {
+        if (link.getAttribute('data-uv-video-disabled') === 'true') return;
+
+        link.removeAttribute('data-fancybox');
+        link.removeAttribute('data-index');
+        link.removeAttribute('href');
+        link.setAttribute('aria-disabled', 'true');
+        link.setAttribute('tabindex', '-1');
+        link.setAttribute('data-uv-video-disabled', 'true');
+    }
+
+    function disableVideoLinks() {
+        document.querySelectorAll(videoLinkSelector).forEach(disableVideoLink);
+    }
+
+    function preventVideoLinkClick(event) {
+        var link = event.target.closest(videoLinkSelector);
+        if (!link) return;
+
+        event.preventDefault();
+        event.stopPropagation();
+        if (typeof event.stopImmediatePropagation === 'function') {
+            event.stopImmediatePropagation();
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', disableVideoLinks);
+    } else {
+        disableVideoLinks();
+    }
+
+    document.addEventListener('click', preventVideoLinkClick, true);
+})(document);
+
 (function(window, document, $) {
 	'use strict';
 
@@ -2316,6 +2399,7 @@ $( document ).ready(function() {
 	var originalAddToBasket = null;
 	var originalPrivateAddToBasket = null;
 	var originalPublicAddToBasket = null;
+	var profileCompletion = null;
 
 	function normalizeSiteUrl(path) {
 		var base = (typeof site_url !== 'undefined' && site_url) ? site_url : '/';
@@ -2369,6 +2453,191 @@ $( document ).ready(function() {
 		if (typeof window._error === 'function') return window._error('', message);
 		window.alert(message);
 		return false;
+	}
+
+	function isValidProfilePhone(value) {
+		var digits = String(value || '').replace(/\D/g, '');
+		return digits.length >= 10 && digits.length <= 15;
+	}
+
+	function isEnrollmentProfileComplete(member) {
+		return Boolean(
+			member &&
+			$.trim(member.name || '') &&
+			$.trim(member.surname || '') &&
+			$.trim(member.email || '') &&
+			isValidProfilePhone(member.phone)
+		);
+	}
+
+	function setProfileCompletionStatus(state, message, isError) {
+		state.status.textContent = message || '';
+		state.status.classList.toggle('is-error', Boolean(isError));
+	}
+
+	function setProfileCompletionSubmitting(state, submitting) {
+		state.isSubmitting = submitting;
+		state.submit.disabled = submitting;
+		state.submit.setAttribute('aria-busy', String(submitting));
+		state.submit.textContent = submitting ? 'Kaydediliyor...' : 'Bilgilerimi Kaydet';
+		state.close.disabled = submitting;
+	}
+
+	function closeProfileCompletion() {
+		if (!profileCompletion || profileCompletion.isSubmitting) return;
+
+		profileCompletion.modal.hidden = true;
+		document.body.classList.remove('uv-legacy-profile-completion-open');
+
+		if (profileCompletion.lastFocus && typeof profileCompletion.lastFocus.focus === 'function') {
+			profileCompletion.lastFocus.focus();
+		}
+	}
+
+	function submitProfileCompletion(event) {
+		event.preventDefault();
+
+		var state = profileCompletion;
+		if (!state || state.isSubmitting) return;
+
+		var name = $.trim(state.name.value);
+		var surname = $.trim(state.surname.value);
+		var phone = $.trim(state.phone.value);
+
+		if (!name || !surname) {
+			setProfileCompletionStatus(state, 'Ad ve soyad alanlarını eksiksiz giriniz.', true);
+			(!name ? state.name : state.surname).focus();
+			return;
+		}
+
+		if (!isValidProfilePhone(phone)) {
+			setProfileCompletionStatus(state, 'Geçerli bir telefon numarası giriniz.', true);
+			state.phone.focus();
+			return;
+		}
+
+		setProfileCompletionSubmitting(state, true);
+		setProfileCompletionStatus(state, 'Profil bilgileriniz kaydediliyor.', false);
+
+		fetch(endpoint('api/csrf-token'), {
+			credentials: 'same-origin',
+			headers: { 'X-Requested-With': 'XMLHttpRequest' }
+		})
+			.then(function(response) {
+				if (!response.ok) throw new Error('Güvenlik bilgisi alınamadı.');
+				return readJson(response);
+			})
+			.then(function(protection) {
+				if (!protection.token) throw new Error('Güvenlik bilgisi eksik.');
+
+				return fetch(endpoint('ajax/member/profile'), {
+					method: 'POST',
+					credentials: 'same-origin',
+					headers: {
+						'Content-Type': 'application/x-www-form-urlencoded',
+						'X-Requested-With': 'XMLHttpRequest'
+					},
+					body: new URLSearchParams({
+						name: name,
+						surname: surname,
+						phone: phone,
+						_csrf: protection.token
+					})
+				});
+			})
+			.then(function(response) {
+				return readJson(response).then(function(result) {
+					if (response.status === 401) {
+						redirectToLogin(state.productId);
+						return null;
+					}
+					if (!response.ok || result.status !== 'success') {
+						throw new Error(result.message || 'Profil bilgileri kaydedilemedi.');
+					}
+					return result;
+				});
+			})
+			.then(function(result) {
+				if (!result) return;
+
+				var productId = state.productId;
+				setProfileCompletionSubmitting(state, false);
+				closeProfileCompletion();
+				notifySuccess('Bilgileriniz kaydedildi. Eğitim kaydınız devam ediyor.');
+				startLegacyEnrollment(productId);
+			})
+			.catch(function(error) {
+				setProfileCompletionStatus(state, error.message || 'Profil bilgileri kaydedilemedi.', true);
+				setProfileCompletionSubmitting(state, false);
+			});
+	}
+
+	function ensureProfileCompletion() {
+		if (profileCompletion) return profileCompletion;
+
+		var modal = document.createElement('div');
+		modal.className = 'uv-legacy-profile-completion';
+		modal.hidden = true;
+		modal.innerHTML = [
+			'<section class="uv-legacy-profile-completion__panel" role="dialog" aria-modal="true" aria-labelledby="uv-profile-completion-title" aria-describedby="uv-profile-completion-description">',
+				'<button class="uv-legacy-profile-completion__close" type="button" aria-label="Pencereyi kapat">&times;</button>',
+				'<h2 id="uv-profile-completion-title">Bilgilerinizi tamamlayın</h2>',
+				'<p id="uv-profile-completion-description">Eğitim kaydına devam etmek için iletişim bilgilerinizi kontrol edin.</p>',
+				'<form class="uv-legacy-profile-completion__form" novalidate>',
+					'<label>Ad<input name="name" type="text" autocomplete="given-name" required></label>',
+					'<label>Soyad<input name="surname" type="text" autocomplete="family-name" required></label>',
+					'<label class="uv-legacy-profile-completion__wide">E-posta<input name="email" type="email" autocomplete="email" readonly></label>',
+					'<label class="uv-legacy-profile-completion__wide">Telefon<input name="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="+90 5xx xxx xx xx" required></label>',
+					'<p class="uv-legacy-profile-completion__status" role="status" aria-live="polite"></p>',
+					'<button class="uv-legacy-profile-completion__submit" type="submit">Bilgilerimi Kaydet</button>',
+				'</form>',
+			'</section>'
+		].join('');
+		document.body.appendChild(modal);
+
+		profileCompletion = {
+			modal: modal,
+			form: modal.querySelector('form'),
+			name: modal.querySelector('[name="name"]'),
+			surname: modal.querySelector('[name="surname"]'),
+			email: modal.querySelector('[name="email"]'),
+			phone: modal.querySelector('[name="phone"]'),
+			status: modal.querySelector('[role="status"]'),
+			submit: modal.querySelector('[type="submit"]'),
+			close: modal.querySelector('.uv-legacy-profile-completion__close'),
+			productId: '',
+			lastFocus: null,
+			isSubmitting: false
+		};
+
+		profileCompletion.form.addEventListener('submit', submitProfileCompletion);
+		profileCompletion.close.addEventListener('click', closeProfileCompletion);
+		modal.addEventListener('click', function(event) {
+			if (event.target === modal) closeProfileCompletion();
+		});
+		document.addEventListener('keydown', function(event) {
+			if (event.key === 'Escape' && !modal.hidden) closeProfileCompletion();
+		});
+
+		return profileCompletion;
+	}
+
+	function openProfileCompletion(productId, member) {
+		var state = ensureProfileCompletion();
+		state.productId = String(productId || '');
+		state.lastFocus = document.activeElement;
+		state.name.value = member && member.name ? member.name : '';
+		state.surname.value = member && member.surname ? member.surname : '';
+		state.email.value = member && member.email ? member.email : '';
+		state.phone.value = member && member.phone ? member.phone : '';
+		setProfileCompletionStatus(state, '', false);
+		setProfileCompletionSubmitting(state, false);
+		state.modal.hidden = false;
+		document.body.classList.add('uv-legacy-profile-completion-open');
+
+		if (!state.name.value) state.name.focus();
+		else if (!state.surname.value) state.surname.focus();
+		else state.phone.focus();
 	}
 
 	function canUseBackendEnrollment() {
@@ -2432,7 +2701,7 @@ $( document ).ready(function() {
 			});
 	}
 
-	function handleEnrollmentResult(productId, payload) {
+	function handleEnrollmentResult(productId, payload, member) {
 		var response = payload.response;
 		var result = payload.result || {};
 
@@ -2464,7 +2733,7 @@ $( document ).ready(function() {
 		}
 
 		if (response.status === 422 && result.code === 'PROFILE_INCOMPLETE') {
-			notifyError('Kaydı tamamlamak için profilinizde ad, e-posta ve telefon bilgileriniz eksiksiz olmalıdır.');
+			openProfileCompletion(productId, member);
 			return;
 		}
 
@@ -2501,12 +2770,17 @@ $( document ).ready(function() {
 					return null;
 				}
 
+				if (!isEnrollmentProfileComplete(result.member)) {
+					openProfileCompletion(productId, result.member);
+					return null;
+				}
+
 				return loadEnrollmentProtection()
 					.then(function(protection) {
 						return postEnrollment(productId, protection);
 					})
 					.then(function(payload) {
-						handleEnrollmentResult(productId, payload);
+						handleEnrollmentResult(productId, payload, result.member);
 					});
 			})
 			.catch(function(error) {

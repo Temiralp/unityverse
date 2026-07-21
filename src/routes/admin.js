@@ -20,6 +20,11 @@ const {
   buildProductFormTabs,
   replaceProductContentStructure
 } = require('../services/product-tabs');
+const {
+  ProductVariantValidationError,
+  normalizeProductVariantRows,
+  replaceProductVariants
+} = require('../services/product-variants');
 const { validateBlogContentImages } = require('../services/blog-images');
 
 const router = express.Router();
@@ -643,7 +648,22 @@ function validateProductForm(body) {
     return 'Tutar indirimi normal fiyattan büyük olamaz.';
   }
 
+  try {
+    normalizeProductVariantRows(body.variants, body.defaultVariantIndex);
+  } catch (error) {
+    if (error instanceof ProductVariantValidationError) return error.message;
+    throw error;
+  }
+
   return null;
+}
+
+function productVariantFormRows(body) {
+  try {
+    return normalizeProductVariantRows(body.variants, body.defaultVariantIndex);
+  } catch (error) {
+    return [];
+  }
 }
 
 function productUniqueErrorMessage(error) {
@@ -693,16 +713,42 @@ async function saveUploadedProductImage(req) {
 }
 
 async function renderProductForm(res, options) {
-  const categories = await prisma.category.findMany({ orderBy: { name: 'asc' } });
+  const [categories, variantCandidates] = await Promise.all([
+    prisma.category.findMany({ orderBy: { name: 'asc' } }),
+    findProductVariantCandidates(prisma, options.product && options.product.id)
+  ]);
+  const productVariants = options.productVariants
+    || options.product?.productVariants
+    || [];
+
   return res.status(options.statusCode || 200).render('admin/products/form', {
     product: options.product || null,
     productTabs: buildProductFormTabs(options.productTabs || options.product?.tabs || options.product?.tabsInput),
     learningOutcomes: buildProductFormOutcomes(options.learningOutcomes || options.product?.learningOutcomes || options.product?.learningOutcomesInput),
+    productVariants,
+    defaultVariantIndex: Math.max(0, productVariants.findIndex((variant) => variant.isDefault)),
+    variantCandidates,
     categories,
     action: options.action || '/admin/products',
     pageTitle: options.pageTitle || 'Yeni Kurs',
     submitLabel: options.submitLabel || 'Kaydet',
     error: options.error || null
+  });
+}
+
+function findProductVariantCandidates(prismaClient, excludedProductId) {
+  const productId = Number(excludedProductId);
+  return prismaClient.product.findMany({
+    where: Number.isInteger(productId) && productId > 0
+      ? { id: { not: productId } }
+      : undefined,
+    select: {
+      id: true,
+      title: true,
+      duration: true,
+      status: true
+    },
+    orderBy: [{ title: 'asc' }, { id: 'asc' }]
   });
 }
 
@@ -1811,15 +1857,26 @@ router.get('/products/new', requireAdmin, async (req, res, next) => {
   }
 });
 
+router.get('/products/variant-candidates', requireAdmin, async (req, res, next) => {
+  try {
+    const products = await findProductVariantCandidates(prisma, req.query.excludeId);
+    res.json({ status: 'success', products });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.post('/products', requireAdmin, handleProductImageUpload, requireMultipartCsrf, async (req, res, next) => {
   try {
     const formError = req.productUploadError || validateProductForm(req.body);
     const data = buildProductData(req.body);
+    const productVariants = normalizeProductVariantRows(req.body.variants, req.body.defaultVariantIndex);
 
     if (formError) {
       return renderProductForm(res, {
         statusCode: 400,
         product: req.body,
+        productVariants,
         action: '/admin/products',
         pageTitle: 'Yeni Kurs',
         submitLabel: 'Kaydet',
@@ -1833,6 +1890,7 @@ router.post('/products', requireAdmin, handleProductImageUpload, requireMultipar
     await prisma.$transaction(async (tx) => {
       const product = await tx.product.create({ data });
       await replaceProductContentStructure(tx, product.id, req.body.tabs, req.body.learningOutcomes);
+      await replaceProductVariants(tx, product.id, productVariants, productVariants.findIndex((variant) => variant.isDefault));
     });
     res.redirect('/admin/products');
   } catch (error) {
@@ -1847,6 +1905,18 @@ router.post('/products', requireAdmin, handleProductImageUpload, requireMultipar
       });
     }
 
+    if (error instanceof ProductVariantValidationError) {
+      return renderProductForm(res, {
+        statusCode: 400,
+        product: req.body,
+        productVariants: productVariantFormRows(req.body),
+        action: '/admin/products',
+        pageTitle: 'Yeni Kurs',
+        submitLabel: 'Kaydet',
+        error: error.message
+      });
+    }
+
     next(error);
   }
 });
@@ -1857,7 +1927,11 @@ router.get('/products/:id/edit', requireAdmin, async (req, res, next) => {
       where: { id: Number(req.params.id) },
       include: {
         tabs: { orderBy: { sortOrder: 'asc' } },
-        learningOutcomes: { orderBy: { sortOrder: 'asc' } }
+        learningOutcomes: { orderBy: { sortOrder: 'asc' } },
+        productVariants: {
+          include: { variantProduct: true },
+          orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }]
+        }
       }
     });
 
@@ -1889,11 +1963,13 @@ router.post('/products/:id', requireAdmin, handleProductImageUpload, requireMult
 
     const formError = req.productUploadError || validateProductForm(req.body);
     const data = buildProductData(req.body);
+    const productVariants = normalizeProductVariantRows(req.body.variants, req.body.defaultVariantIndex);
 
     if (formError) {
       return renderProductForm(res, {
         statusCode: 400,
         product: { ...req.body, id: productId, image: currentProduct.image },
+        productVariants,
         action: `/admin/products/${productId}`,
         pageTitle: 'Kursu Düzenle',
         submitLabel: 'Güncelle',
@@ -1910,6 +1986,7 @@ router.post('/products/:id', requireAdmin, handleProductImageUpload, requireMult
         data
       });
       await replaceProductContentStructure(tx, productId, req.body.tabs, req.body.learningOutcomes);
+      await replaceProductVariants(tx, productId, productVariants, productVariants.findIndex((variant) => variant.isDefault));
     });
 
     res.redirect('/admin/products');
@@ -1922,6 +1999,22 @@ router.post('/products/:id', requireAdmin, handleProductImageUpload, requireMult
         pageTitle: 'Kursu Düzenle',
         submitLabel: 'Güncelle',
         error: productUniqueErrorMessage(error)
+      });
+    }
+
+    if (error instanceof ProductVariantValidationError) {
+      return renderProductForm(res, {
+        statusCode: 400,
+        product: {
+          ...req.body,
+          id: Number(req.params.id),
+          image: req.savedProductImagePath || currentProduct?.image || req.body.image
+        },
+        productVariants: productVariantFormRows(req.body),
+        action: `/admin/products/${req.params.id}`,
+        pageTitle: 'Kursu Düzenle',
+        submitLabel: 'Güncelle',
+        error: error.message
       });
     }
 
@@ -3124,3 +3217,4 @@ router.use((error,req,res,next) => {
 })
 
 module.exports = router;
+module.exports.findProductVariantCandidates = findProductVariantCandidates;

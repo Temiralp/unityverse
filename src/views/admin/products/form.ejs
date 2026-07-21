@@ -64,6 +64,51 @@
       Süre
       <input name="duration" value="<%= product ? product.duration || '' : '' %>" placeholder="3 ay, 120 saat vb.">
     </label>
+    <section class="wide product-variants" data-product-variants data-variant-candidates-url="/admin/products/variant-candidates" data-product-id="<%= product && product.id ? product.id : '' %>">
+      <div class="product-content-builder__head">
+        <div>
+          <h2>Eğitim Seçenekleri</h2>
+          <p>Birden fazla süre varsa önce her süreyi ayrı kurs olarak oluşturun, sonra bu ana kursa bağlayın. Seçenek eklenmezse yukarıdaki tek “Süre” değeri kullanılır.</p>
+        </div>
+        <button type="button" class="button button-secondary" data-add-variant>Seçenek Ekle</button>
+      </div>
+      <div class="product-variant-list" data-variant-list>
+        <% productVariants.forEach((variant, index) => { %>
+          <div class="product-variant-row" data-variant-row>
+            <label class="product-variant-course">
+              Bağlı Kurs
+              <input type="search" data-variant-search placeholder="Kurs adı veya ID ile ara" autocomplete="off">
+              <select name="variants[<%= index %>][variantProductId]" data-field="variantProductId" required>
+                <option value="">Kurs seçin</option>
+                <% variantCandidates.forEach((candidate) => { %>
+                  <option value="<%= candidate.id %>" <%= Number(variant.variantProductId) === Number(candidate.id) ? 'selected' : '' %>>
+                    <%= candidate.title %><%= candidate.duration ? ` — ${candidate.duration}` : '' %> [<%= candidate.status %>]
+                  </option>
+                <% }) %>
+              </select>
+            </label>
+            <label>
+              Görünen Süre
+              <input name="variants[<%= index %>][label]" data-field="label" value="<%= variant.label || '' %>" placeholder="Boş bırakılırsa bağlı kursun Süre değeri">
+            </label>
+            <label>
+              Sıralama
+              <input name="variants[<%= index %>][sortOrder]" data-field="sortOrder" type="number" value="<%= variant.sortOrder || 0 %>">
+            </label>
+            <label class="check product-variant-default">
+              <input type="radio" name="defaultVariantIndex" value="<%= index %>" <%= index === defaultVariantIndex ? 'checked' : '' %> data-field="isDefault">
+              Varsayılan
+            </label>
+            <label class="check product-variant-active">
+              <input type="hidden" name="variants[<%= index %>][isActivePresent]" value="1" data-field="isActivePresent">
+              <input type="checkbox" name="variants[<%= index %>][isActive]" value="1" <%= variant.isActive !== false ? 'checked' : '' %> data-field="isActive">
+              Aktif
+            </label>
+            <button type="button" class="button button-danger" data-remove-variant>Sil</button>
+          </div>
+        <% }) %>
+      </div>
+    </section>
     <label>
       Eğitim Tipi
       <input name="lessonType" value="<%= product ? product.lessonType || '' : '' %>" placeholder="Online, yüz yüze">
@@ -189,6 +234,39 @@
   </div>
 </template>
 
+<template id="product-variant-template">
+  <div class="product-variant-row" data-variant-row>
+    <label class="product-variant-course">
+      Bağlı Kurs
+      <input type="search" data-variant-search placeholder="Kurs adı veya ID ile ara" autocomplete="off">
+      <select data-field="variantProductId" required>
+        <option value="">Kurs seçin</option>
+        <% variantCandidates.forEach((candidate) => { %>
+          <option value="<%= candidate.id %>"><%= candidate.title %><%= candidate.duration ? ` — ${candidate.duration}` : '' %> [<%= candidate.status %>]</option>
+        <% }) %>
+      </select>
+    </label>
+    <label>
+              Görünen Süre
+              <input data-field="label" placeholder="Boş bırakılırsa bağlı kursun Süre değeri">
+    </label>
+    <label>
+      Sıralama
+      <input data-field="sortOrder" type="number" value="0">
+    </label>
+    <label class="check product-variant-default">
+      <input type="radio" name="defaultVariantIndex" data-field="isDefault">
+      Varsayılan
+    </label>
+    <label class="check product-variant-active">
+      <input type="hidden" value="1" data-field="isActivePresent">
+      <input type="checkbox" value="1" checked data-field="isActive">
+      Aktif
+    </label>
+    <button type="button" class="button button-danger" data-remove-variant>Sil</button>
+  </div>
+</template>
+
 <script src="/vendor/jodit/jodit.min.js"></script>
-<script src="/public/tema10/js/admin-product-editor.js?v=20260626-1"></script>
+<script src="/public/tema10/js/admin-product-editor.js?v=20260720-3"></script>
 <%- include('../partials/footer') %>

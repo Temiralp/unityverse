@@ -20,6 +20,11 @@
     "test:legacy-whatsapp": "node scripts/test-legacy-whatsapp.js",
     "test:legacy-header": "node scripts/test-legacy-header-layout.js",
     "test:legacy-homepage": "node scripts/test-legacy-homepage-responsive.js",
+    "test:legacy-product-visibility": "node scripts/test-legacy-product-visibility.js",
+    "test:legacy-variant-navigation": "node scripts/test-legacy-variant-navigation.js",
+    "test:product-variants": "node scripts/test-product-variants.js",
+    "test:admin-product-variant-form": "node scripts/test-admin-product-variant-form.js",
+    "test:course-data-migration": "node scripts/test-course-data-migration.js",
     "test:form-success": "node scripts/test-form-success-redirect.js",
     "test:blog-images": "node scripts/test-blog-images.js",
     "test:blog-categories": "node scripts/test-blog-categories.js",
@@ -27,6 +32,7 @@
     "test:blog-categories-browser": "node scripts/blog-category-browser-smoke.js",
     "audit:blog-categories-db": "node scripts/audit-blog-category-db.js",
     "test:social-oauth": "node scripts/test-social-oauth.js",
+    "test:profile-completion": "node scripts/test-profile-completion.js",
     "seed": "node prisma/seed.js"
   },
   "dependencies": {

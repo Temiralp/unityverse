@@ -9,6 +9,7 @@ const { Pool } = require('pg');
 const compression = require('compression');
 const helmet = require('helmet');
 const methodOverride = require('method-override');
+const prisma = require('./db');
 
 const adminRoutes = require('./routes/admin');
 const apiRoutes = require('./routes/api');
@@ -30,6 +31,9 @@ const {
   sendLegacyHtmlFile,
   serveLegacyHtmlWithWhatsapp
 } = require('./middleware/legacy-whatsapp');
+const {
+  createLegacyProductVisibility
+} = require('./middleware/legacy-product-visibility');
 const { redirectLegacyBlogImage } = require('./services/blog-images');
 
 const app = express();
@@ -176,7 +180,18 @@ app.use('/vendor/jodit', express.static(path.join(rootDir, 'node_modules/jodit/e
 app.use('/admin', adminRoutes);
 app.use('/api', apiRoutes);
 if (legacyFrontendMode) {
+  app.use(createLegacyProductVisibility(prisma));
   app.use(injectLegacyWhatsappIntoHtmlResponses);
+  app.use((req, res, next) => {
+    if (
+      res.locals.legacyProductHasVariants
+      && /^\/urun\/[^/]+\/?$/.test(req.path)
+    ) {
+      return legacyProductDetailRoutes(req, res, next);
+    }
+
+    return next();
+  });
 }
 // In legacy frontend mode, keep the original course-listing interface while
 // rendering its product cards from admin-managed DB records.

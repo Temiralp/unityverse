@@ -124,6 +124,8 @@ model Product {
   category               Category?               @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   tabs                   ProductTab[]
   learningOutcomes       ProductLearningOutcome[]
+  productVariants        ProductVariant[]        @relation("ProductVariantParent")
+  variantOfProducts      ProductVariant[]        @relation("ProductVariantProduct")
   educationRegistrations EducationRegistration[]
   memberInterests        MemberCourseInterest[]
   couponProducts         CouponProduct[]
@@ -132,6 +134,24 @@ model Product {
 
   @@index([status])
   @@index([categoryId])
+}
+
+model ProductVariant {
+  id               Int      @id @default(autoincrement())
+  parentProductId  Int
+  parentProduct    Product  @relation("ProductVariantParent", fields: [parentProductId], references: [id], onDelete: Cascade)
+  variantProductId Int
+  variantProduct   Product  @relation("ProductVariantProduct", fields: [variantProductId], references: [id], onDelete: Cascade)
+  label            String?
+  sortOrder        Int      @default(0)
+  isDefault        Boolean  @default(false)
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([parentProductId, variantProductId])
+  @@index([parentProductId, sortOrder])
+  @@unique([variantProductId])
 }
 
 model ProductTab {

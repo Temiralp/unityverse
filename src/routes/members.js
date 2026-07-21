@@ -444,6 +444,7 @@ router.post('/profile', async (req, res, next) => {
     const name = asText(req.body.name);
     const surname = asText(req.body.surname);
     const phone = asText(req.body.phone || req.body.gsm);
+    const phoneDigits = phone.replace(/\D/g, '');
 
     if (!name || !surname || !phone) {
       return res.status(400).json({
@@ -452,15 +453,24 @@ router.post('/profile', async (req, res, next) => {
       });
     }
 
+    if (phoneDigits.length < 10 || phoneDigits.length > 15) {
+      return res.status(400).json({
+        status: 'failure',
+        message: 'Geçerli bir telefon numarası giriniz.'
+      });
+    }
+
+    const profileData = { name, surname, phone };
+    if (Object.prototype.hasOwnProperty.call(req.body, 'maillist')) {
+      profileData.mailList = asBoolean(req.body.maillist);
+    }
+    if (Object.prototype.hasOwnProperty.call(req.body, 'smslist')) {
+      profileData.smsList = asBoolean(req.body.smslist);
+    }
+
     const member = await prisma.member.update({
       where: { id: Number(req.session.member.id) },
-      data: {
-        name,
-        surname,
-        phone,
-        mailList: asBoolean(req.body.maillist),
-        smsList: asBoolean(req.body.smslist)
-      },
+      data: profileData,
       select: {
         id: true,
         name: true,

@@ -69,6 +69,7 @@
 
 .uv-payment-legacy-header__nav-inner {
   display: flex;
+  width: min(1480px, calc(100% - 32px));
   min-height: 84px;
   align-items: center;
   gap: 24px;
@@ -261,23 +262,6 @@
   font-size: 14px;
   font-weight: 600;
   text-align: center;
-}
-
-.uv-payment-legacy-footer__chat {
-  position: fixed;
-  right: 28px;
-  bottom: 26px;
-  z-index: 20;
-  display: inline-flex;
-  width: 68px;
-  height: 68px;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: #098532;
-  color: #fff;
-  box-shadow: 0 0 35px rgba(9, 133, 50, 0.5);
-  font-size: 24px;
 }
 
 .uv-payment-page {
@@ -861,6 +845,42 @@
 .uv-payment-frame iframe:focus-visible {
   outline: var(--uv-focus-ring);
   outline-offset: var(--uv-focus-offset);
+}
+
+@media (min-width: 1200px) {
+  .uv-payment-legacy-header {
+    position: relative;
+  }
+
+  .uv-payment-legacy-header__top {
+    height: 140px;
+  }
+
+  .uv-payment-legacy-header__top-inner {
+    min-height: 140px;
+  }
+
+  .uv-payment-legacy-header__brand {
+    position: absolute;
+    z-index: 2;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: 140px;
+    box-sizing: border-box;
+    padding: 18px 0;
+    background: transparent;
+    pointer-events: none;
+  }
+
+  .uv-payment-legacy-header__brand-inner {
+    height: 100%;
+    min-height: 0;
+  }
+
+  .uv-payment-legacy-header__logo {
+    pointer-events: auto;
+  }
 }
 
 @media (max-width: 900px) {
