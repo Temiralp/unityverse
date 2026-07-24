@@ -57,6 +57,7 @@
         <th>Başlık</th>
         <th>Kategori</th>
         <th>Eğitim Tipi</th>
+        <th>Süre</th>
         <th>Status</th>
         <th>Fiyat</th>
         <th>İşlem</th>
@@ -72,6 +73,7 @@
           </td>
           <td><%= product.category ? product.category.name : '-' %></td>
           <td><%= product.lessonType || '-' %></td>
+          <td><%= product.duration || 'Belirtilmedi' %></td>
           <td>
             <span class="status-pill <%= product.status === 'PUBLISHED' ? 'is-active' : 'is-passive' %>">
               <%= product.status === 'PUBLISHED' ? 'Yayında' : 'Taslak' %>
@@ -112,7 +114,7 @@
         </tr>
       <% }) %>
       <% if (!products.length) { %>
-        <tr><td colspan="6">Henüz kurs yok.</td></tr>
+        <tr><td colspan="7">Henüz kurs yok.</td></tr>
       <% } %>
     </tbody>
   </table>

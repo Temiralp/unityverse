@@ -4,6 +4,10 @@ const fs = require('fs');
 const path = require('path');
 const cheerio = require('cheerio');
 const { PrismaClient } = require('@prisma/client');
+const {
+  legacyDurationOptions,
+  selectLegacyCourseDuration
+} = require('../src/services/course-duration');
 
 const ROOT_DIR = path.resolve(__dirname, '..');
 const COURSE_DIR = path.join(ROOT_DIR, 'urun');
@@ -123,6 +127,8 @@ function parseCourseFile(filePath) {
   const image = normalizeAssetPath($('.pbl-product-slider img[src]').first().attr('src'));
   const price = parsePrice(html);
   const category = parseCategory($);
+  const durationOptions = legacyDurationOptions($);
+  const duration = selectLegacyCourseDuration({ title, slug, code, optionLabels: durationOptions });
   const tabSections = [];
   const tabs = [];
   const seenTabIds = new Set();
@@ -177,12 +183,14 @@ function parseCourseFile(filePath) {
     tabs,
     image,
     price,
+    duration,
     status: missingCurriculum ? 'DRAFT' : 'PUBLISHED',
     meta: {
       category,
       curriculum: missingCurriculum ? 'missing' : curriculumTabFound ? 'present' : 'no-tab',
       missingCurriculum,
       curriculumTabFound,
+      durationOptions,
       contentLength: content ? content.length : 0
     }
   };
@@ -275,6 +283,7 @@ function courseWarnings(course) {
   if (course.price == null) warnings.push('missingPrice');
   if (!course.image) warnings.push('missingImage');
   if (!course.summary) warnings.push('missingSummary');
+  if (!course.duration) warnings.push('missingDuration');
   if (!course.content) warnings.push('missingContent');
   if (!course.meta.category.name) warnings.push('missingCategory');
   return warnings;
@@ -293,6 +302,24 @@ function tabsForWrite(tabs) {
   });
 }
 
+function durationUpdateForImport(existingDuration, importedDuration) {
+  const current = normalizeWhitespace(existingDuration);
+  const hasAdminDuration = current && current.toLocaleLowerCase('tr-TR') !== 'eğitim';
+
+  if (hasAdminDuration || !importedDuration) return {};
+  return { duration: importedDuration };
+}
+
+function productUpdateForImport(importedData, existingDuration, importedDuration) {
+  const adminSafeData = { ...importedData };
+  delete adminSafeData.price;
+
+  return {
+    ...adminSafeData,
+    ...durationUpdateForImport(existingDuration, importedDuration)
+  };
+}
+
 function previewCourse(course) {
   return {
     sourceFile: course.sourceFile,
@@ -300,6 +327,7 @@ function previewCourse(course) {
     title: course.title,
     code: course.code,
     price: course.price,
+    duration: course.duration,
     image: course.image,
     summary: course.summary,
     status: course.status,
@@ -343,6 +371,8 @@ function summarize(courses, errors, sourceFileCount) {
     published: courses.filter((course) => course.status === 'PUBLISHED').length,
     draftMissingCurriculum: courses.filter((course) => course.meta.missingCurriculum).length,
     publishedWithoutCurriculumTab: courses.filter((course) => course.meta.curriculum === 'no-tab').length,
+    withDuration: courses.filter((course) => course.duration).length,
+    withoutDuration: courses.filter((course) => !course.duration).length,
     parseErrors: errors.length,
     coursesWithWarnings: new Set(warnings.map((warning) => warning.slug)).size,
     warningCounts: warnings.reduce((counts, warning) => {
@@ -401,7 +431,10 @@ async function writeCourses(courses) {
         }
 
         if (course.code) seenCodes.set(course.code, course.sourceFile);
-        const existing = await prisma.product.findUnique({ where: { slug: course.slug }, select: { id: true } });
+        const existing = await prisma.product.findUnique({
+          where: { slug: course.slug },
+          select: { id: true, duration: true }
+        });
         const categoryId = resolveCategoryId(course, categories);
         if (course.meta.category.name && !categoryId) {
           result.unresolvedCategories.push({
@@ -421,12 +454,17 @@ async function writeCourses(courses) {
           status: course.status,
           categoryId
         };
+        const updateData = productUpdateForImport(
+          data,
+          existing?.duration,
+          course.duration
+        );
 
         await prisma.$transaction(async (tx) => {
           const savedProduct = await tx.product.upsert({
             where: { slug: course.slug },
-            create: { slug: course.slug, ...data },
-            update: data,
+            create: { slug: course.slug, ...data, duration: course.duration },
+            update: updateData,
             select: { id: true }
           });
 
@@ -592,9 +630,11 @@ if (require.main === module) {
 module.exports = {
   cleanContentHtml,
   collectCourseCategories,
+  durationUpdateForImport,
   normalizeCategoryName,
   parseCourseFile,
   parsePrice,
+  productUpdateForImport,
   resolveCategoryId,
   syncCategories
 };

@@ -2444,7 +2444,7 @@ body:not(.member-logged-in) :is(
     .buy-together-footer-price,
     .complementary-products-carousel-item-price
 )::after {
-    content: "Qiyməti görmək üçün giriş edin";
+    content: "Fiyatı görmek için giriş yapın";
     position: absolute;
     inset: 0;
     display: flex;

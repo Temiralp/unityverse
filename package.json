@@ -25,6 +25,8 @@
     "test:product-variants": "node scripts/test-product-variants.js",
     "test:admin-product-variant-form": "node scripts/test-admin-product-variant-form.js",
     "test:course-data-migration": "node scripts/test-course-data-migration.js",
+    "test:course-duration": "node scripts/test-course-duration.js",
+    "audit:course-duration-db": "node scripts/audit-course-durations.js",
     "test:form-success": "node scripts/test-form-success-redirect.js",
     "test:blog-images": "node scripts/test-blog-images.js",
     "test:blog-categories": "node scripts/test-blog-categories.js",
@@ -34,6 +36,7 @@
     "test:social-oauth": "node scripts/test-social-oauth.js",
     "test:profile-completion": "node scripts/test-profile-completion.js",
     "test:member-registration": "node scripts/test-member-registration.js",
+    "test:rate-limit": "node scripts/test-rate-limit.js",
     "seed": "node prisma/seed.js"
   },
   "dependencies": {

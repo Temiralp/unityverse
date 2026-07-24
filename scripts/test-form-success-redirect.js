@@ -10,6 +10,11 @@ const standaloneForm = fs.readFileSync(
 );
 const successPage = fs.readFileSync(path.join(projectRoot, 'form/tesekkur/index.html'), 'utf8');
 const successCss = fs.readFileSync(path.join(projectRoot, 'public/tema10/css/form-success.css'), 'utf8');
+const formProtection = fs.readFileSync(
+  path.join(projectRoot, 'public/tema10/js/form-protection.js'),
+  'utf8'
+);
+const leadRoutes = fs.readFileSync(path.join(projectRoot, 'src/routes/leads.js'), 'utf8');
 const redirectStatement = "window.location.assign('/form/tesekkur/');";
 
 function functionSource(html, functionName, nextMarker) {
@@ -21,6 +26,15 @@ function functionSource(html, functionName, nextMarker) {
 
 const homepageSubmit = functionSource(homepage, 'postHomepageInfoForm(formId)', "var owl = $('#module1_2696");
 const standaloneSubmit = functionSource(standaloneForm, 'postForm()', 'function uploadFile');
+
+assert(homepageSubmit.includes('ajax/sendHomepageInfoForm'));
+assert(!homepageSubmit.includes('ajax/sendCustomForm'));
+assert(standaloneSubmit.includes('ajax/sendInformationPageForm'));
+assert(!standaloneSubmit.includes('ajax/sendCustomForm'));
+assert(formProtection.includes('sendHomepageInfoForm'));
+assert(formProtection.includes('sendInformationPageForm'));
+assert(leadRoutes.includes("router.post('/sendHomepageInfoForm', leadHandlers)"));
+assert(leadRoutes.includes("router.post('/sendInformationPageForm', leadHandlers)"));
 
 [homepageSubmit, standaloneSubmit].forEach((submitSource) => {
   assert(submitSource.includes('status'));

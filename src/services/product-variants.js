@@ -109,7 +109,7 @@ function productVariantLabel(variant) {
   return String(
     variant.label
       || (variant.variantProduct && variant.variantProduct.duration)
-      || 'Eğitim'
+      || ''
   ).trim();
 }
 

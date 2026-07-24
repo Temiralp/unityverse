@@ -7,7 +7,9 @@ const { requirePublicCsrf } = require('../middleware/public-csrf');
 const {
   clearLoginFailures,
   createIpRateLimiter,
+  isIpBlocked,
   isLoginBlocked,
+  recordIpFailure,
   recordLoginFailure
 } = require('../middleware/rate-limit');
 
@@ -15,6 +17,9 @@ const router = express.Router();
 const MEMBER_LOGIN_SCOPE = 'member-signin';
 const MEMBER_LOGIN_LIMIT = 5;
 const MEMBER_LOGIN_WINDOW_MS = 15 * 60 * 1000;
+const MEMBER_LOGIN_IP_SCOPE = 'member-signin-ip';
+const MEMBER_LOGIN_IP_LIMIT = 30;
+const MEMBER_LOGIN_IP_WINDOW_MS = 15 * 60 * 1000;
 const registrationStatusLabels = {
   NEW: 'Yeni kayıt',
   CONTACTED: 'İletişimde',
@@ -198,14 +203,21 @@ function serializeRegistration(registration) {
   };
 }
 
-function recordMemberLoginFailure(res, identifier) {
-  return recordLoginFailure({
-    res,
-    scope: MEMBER_LOGIN_SCOPE,
-    identifier,
-    limit: MEMBER_LOGIN_LIMIT,
-    windowMs: MEMBER_LOGIN_WINDOW_MS
-  });
+function recordMemberLoginFailure(res, identifier, ipIdentifier) {
+  return Promise.all([
+    recordLoginFailure({
+      res,
+      scope: MEMBER_LOGIN_SCOPE,
+      identifier,
+      limit: MEMBER_LOGIN_LIMIT,
+      windowMs: MEMBER_LOGIN_WINDOW_MS
+    }),
+    recordIpFailure({
+      scope: MEMBER_LOGIN_IP_SCOPE,
+      identifier: ipIdentifier,
+      windowMs: MEMBER_LOGIN_IP_WINDOW_MS
+    })
+  ]);
 }
 
 function memberBotGuard(req, res, next) {
@@ -311,6 +323,20 @@ router.post('/signin', memberBotGuard, async (req, res, next) => {
     const data = req.body || {};
     const email = asText(data.email).toLowerCase();
     const password = asText(data.pass || data.password);
+    const ipAttempt = await isIpBlocked({
+      req,
+      res,
+      scope: MEMBER_LOGIN_IP_SCOPE,
+      limit: MEMBER_LOGIN_IP_LIMIT
+    });
+
+    if (ipAttempt.blocked) {
+      return res.status(429).json({
+        status: 'failure',
+        message: 'Çok fazla hatalı giriş denemesi yapıldı. Lütfen 15 dakika sonra tekrar deneyin.'
+      });
+    }
+
     const loginAttempt = await isLoginBlocked({
       req,
       res,
@@ -327,7 +353,7 @@ router.post('/signin', memberBotGuard, async (req, res, next) => {
     }
 
     if (!email || !password) {
-      await recordMemberLoginFailure(res, loginAttempt.identifier);
+      await recordMemberLoginFailure(res, loginAttempt.identifier, ipAttempt.identifier);
       return res.status(400).json({
         status: 'failure',
         message: 'E-posta ve şifre zorunludur.'
@@ -336,7 +362,7 @@ router.post('/signin', memberBotGuard, async (req, res, next) => {
 
     const member = await prisma.member.findUnique({ where: { email } });
     if (!member || !member.passwordHash) {
-      await recordMemberLoginFailure(res, loginAttempt.identifier);
+      await recordMemberLoginFailure(res, loginAttempt.identifier, ipAttempt.identifier);
       return res.status(401).json({
         status: 'failure',
         message: 'E-posta veya şifre hatalı.'
@@ -344,7 +370,7 @@ router.post('/signin', memberBotGuard, async (req, res, next) => {
     }
 
     if (member.status !== 'ACTIVE') {
-      await recordMemberLoginFailure(res, loginAttempt.identifier);
+      await recordMemberLoginFailure(res, loginAttempt.identifier, ipAttempt.identifier);
       return res.status(403).json({
         status: 'failure',
         message: 'Üyeliğiniz aktif değildir.'
@@ -353,7 +379,7 @@ router.post('/signin', memberBotGuard, async (req, res, next) => {
 
     const passwordMatches = await bcrypt.compare(password, member.passwordHash);
     if (!passwordMatches) {
-      await recordMemberLoginFailure(res, loginAttempt.identifier);
+      await recordMemberLoginFailure(res, loginAttempt.identifier, ipAttempt.identifier);
       return res.status(401).json({
         status: 'failure',
         message: 'E-posta veya şifre hatalı.'

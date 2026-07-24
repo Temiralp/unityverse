@@ -10,7 +10,9 @@ const { BLOG_CATEGORIES, blogCategoryByLegacyId } = require('../config/blog-cate
 const { requireAdmin, redirectIfLoggedIn } = require('../middleware/auth');
 const {
   clearLoginFailures,
+  isIpBlocked,
   isLoginBlocked,
+  recordIpFailure,
   recordLoginFailure
 } = require('../middleware/rate-limit');
 const { parseIdParam } = require('../middleware/parse-id');
@@ -26,11 +28,24 @@ const {
   replaceProductVariants
 } = require('../services/product-variants');
 const { validateBlogContentImages } = require('../services/blog-images');
+const {
+  hasAnyRegistrationProfileInput,
+  validateRegistrationProfile
+} = require('../services/registration-profile');
+const {
+  RegistrationPiiConfigurationError,
+  RegistrationPiiDecryptionError,
+  decryptRegistrationPii,
+  encryptRegistrationPii
+} = require('../services/registration-pii');
 
 const router = express.Router();
 const ADMIN_LOGIN_SCOPE = 'admin-login';
 const LOGIN_RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
 const LOGIN_RATE_LIMIT_MAX_ATTEMPTS = 5;
+const ADMIN_LOGIN_IP_SCOPE = 'admin-login-ip';
+const ADMIN_LOGIN_IP_LIMIT = 5;
+const ADMIN_LOGIN_IP_WINDOW_MS = 60 * 60 * 1000;
 const PAGE_SIZE_OPTIONS = [5, 10, 25, 50, 100];
 const DEFAULT_PAGE_SIZE = 25;
 const MAX_PAGE_SIZE = 100;
@@ -494,6 +509,61 @@ function nullableText(value) {
   return text || null;
 }
 
+function setPrivateNoStore(res) {
+  res.set('Cache-Control', 'private, no-store');
+}
+
+function sendRegistrationPiiUnavailable(res) {
+  setPrivateNoStore(res);
+  return res.status(503).send('Kişisel bilgiler şu anda güvenli şekilde işlenemiyor. Lütfen daha sonra tekrar deneyin.');
+}
+
+function isRegistrationPiiError(error) {
+  return error instanceof RegistrationPiiConfigurationError
+    || error instanceof RegistrationPiiDecryptionError;
+}
+
+function handleRegistrationPiiError(res, error) {
+  if (!isRegistrationPiiError(error)) return false;
+  sendRegistrationPiiUnavailable(res);
+  return true;
+}
+
+function withoutEncryptedRegistrationPii(registration) {
+  if (!registration) return registration;
+
+  const {
+    identityDocumentNumberEncrypted,
+    birthDateEncrypted,
+    addressEncrypted,
+    ...safeRegistration
+  } = registration;
+
+  return safeRegistration;
+}
+
+function hasStoredRegistrationPii(registration) {
+  return Boolean(
+    registration?.identityDocumentNumberEncrypted
+    || registration?.birthDateEncrypted
+    || registration?.addressEncrypted
+  );
+}
+
+function hasSubmittedRegistrationPii(body) {
+  return hasAnyRegistrationProfileInput({
+    identityDocumentType: body?.identityDocumentType,
+    identityDocumentNumber: body?.identityDocumentNumber,
+    documentCountryCode: body?.documentCountryCode,
+    birthDate: body?.birthDate,
+    country: body?.country,
+    city: body?.city,
+    district: body?.district,
+    postalCode: body?.postalCode,
+    addressLine: body?.addressLine
+  });
+}
+
 function numberOrZero(value) {
   const number = Number(value || 0);
   return Number.isFinite(number) ? number : 0;
@@ -874,6 +944,7 @@ async function getRegistrationFormOptions() {
 
 async function renderRegistrationForm(res, options) {
   const { members, products } = await getRegistrationFormOptions();
+  setPrivateNoStore(res);
   return res.status(options.statusCode || 200).render('admin/registrations/form', {
     registration: options.registration || null,
     members,
@@ -884,11 +955,14 @@ async function renderRegistrationForm(res, options) {
     action: options.action || '/admin/registrations',
     pageTitle: options.pageTitle || 'Yeni Eğitim Kaydı',
     submitLabel: options.submitLabel || 'Kayıt Oluştur',
-    error: options.error || null
+    error: options.error || null,
+    fieldErrors: options.fieldErrors || {},
+    profileRequired: options.profileRequired === true,
+    focusAddress: options.focusAddress === true
   });
 }
 
-async function buildRegistrationData(body) {
+async function buildRegistrationData(body, options = {}) {
   const productCode = String(body.productCode || '').trim().toUpperCase();
   const productId = body.productId ? Number(body.productId) : null;
   const memberId = body.memberId ? Number(body.memberId) : null;
@@ -904,16 +978,32 @@ async function buildRegistrationData(body) {
   const surname = String(body.surname || (member ? member.surname || '' : '')).trim();
   const email = String(body.email || (member ? member.email || '' : '')).trim();
   const phone = String(body.phone || (member ? member.phone || '' : '')).trim();
+  const shouldValidateProfile = options.requireProfile === true
+    || options.hasStoredPii === true
+    || hasSubmittedRegistrationPii(body);
+  const profileValidation = shouldValidateProfile
+    ? validateRegistrationProfile({
+        ...body,
+        name,
+        surname,
+        email,
+        phone
+      })
+    : null;
+  const normalizedProfile = profileValidation?.profile;
+  const encryptedProfile = profileValidation?.isValid
+    ? encryptRegistrationPii(normalizedProfile)
+    : {};
 
   return {
     data: {
       memberId: member ? member.id : null,
       productId: product ? product.id : null,
       courseTitle,
-      name,
-      surname: surname || null,
-      email: email || null,
-      phone,
+      name: normalizedProfile?.name || name,
+      surname: normalizedProfile?.surname || surname || null,
+      email: normalizedProfile?.email || email || null,
+      phone: normalizedProfile?.phone || phone,
       note: nullableText(body.note),
       advisorNote: nullableText(body.advisorNote),
       status: normalizeRegistrationStatus(body.status),
@@ -921,9 +1011,13 @@ async function buildRegistrationData(body) {
       totalAmount: optionalDecimal(body.totalAmount),
       invoiceStatus: normalizeInvoiceStatus(body.invoiceStatus),
       paymentNote: nullableText(body.paymentNote),
-      startsAt: parseOptionalDate(body.startsAt)
+      startsAt: parseOptionalDate(body.startsAt),
+      ...encryptedProfile
     },
     isValid: Boolean(courseTitle && name && phone)
+      && (!profileValidation || profileValidation.isValid),
+    fieldErrors: profileValidation?.errors || {},
+    profileRequired: shouldValidateProfile
   };
 }
 
@@ -933,6 +1027,31 @@ function validateRegistrationFinanceFields(body) {
   }
 
   return null;
+}
+
+async function renderRegistrationDetail(res, registration, options = {}) {
+  let registrationProfile;
+
+  try {
+    registrationProfile = decryptRegistrationPii(registration);
+  } catch (error) {
+    if (handleRegistrationPiiError(res, error)) return res;
+    throw error;
+  }
+
+  setPrivateNoStore(res);
+  return res.status(options.statusCode || 200).render('admin/registrations/show', {
+    registration: withoutEncryptedRegistrationPii(registration),
+    registrationProfile,
+    advisorOptions: await getAdvisorOptions(),
+    followUpValue: formatDateTimeLocal(registration.nextFollowUpAt),
+    finance: getRegistrationFinance(registration),
+    statusLabels: registrationStatusLabels,
+    paymentStatusLabels,
+    invoiceStatusLabels,
+    installmentStatusLabels,
+    error: options.error || null
+  });
 }
 
 function normalizeIdList(value) {
@@ -1010,6 +1129,19 @@ router.post('/login', redirectIfLoggedIn, async (req, res, next) => {
   try {
     const { email, password } = req.body;
     const normalizedEmail = String(email || '').trim().toLowerCase();
+    const ipAttempt = await isIpBlocked({
+      req,
+      res,
+      scope: ADMIN_LOGIN_IP_SCOPE,
+      limit: ADMIN_LOGIN_IP_LIMIT
+    });
+
+    if (ipAttempt.blocked) {
+      return res.status(429).render('admin/login', {
+        error: 'Çok fazla hatalı giriş denemesi yapıldı. Lütfen 60 dakika sonra tekrar deneyin.'
+      });
+    }
+
     const loginAttempt = await isLoginBlocked({
       req,
       res,
@@ -1027,13 +1159,20 @@ router.post('/login', redirectIfLoggedIn, async (req, res, next) => {
     const user = await prisma.adminUser.findUnique({ where: { email: normalizedEmail } });
 
     if (!user || !(await bcrypt.compare(password || '', user.passwordHash))) {
-      await recordLoginFailure({
-        res,
-        scope: ADMIN_LOGIN_SCOPE,
-        identifier: loginAttempt.identifier,
-        limit: LOGIN_RATE_LIMIT_MAX_ATTEMPTS,
-        windowMs: LOGIN_RATE_LIMIT_WINDOW_MS
-      });
+      await Promise.all([
+        recordLoginFailure({
+          res,
+          scope: ADMIN_LOGIN_SCOPE,
+          identifier: loginAttempt.identifier,
+          limit: LOGIN_RATE_LIMIT_MAX_ATTEMPTS,
+          windowMs: LOGIN_RATE_LIMIT_WINDOW_MS
+        }),
+        recordIpFailure({
+          scope: ADMIN_LOGIN_IP_SCOPE,
+          identifier: ipAttempt.identifier,
+          windowMs: ADMIN_LOGIN_IP_WINDOW_MS
+        })
+      ]);
       return res.status(401).render('admin/login', { error: 'E-posta veya şifre hatalı.' });
     }
 
@@ -2509,8 +2648,9 @@ router.get('/registrations', requireAdmin, async (req, res, next) => {
       getAdvisorOptions()
     ]);
 
+    setPrivateNoStore(res);
     res.render('admin/registrations/index', {
-      registrations,
+      registrations: registrations.map(withoutEncryptedRegistrationPii),
       totalCount,
       pagination,
       q,
@@ -2542,7 +2682,8 @@ router.get('/registrations/new', requireAdmin, async (req, res, next) => {
       registration: null,
       action: '/admin/registrations',
       pageTitle: 'Yeni Eğitim Kaydı',
-      submitLabel: 'Kayıt Oluştur'
+      submitLabel: 'Kayıt Oluştur',
+      profileRequired: true
     });
   } catch (error) {
     next(error);
@@ -2555,7 +2696,12 @@ router.post('/registrations', requireAdmin, async (req, res, next) => {
       return res.redirect('/admin/registrations');
     }
 
-    const { data, isValid } = await buildRegistrationData(req.body);
+    const {
+      data,
+      isValid,
+      fieldErrors,
+      profileRequired
+    } = await buildRegistrationData(req.body, { requireProfile: true });
     const financeError = validateRegistrationFinanceFields(req.body);
 
     if (!isValid || financeError) {
@@ -2565,7 +2711,9 @@ router.post('/registrations', requireAdmin, async (req, res, next) => {
         action: '/admin/registrations',
         pageTitle: 'Yeni Eğitim Kaydı',
         submitLabel: 'Kayıt Oluştur',
-        error: financeError || 'Eğitim, ad ve telefon alanları zorunludur.'
+        error: financeError || 'Zorunlu kayıt ve kişisel bilgi alanlarını kontrol ediniz.',
+        fieldErrors,
+        profileRequired
       });
     }
 
@@ -2578,6 +2726,7 @@ router.post('/registrations', requireAdmin, async (req, res, next) => {
 
     res.redirect('/admin/registrations');
   } catch (error) {
+    if (handleRegistrationPiiError(res, error)) return;
     next(error);
   }
 });
@@ -2597,13 +2746,22 @@ router.get('/registrations/:id/edit', requireAdmin, async (req, res, next) => {
       return res.status(404).send('Eğitim kaydı bulunamadı');
     }
 
+    const registrationProfile = decryptRegistrationPii(registration);
+    const formRegistration = {
+      ...withoutEncryptedRegistrationPii(registration),
+      ...registrationProfile
+    };
+
     return renderRegistrationForm(res, {
-      registration,
+      registration: formRegistration,
       action: `/admin/registrations/${registration.id}`,
       pageTitle: 'Eğitim Kaydını Düzenle',
-      submitLabel: 'Güncelle'
+      submitLabel: 'Güncelle',
+      profileRequired: hasStoredRegistrationPii(registration),
+      focusAddress: req.query.focus === 'address'
     });
   } catch (error) {
+    if (handleRegistrationPiiError(res, error)) return;
     next(error);
   }
 });
@@ -2616,15 +2774,25 @@ router.post('/registrations/:id', requireAdmin, async (req, res, next) => {
 
     const registrationId = Number(req.params.id);
     const registrationExists = await prisma.educationRegistration.findUnique({
-      where: { id: registrationId },
-      select: { id: true }
+      where: { id: registrationId }
     });
 
     if (!registrationExists) {
       return res.status(404).send('Eğitim kaydı bulunamadı');
     }
 
-    const { data, isValid } = await buildRegistrationData(req.body);
+    if (hasStoredRegistrationPii(registrationExists)) {
+      decryptRegistrationPii(registrationExists);
+    }
+
+    const {
+      data,
+      isValid,
+      fieldErrors,
+      profileRequired
+    } = await buildRegistrationData(req.body, {
+      hasStoredPii: hasStoredRegistrationPii(registrationExists)
+    });
     const financeError = validateRegistrationFinanceFields(req.body);
 
     if (!isValid || financeError) {
@@ -2634,7 +2802,11 @@ router.post('/registrations/:id', requireAdmin, async (req, res, next) => {
         action: `/admin/registrations/${registrationId}`,
         pageTitle: 'Eğitim Kaydını Düzenle',
         submitLabel: 'Güncelle',
-        error: financeError || 'Eğitim, ad ve telefon alanları zorunludur.'
+        error: financeError || (profileRequired
+          ? 'Zorunlu kayıt ve kişisel bilgi alanlarını kontrol ediniz.'
+          : 'Eğitim, ad ve telefon alanları zorunludur.'),
+        fieldErrors,
+        profileRequired
       });
     }
 
@@ -2678,6 +2850,7 @@ router.post('/registrations/:id', requireAdmin, async (req, res, next) => {
 
     res.redirect(`/admin/registrations/${registrationId}`);
   } catch (error) {
+    if (handleRegistrationPiiError(res, error)) return;
     next(error);
   }
 });
@@ -2694,18 +2867,9 @@ router.get('/registrations/:id', requireAdmin, async (req, res, next) => {
       return res.status(404).send('Eğitim kaydı bulunamadı');
     }
 
-    res.render('admin/registrations/show', {
-      registration,
-      advisorOptions: await getAdvisorOptions(),
-      followUpValue: formatDateTimeLocal(registration.nextFollowUpAt),
-      finance: getRegistrationFinance(registration),
-      statusLabels: registrationStatusLabels,
-      paymentStatusLabels,
-      invoiceStatusLabels,
-      installmentStatusLabels,
-      error: null
-    });
+    return renderRegistrationDetail(res, registration);
   } catch (error) {
+    if (handleRegistrationPiiError(res, error)) return;
     next(error);
   }
 });
@@ -2723,15 +2887,8 @@ router.post('/registrations/:id/status', requireAdmin, async (req, res, next) =>
 
     if (financeError) {
       const registration = await getRegistrationDetail(req.params.id);
-      return res.status(400).render('admin/registrations/show', {
-        registration,
-        advisorOptions: await getAdvisorOptions(),
-        followUpValue: formatDateTimeLocal(registration.nextFollowUpAt),
-        finance: getRegistrationFinance(registration),
-        statusLabels: registrationStatusLabels,
-        paymentStatusLabels,
-        invoiceStatusLabels,
-        installmentStatusLabels,
+      return renderRegistrationDetail(res, registration, {
+        statusCode: 400,
         error: financeError
       });
     }
@@ -2800,15 +2957,8 @@ router.post('/registrations/:id/notes', requireAdmin, async (req, res, next) => 
     if (!note) {
       const registration = await getRegistrationDetail(req.params.id);
 
-      return res.status(400).render('admin/registrations/show', {
-        registration,
-        advisorOptions: await getAdvisorOptions(),
-        followUpValue: formatDateTimeLocal(registration.nextFollowUpAt),
-        finance: getRegistrationFinance(registration),
-        statusLabels: registrationStatusLabels,
-        paymentStatusLabels,
-        invoiceStatusLabels,
-        installmentStatusLabels,
+      return renderRegistrationDetail(res, registration, {
+        statusCode: 400,
         error: 'Not alanı boş olamaz.'
       });
     }
@@ -2838,15 +2988,8 @@ router.post('/registrations/:id/payments', requireAdmin, async (req, res, next) 
 
     if (!amount || Number(amount) <= 0) {
       const registration = await getRegistrationDetail(req.params.id);
-      return res.status(400).render('admin/registrations/show', {
-        registration,
-        advisorOptions: await getAdvisorOptions(),
-        followUpValue: formatDateTimeLocal(registration.nextFollowUpAt),
-        finance: getRegistrationFinance(registration),
-        statusLabels: registrationStatusLabels,
-        paymentStatusLabels,
-        invoiceStatusLabels,
-        installmentStatusLabels,
+      return renderRegistrationDetail(res, registration, {
+        statusCode: 400,
         error: 'Ödeme tutarı geçerli pozitif sayı olmalıdır.'
       });
     }
@@ -2898,15 +3041,8 @@ router.post('/registrations/:id/installments', requireAdmin, async (req, res, ne
 
     if (!amount || Number(amount) <= 0 || !dueDate) {
       const registration = await getRegistrationDetail(req.params.id);
-      return res.status(400).render('admin/registrations/show', {
-        registration,
-        advisorOptions: await getAdvisorOptions(),
-        followUpValue: formatDateTimeLocal(registration.nextFollowUpAt),
-        finance: getRegistrationFinance(registration),
-        statusLabels: registrationStatusLabels,
-        paymentStatusLabels,
-        invoiceStatusLabels,
-        installmentStatusLabels,
+      return renderRegistrationDetail(res, registration, {
+        statusCode: 400,
         error: 'Taksit tutarı ve vade tarihi zorunludur.'
       });
     }

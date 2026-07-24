@@ -2,11 +2,11 @@ const fs = require('fs/promises');
 const path = require('path');
 const express = require('express');
 const prisma = require('../db');
+const { publicCatalogProductWhere } = require('../services/public-catalog');
 
 const router = express.Router();
 const rootDir = path.resolve(__dirname, '../..');
 const categoryDir = path.join(rootDir, 'kategori');
-const productsDir = path.join(rootDir, 'urun');
 const allProductsFile = path.join(rootDir, 'tum-urunler/index.html');
 
 const preferredCategoryOrder = [
@@ -41,55 +41,12 @@ function countMatches(html, expression) {
   return (html.match(expression) || []).length;
 }
 
-function productIdsFromListing(html) {
-  return new Set(Array.from(html.matchAll(/addToBasket\((\d+)/g), (match) => match[1]));
-}
-
-function parseBasePrice(html) {
-  const match = html.match(/var\s+base_price\s*=\s*['"]?([0-9]+(?:[.,][0-9]+)?)['"]?\s*;/i);
-  if (!match) return null;
-
-  const price = Number(match[1].replace(',', '.'));
-  return Number.isFinite(price) && price > 0 ? price : null;
-}
-
-function productIdentity(filePath) {
-  const relativePath = path.relative(productsDir, path.dirname(filePath));
-  const parts = relativePath.split(path.sep).filter(Boolean);
-  const lastPart = parts[parts.length - 1] || '';
-  const firstPart = parts[0] || '';
-
-  if (/^\d+$/.test(lastPart)) return lastPart;
-
-  const match = firstPart.match(/-(\d+)$/);
-  return match ? match[1] : relativePath;
-}
-
 function priceBucket(price) {
   if (price < 5000) return { val1: 0, val2: 4999 };
   if (price < 10000) return { val1: 5000, val2: 9999 };
   if (price < 20000) return { val1: 10000, val2: 19999 };
   if (price < 40000) return { val1: 20000, val2: 39999 };
   return { val1: 40000, val2: 100000 };
-}
-
-async function readIndexFiles(directory) {
-  const entries = await fs.readdir(directory, { withFileTypes: true });
-  const files = [];
-
-  await Promise.all(entries.map(async (entry) => {
-    const entryPath = path.join(directory, entry.name);
-    if (entry.isDirectory()) {
-      files.push(...await readIndexFiles(entryPath));
-      return;
-    }
-
-    if (entry.name === 'index.html') {
-      files.push(entryPath);
-    }
-  }));
-
-  return files;
 }
 
 async function buildCategories() {
@@ -150,32 +107,9 @@ async function buildBrandFilters(totalProductCount) {
     }));
 }
 
-async function buildPriceFilters(allowedProductIds) {
-  const files = await readIndexFiles(productsDir);
-  const buckets = new Map();
-  const seenProducts = new Set();
-
-  await Promise.all(files.map(async (filePath) => {
-    const identity = productIdentity(filePath);
-    if (allowedProductIds.size > 0 && !allowedProductIds.has(identity)) return;
-    if (seenProducts.has(identity)) return;
-    seenProducts.add(identity);
-
-    const html = await fs.readFile(filePath, 'utf8');
-    const price = parseBasePrice(html);
-    if (!price) return;
-
-    const bucket = priceBucket(price);
-    const key = `${bucket.val1}-${bucket.val2}`;
-    buckets.set(key, { ...bucket, pcount: (buckets.get(key)?.pcount || 0) + 1 });
-  }));
-
-  return Array.from(buckets.values()).sort((a, b) => a.val1 - b.val1);
-}
-
-async function buildFilterPayload() {
-  const products = await prisma.product.findMany({
-    where: { status: 'PUBLISHED' },
+async function buildFilterPayload(prismaClient = prisma) {
+  const products = await prismaClient.product.findMany({
+    where: publicCatalogProductWhere(),
     include: { category: true }
   });
 
@@ -194,7 +128,10 @@ async function buildFilterPayload() {
         categoryCounts.set(product.category.slug, current);
       }
 
-      const price = Number(product.discountPrice || product.price || 0);
+      const effectivePrice = product.discountPrice == null
+        ? product.price
+        : product.discountPrice;
+      const price = Number(effectivePrice || 0);
       if (Number.isFinite(price) && price > 0) {
         const bucket = priceBucket(price);
         const key = `${bucket.val1}-${bucket.val2}`;
@@ -221,18 +158,16 @@ async function buildFilterPayload() {
 
   const allProductsHtml = await fs.readFile(allProductsFile, 'utf8');
   const totalProductCount = countMatches(allProductsHtml, /class="pbl-product-card-item"/g);
-  const listedProductIds = productIdsFromListing(allProductsHtml);
-  const [subCategoryList, brandFilters, priceFilters] = await Promise.all([
+  const [subCategoryList, brandFilters] = await Promise.all([
     buildCategories(),
-    buildBrandFilters(totalProductCount),
-    buildPriceFilters(listedProductIds)
+    buildBrandFilters(totalProductCount)
   ]);
 
   return {
     sub_category_list: subCategoryList,
     category_tree: [],
     brand_filters: brandFilters,
-    price_filters: priceFilters,
+    price_filters: [],
     special_filters: {
       new_count: 3,
       sponsor_count: 0,
@@ -262,3 +197,4 @@ router.get('/productfilters', async (req, res, next) => {
 });
 
 module.exports = router;
+module.exports.buildFilterPayload = buildFilterPayload;

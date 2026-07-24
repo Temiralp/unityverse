@@ -3003,7 +3003,7 @@ function postHomepageInfoForm(formId) {
 	var formdata = getJsonDataFromForm(formId);
 	$.ajax({
 		type: "post",
-		url: site_url + "ajax/sendCustomForm",
+		url: site_url + "ajax/sendHomepageInfoForm",
 		data: formdata,
 		dataType: "json",
 		success: function(result) {

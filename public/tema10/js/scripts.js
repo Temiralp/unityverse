@@ -2070,7 +2070,7 @@ $( document ).ready(function() {
 		if (document.querySelector('script[data-form-protection-script]')) return;
 
 		var script = document.createElement('script');
-		script.src = '/public/tema10/js/form-protection.js?v=5';
+		script.src = '/public/tema10/js/form-protection.js?v=6';
 		script.defer = true;
 		script.setAttribute('data-form-protection-script', '');
 		document.head.appendChild(script);
@@ -2125,26 +2125,11 @@ $( document ).ready(function() {
 		return match ? Number(match[1]) : null;
 	}
 
-	function absoluteUrl(value) {
-		try {
-			return new URL(String(value || ''), window.location.href).href;
-		} catch (error) {
-			return '';
-		}
-	}
-
-	function legacyPriceHtmlFromSource(source) {
-		var match = String(source || '').match(/var\s+base_price\s*=\s*([0-9]+(?:\.[0-9]+)?)/);
-		return match ? '<span class="new-price price-new">' + escapeHtml(formatMemberPrice(match[1])) + '</span>' : '';
-	}
-
 	function currentLegacyProductSlug() {
 		return productSlugFromHref(window.location.pathname + '/');
 	}
 
 	function renderLegacyListingPrices(productsById, productsBySlug) {
-		var fallbackItems = [];
-
 		$('.pbl-product-card-item').each(function() {
 			var $card = $(this);
 			var id = productIdFromCard($card);
@@ -2160,65 +2145,8 @@ $( document ).ready(function() {
 
 			if (html) {
 				$wrap.prepend('<div class="product-price uv-member-product-price">' + html + '</div>');
-				return;
-			}
-
-			if (href) {
-				fallbackItems.push({
-					$wrap: $wrap,
-					url: absoluteUrl(href)
-				});
 			}
 		});
-
-		renderLegacyListingFallbackPrices(fallbackItems);
-	}
-
-	function renderLegacyListingFallbackPrices(items) {
-		var index = 0;
-		var active = 0;
-		var cache = {};
-		var maxConcurrent = 4;
-
-		function next() {
-			if (!document.body.classList.contains('member-logged-in')) return;
-
-			while (active < maxConcurrent && index < items.length) {
-				(function(item) {
-					var cachedHtml = cache[item.url];
-
-					index += 1;
-					if (!item.url || item.$wrap.find('.product-price').length) return;
-
-					if (cachedHtml !== undefined) {
-						if (cachedHtml) {
-							item.$wrap.prepend('<div class="product-price uv-member-product-price">' + cachedHtml + '</div>');
-						}
-						return;
-					}
-
-					active += 1;
-					$.ajax({
-						type: 'get',
-						url: item.url,
-						dataType: 'html',
-						success: function(source) {
-							var html = legacyPriceHtmlFromSource(source);
-							cache[item.url] = html;
-							if (html && !item.$wrap.find('.product-price').length) {
-								item.$wrap.prepend('<div class="product-price uv-member-product-price">' + html + '</div>');
-							}
-						},
-						complete: function() {
-							active -= 1;
-							next();
-						}
-					});
-				}(items[index]));
-			}
-		}
-
-		next();
 	}
 
 	function renderLegacyDetailPrice(productsById, productsBySlug) {
@@ -2228,10 +2156,6 @@ $( document ).ready(function() {
 		var product = hasLinkedProduct ? productsById[linkedProductId] : (slug && productsBySlug[slug]);
 		var html = productPriceHtml(product);
 		var $target;
-
-		if (!html && typeof window.base_price !== 'undefined') {
-			html = '<span class="new-price price-new">' + escapeHtml(formatMemberPrice(window.base_price)) + '</span>';
-		}
 
 		if (!html || $('.product_page_price .price-new').length) return;
 
@@ -2455,19 +2379,62 @@ $( document ).ready(function() {
 		return false;
 	}
 
-	function isValidProfilePhone(value) {
-		var digits = String(value || '').replace(/\D/g, '');
-		return digits.length >= 10 && digits.length <= 15;
+	var enrollmentFieldNames = [
+		'name', 'surname', 'email', 'phone', 'identityDocumentType',
+		'identityDocumentNumber', 'documentCountryCode', 'birthDate',
+		'country', 'city', 'district', 'postalCode', 'addressLine'
+	];
+
+	function isValidTurkishEnrollmentId(value) {
+		var digits = String(value || '').trim();
+		if (!/^[1-9]\d{10}$/.test(digits)) return false;
+		var numbers = digits.split('').map(Number);
+		var oddTotal = numbers[0] + numbers[2] + numbers[4] + numbers[6] + numbers[8];
+		var evenTotal = numbers[1] + numbers[3] + numbers[5] + numbers[7];
+		var tenthDigit = (((oddTotal * 7) - evenTotal) % 10 + 10) % 10;
+		var eleventhDigit = numbers.slice(0, 10).reduce(function(total, number) {
+			return total + number;
+		}, 0) % 10;
+		return tenthDigit === numbers[9] && eleventhDigit === numbers[10];
 	}
 
-	function isEnrollmentProfileComplete(member) {
-		return Boolean(
-			member &&
-			$.trim(member.name || '') &&
-			$.trim(member.surname || '') &&
-			$.trim(member.email || '') &&
-			isValidProfilePhone(member.phone)
-		);
+	function enrollmentValues(state) {
+		var values = {};
+		enrollmentFieldNames.forEach(function(name) {
+			values[name] = $.trim(state.fields[name].value || '');
+		});
+		values.identityDocumentNumber = values.identityDocumentNumber.toUpperCase();
+		values.documentCountryCode = values.documentCountryCode.toUpperCase();
+		return values;
+	}
+
+	function validateEnrollmentValues(values) {
+		var errors = {};
+		var now = new Date();
+		var today = [now.getUTCFullYear(), String(now.getUTCMonth() + 1).padStart(2, '0'), String(now.getUTCDate()).padStart(2, '0')].join('-');
+		var birthDate = /^\d{4}-\d{2}-\d{2}$/.test(values.birthDate)
+			? new Date(values.birthDate + 'T00:00:00Z')
+			: null;
+		if (values.name.length < 2 || values.name.length > 100) errors.name = 'Ad 2-100 karakter arasında olmalıdır.';
+		if (values.surname.length < 2 || values.surname.length > 100) errors.surname = 'Soyad 2-100 karakter arasında olmalıdır.';
+		if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email) || values.email.length > 254) errors.email = 'Geçerli bir e-posta adresi giriniz.';
+		var phoneDigits = values.phone.replace(/\D/g, '');
+		if (phoneDigits.length < 10 || phoneDigits.length > 15) errors.phone = 'Telefon numarası 10-15 rakam içermelidir.';
+		if (values.identityDocumentType === 'TC_ID') {
+			if (!isValidTurkishEnrollmentId(values.identityDocumentNumber)) errors.identityDocumentNumber = 'Geçerli bir 11 haneli T.C. kimlik numarası giriniz.';
+		} else if (values.identityDocumentType === 'PASSPORT') {
+			if (!/^[A-Za-z0-9]{5,20}$/.test(values.identityDocumentNumber)) errors.identityDocumentNumber = 'Pasaport numarası 5-20 harf veya rakamdan oluşmalıdır.';
+			if (!/^[A-Za-z]{2}$/.test(values.documentCountryCode)) errors.documentCountryCode = 'Belge ülke kodunu 2 harf olarak giriniz.';
+		} else {
+			errors.identityDocumentType = 'Kimlik belgesi türünü seçiniz.';
+		}
+		if (!birthDate || Number.isNaN(birthDate.getTime()) || birthDate.toISOString().slice(0, 10) !== values.birthDate || values.birthDate >= today) errors.birthDate = 'Geçerli ve geçmiş bir doğum tarihi giriniz.';
+		['country', 'city', 'district'].forEach(function(field) {
+			if (values[field].length < 2 || values[field].length > 100) errors[field] = field === 'country' ? 'Ülke 2-100 karakter arasında olmalıdır.' : field === 'city' ? 'Şehir 2-100 karakter arasında olmalıdır.' : 'İlçe 2-100 karakter arasında olmalıdır.';
+		});
+		if (values.postalCode && (values.postalCode.length > 20 || !/^[\p{L}\p{N}\s-]+$/u.test(values.postalCode))) errors.postalCode = 'Posta kodu en fazla 20 harf, rakam, boşluk veya tire içerebilir.';
+		if (values.addressLine.length < 5 || values.addressLine.length > 500) errors.addressLine = 'Açık adresi en az 5, en fazla 500 karakter giriniz.';
+		return errors;
 	}
 
 	function setProfileCompletionStatus(state, message, isError) {
@@ -2479,8 +2446,45 @@ $( document ).ready(function() {
 		state.isSubmitting = submitting;
 		state.submit.disabled = submitting;
 		state.submit.setAttribute('aria-busy', String(submitting));
-		state.submit.textContent = submitting ? 'Kaydediliyor...' : 'Bilgilerimi Kaydet';
+		state.submit.textContent = submitting ? 'Kaydediliyor...' : 'Ödemeye Geç';
 		state.close.disabled = submitting;
+	}
+
+	function clearEnrollmentFieldError(state, name) {
+		var input = state.fields[name];
+		var error = state.modal.querySelector('[data-enrollment-error="' + name + '"]');
+		if (input) input.removeAttribute('aria-invalid');
+		if (error) error.textContent = '';
+	}
+
+	function clearEnrollmentErrors(state) {
+		enrollmentFieldNames.forEach(function(name) {
+			clearEnrollmentFieldError(state, name);
+		});
+		state.warning.hidden = true;
+	}
+
+	function showEnrollmentErrors(state, errors, message) {
+		var firstInvalid = null;
+		clearEnrollmentErrors(state);
+		Object.keys(errors || {}).forEach(function(name) {
+			var input = state.fields[name];
+			var error = state.modal.querySelector('[data-enrollment-error="' + name + '"]');
+			if (!input || !error) return;
+			input.setAttribute('aria-invalid', 'true');
+			error.textContent = errors[name];
+			if (!firstInvalid) firstInvalid = input;
+		});
+		state.warning.textContent = message || 'Lütfen işaretli alanları kontrol edin.';
+		state.warning.hidden = false;
+		(firstInvalid || state.warning).focus();
+	}
+
+	function syncEnrollmentDocumentType(state) {
+		var passportSelected = state.fields.identityDocumentType.value === 'PASSPORT';
+		state.documentCountryField.hidden = !passportSelected;
+		state.fields.documentCountryCode.required = passportSelected;
+		if (!passportSelected) clearEnrollmentFieldError(state, 'documentCountryCode');
 	}
 
 	function closeProfileCompletion() {
@@ -2488,6 +2492,7 @@ $( document ).ready(function() {
 
 		profileCompletion.modal.hidden = true;
 		document.body.classList.remove('uv-legacy-profile-completion-open');
+		clearEnrollmentErrors(profileCompletion);
 
 		if (profileCompletion.lastFocus && typeof profileCompletion.lastFocus.focus === 'function') {
 			profileCompletion.lastFocus.focus();
@@ -2500,74 +2505,27 @@ $( document ).ready(function() {
 		var state = profileCompletion;
 		if (!state || state.isSubmitting) return;
 
-		var name = $.trim(state.name.value);
-		var surname = $.trim(state.surname.value);
-		var phone = $.trim(state.phone.value);
-
-		if (!name || !surname) {
-			setProfileCompletionStatus(state, 'Ad ve soyad alanlarını eksiksiz giriniz.', true);
-			(!name ? state.name : state.surname).focus();
-			return;
-		}
-
-		if (!isValidProfilePhone(phone)) {
-			setProfileCompletionStatus(state, 'Geçerli bir telefon numarası giriniz.', true);
-			state.phone.focus();
+		var values = enrollmentValues(state);
+		var errors = validateEnrollmentValues(values);
+		if (Object.keys(errors).length) {
+			showEnrollmentErrors(state, errors);
+			setProfileCompletionStatus(state, 'Eksik veya hatalı alanlar var.', true);
 			return;
 		}
 
 		setProfileCompletionSubmitting(state, true);
-		setProfileCompletionStatus(state, 'Profil bilgileriniz kaydediliyor.', false);
+		clearEnrollmentErrors(state);
+		setProfileCompletionStatus(state, 'Kaydınız oluşturuluyor.', false);
 
-		fetch(endpoint('api/csrf-token'), {
-			credentials: 'same-origin',
-			headers: { 'X-Requested-With': 'XMLHttpRequest' }
-		})
-			.then(function(response) {
-				if (!response.ok) throw new Error('Güvenlik bilgisi alınamadı.');
-				return readJson(response);
-			})
+		loadEnrollmentProtection()
 			.then(function(protection) {
-				if (!protection.token) throw new Error('Güvenlik bilgisi eksik.');
-
-				return fetch(endpoint('ajax/member/profile'), {
-					method: 'POST',
-					credentials: 'same-origin',
-					headers: {
-						'Content-Type': 'application/x-www-form-urlencoded',
-						'X-Requested-With': 'XMLHttpRequest'
-					},
-					body: new URLSearchParams({
-						name: name,
-						surname: surname,
-						phone: phone,
-						_csrf: protection.token
-					})
-				});
+				return postEnrollment(state.productId, protection, values);
 			})
-			.then(function(response) {
-				return readJson(response).then(function(result) {
-					if (response.status === 401) {
-						redirectToLogin(state.productId);
-						return null;
-					}
-					if (!response.ok || result.status !== 'success') {
-						throw new Error(result.message || 'Profil bilgileri kaydedilemedi.');
-					}
-					return result;
-				});
-			})
-			.then(function(result) {
-				if (!result) return;
-
-				var productId = state.productId;
-				setProfileCompletionSubmitting(state, false);
-				closeProfileCompletion();
-				notifySuccess('Bilgileriniz kaydedildi. Eğitim kaydınız devam ediyor.');
-				startLegacyEnrollment(productId);
+			.then(function(payload) {
+				handleEnrollmentResult(state.productId, payload, state);
 			})
 			.catch(function(error) {
-				setProfileCompletionStatus(state, error.message || 'Profil bilgileri kaydedilemedi.', true);
+				setProfileCompletionStatus(state, error.message || 'Kayıt tamamlanamadı.', true);
 				setProfileCompletionSubmitting(state, false);
 			});
 	}
@@ -2582,26 +2540,40 @@ $( document ).ready(function() {
 			'<section class="uv-legacy-profile-completion__panel" role="dialog" aria-modal="true" aria-labelledby="uv-profile-completion-title" aria-describedby="uv-profile-completion-description">',
 				'<button class="uv-legacy-profile-completion__close" type="button" aria-label="Pencereyi kapat">&times;</button>',
 				'<h2 id="uv-profile-completion-title">Bilgilerinizi tamamlayın</h2>',
-				'<p id="uv-profile-completion-description">Eğitim kaydına devam etmek için iletişim bilgilerinizi kontrol edin.</p>',
+				'<p id="uv-profile-completion-description">Ödemeye geçmeden önce kayıt bilgilerinizi eksiksiz doldurun.</p>',
 				'<form class="uv-legacy-profile-completion__form" novalidate>',
-					'<label>Ad<input name="name" type="text" autocomplete="given-name" required></label>',
-					'<label>Soyad<input name="surname" type="text" autocomplete="family-name" required></label>',
-					'<label class="uv-legacy-profile-completion__wide">E-posta<input name="email" type="email" autocomplete="email" readonly></label>',
-					'<label class="uv-legacy-profile-completion__wide">Telefon<input name="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="+90 5xx xxx xx xx" required></label>',
+					'<div class="uv-legacy-profile-completion__warning" role="alert" tabindex="-1" hidden>Lütfen işaretli alanları kontrol edin.</div>',
+					'<label>Ad<input name="name" type="text" autocomplete="given-name" maxlength="100" required aria-describedby="legacy-enrollment-error-name"><span id="legacy-enrollment-error-name" data-enrollment-error="name"></span></label>',
+					'<label>Soyad<input name="surname" type="text" autocomplete="family-name" maxlength="100" required aria-describedby="legacy-enrollment-error-surname"><span id="legacy-enrollment-error-surname" data-enrollment-error="surname"></span></label>',
+					'<label>E-posta<input name="email" type="email" autocomplete="email" maxlength="254" required aria-describedby="legacy-enrollment-error-email"><span id="legacy-enrollment-error-email" data-enrollment-error="email"></span></label>',
+					'<label>Telefon<input name="phone" type="tel" autocomplete="tel" inputmode="tel" maxlength="32" placeholder="+90 5xx xxx xx xx" required aria-describedby="legacy-enrollment-error-phone"><span id="legacy-enrollment-error-phone" data-enrollment-error="phone"></span></label>',
+					'<label>Kimlik belgesi<select name="identityDocumentType" required aria-describedby="legacy-enrollment-error-identityDocumentType"><option value="TC_ID">T.C. Kimlik Kartı</option><option value="PASSPORT">Pasaport</option></select><span id="legacy-enrollment-error-identityDocumentType" data-enrollment-error="identityDocumentType"></span></label>',
+					'<label>Kimlik / Pasaport numarası<input name="identityDocumentNumber" type="text" autocomplete="off" maxlength="20" required aria-describedby="legacy-enrollment-error-identityDocumentNumber"><span id="legacy-enrollment-error-identityDocumentNumber" data-enrollment-error="identityDocumentNumber"></span></label>',
+					'<label data-document-country-field hidden>Belge ülke kodu<input name="documentCountryCode" type="text" autocomplete="off" maxlength="2" placeholder="Örn: AZ" aria-describedby="legacy-enrollment-error-documentCountryCode"><span id="legacy-enrollment-error-documentCountryCode" data-enrollment-error="documentCountryCode"></span></label>',
+					'<label>Doğum tarihi<input name="birthDate" type="date" autocomplete="bday" required aria-describedby="legacy-enrollment-error-birthDate"><span id="legacy-enrollment-error-birthDate" data-enrollment-error="birthDate"></span></label>',
+					'<label>Ülke<input name="country" type="text" autocomplete="country-name" maxlength="100" required aria-describedby="legacy-enrollment-error-country"><span id="legacy-enrollment-error-country" data-enrollment-error="country"></span></label>',
+					'<label>Şehir<input name="city" type="text" autocomplete="address-level1" maxlength="100" required aria-describedby="legacy-enrollment-error-city"><span id="legacy-enrollment-error-city" data-enrollment-error="city"></span></label>',
+					'<label>İlçe<input name="district" type="text" autocomplete="address-level2" maxlength="100" required aria-describedby="legacy-enrollment-error-district"><span id="legacy-enrollment-error-district" data-enrollment-error="district"></span></label>',
+					'<label>Posta kodu <small>(opsiyonel)</small><input name="postalCode" type="text" autocomplete="postal-code" maxlength="20" aria-describedby="legacy-enrollment-error-postalCode"><span id="legacy-enrollment-error-postalCode" data-enrollment-error="postalCode"></span></label>',
+					'<label class="uv-legacy-profile-completion__wide">Açık adres<textarea name="addressLine" autocomplete="street-address" maxlength="500" rows="3" required aria-describedby="legacy-enrollment-error-addressLine"></textarea><span id="legacy-enrollment-error-addressLine" data-enrollment-error="addressLine"></span></label>',
+					'<p class="uv-legacy-profile-completion__privacy">Bilgileriniz eğitim kaydı ve ödeme işlemleri için güvenli olarak işlenir. <a href="/sayfa/uyelik-sozlesmesi-ve-gizlilik-politikasi-27/" target="_blank" rel="noopener">Gizlilik politikasını inceleyin</a>.</p>',
 					'<p class="uv-legacy-profile-completion__status" role="status" aria-live="polite"></p>',
-					'<button class="uv-legacy-profile-completion__submit" type="submit">Bilgilerimi Kaydet</button>',
+					'<button class="uv-legacy-profile-completion__submit" type="submit">Ödemeye Geç</button>',
 				'</form>',
 			'</section>'
 		].join('');
 		document.body.appendChild(modal);
 
+		var fields = {};
+		enrollmentFieldNames.forEach(function(name) {
+			fields[name] = modal.querySelector('[name="' + name + '"]');
+		});
 		profileCompletion = {
 			modal: modal,
 			form: modal.querySelector('form'),
-			name: modal.querySelector('[name="name"]'),
-			surname: modal.querySelector('[name="surname"]'),
-			email: modal.querySelector('[name="email"]'),
-			phone: modal.querySelector('[name="phone"]'),
+			fields: fields,
+			warning: modal.querySelector('.uv-legacy-profile-completion__warning'),
+			documentCountryField: modal.querySelector('[data-document-country-field]'),
 			status: modal.querySelector('[role="status"]'),
 			submit: modal.querySelector('[type="submit"]'),
 			close: modal.querySelector('.uv-legacy-profile-completion__close'),
@@ -2612,12 +2584,42 @@ $( document ).ready(function() {
 
 		profileCompletion.form.addEventListener('submit', submitProfileCompletion);
 		profileCompletion.close.addEventListener('click', closeProfileCompletion);
+		profileCompletion.fields.identityDocumentType.addEventListener('change', function() {
+			syncEnrollmentDocumentType(profileCompletion);
+		});
+		enrollmentFieldNames.forEach(function(name) {
+			profileCompletion.fields[name].addEventListener('input', function() {
+				clearEnrollmentFieldError(profileCompletion, name);
+				if (!modal.querySelector('[aria-invalid="true"]')) profileCompletion.warning.hidden = true;
+			});
+		});
 		modal.addEventListener('click', function(event) {
 			if (event.target === modal) closeProfileCompletion();
 		});
-		document.addEventListener('keydown', function(event) {
-			if (event.key === 'Escape' && !modal.hidden) closeProfileCompletion();
-		});
+			document.addEventListener('keydown', function(event) {
+				if (modal.hidden) return;
+				if (event.key === 'Escape') {
+					closeProfileCompletion();
+					return;
+				}
+				if (event.key !== 'Tab') return;
+
+				var focusable = Array.prototype.slice.call(modal.querySelectorAll(
+					'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+				)).filter(function(element) {
+					return element.offsetParent !== null || element === document.activeElement;
+				});
+				var first = focusable[0];
+				var last = focusable[focusable.length - 1];
+				if (!first || !last) return;
+				if (event.shiftKey && document.activeElement === first) {
+					event.preventDefault();
+					last.focus();
+				} else if (!event.shiftKey && document.activeElement === last) {
+					event.preventDefault();
+					first.focus();
+				}
+			});
 
 		return profileCompletion;
 	}
@@ -2626,18 +2628,22 @@ $( document ).ready(function() {
 		var state = ensureProfileCompletion();
 		state.productId = String(productId || '');
 		state.lastFocus = document.activeElement;
-		state.name.value = member && member.name ? member.name : '';
-		state.surname.value = member && member.surname ? member.surname : '';
-		state.email.value = member && member.email ? member.email : '';
-		state.phone.value = member && member.phone ? member.phone : '';
+		if (!state.fields.name.value) state.fields.name.value = member && member.name ? member.name : '';
+		if (!state.fields.surname.value) state.fields.surname.value = member && member.surname ? member.surname : '';
+		if (!state.fields.email.value) state.fields.email.value = member && member.email ? member.email : '';
+		if (!state.fields.phone.value) state.fields.phone.value = member && member.phone ? member.phone : '';
 		setProfileCompletionStatus(state, '', false);
 		setProfileCompletionSubmitting(state, false);
+		clearEnrollmentErrors(state);
+		syncEnrollmentDocumentType(state);
 		state.modal.hidden = false;
 		document.body.classList.add('uv-legacy-profile-completion-open');
 
-		if (!state.name.value) state.name.focus();
-		else if (!state.surname.value) state.surname.focus();
-		else state.phone.focus();
+		if (!state.fields.name.value) state.fields.name.focus();
+		else if (!state.fields.surname.value) state.fields.surname.focus();
+		else if (!state.fields.email.value) state.fields.email.focus();
+		else if (!state.fields.phone.value) state.fields.phone.focus();
+		else state.fields.identityDocumentNumber.focus();
 	}
 
 	function canUseBackendEnrollment() {
@@ -2678,7 +2684,7 @@ $( document ).ready(function() {
 			});
 	}
 
-	function postEnrollment(productId, protection) {
+	function postEnrollment(productId, protection, registrationValues) {
 		return fetch(endpoint('ajax/enroll'), {
 			method: 'POST',
 			credentials: 'same-origin',
@@ -2686,13 +2692,13 @@ $( document ).ready(function() {
 				'Content-Type': 'application/x-www-form-urlencoded',
 				'X-Requested-With': 'XMLHttpRequest'
 			},
-			body: new URLSearchParams({
+			body: new URLSearchParams(Object.assign({}, registrationValues || {}, {
 				productId: productId,
 				productSlug: currentProductSlug(),
 				_csrf: protection.csrfToken,
 				_formToken: protection.formToken,
 				website: ''
-			})
+			}))
 		})
 			.then(function(response) {
 				return readJson(response).then(function(result) {
@@ -2701,7 +2707,7 @@ $( document ).ready(function() {
 			});
 	}
 
-	function handleEnrollmentResult(productId, payload, member) {
+	function handleEnrollmentResult(productId, payload, state) {
 		var response = payload.response;
 		var result = payload.result || {};
 
@@ -2711,6 +2717,7 @@ $( document ).ready(function() {
 		}
 
 		if (response.status === 201) {
+			if (state) setProfileCompletionStatus(state, 'Kaydınız oluşturuldu. Güvenli ödeme sayfasına yönlendiriliyorsunuz.', false);
 			notifySuccess('Kaydınız oluşturuldu. Güvenli ödeme sayfasına yönlendiriliyorsunuz.');
 			window.location.href = result.paymentUrl || (result.registration && result.registration.id ? endpoint('odeme/' + result.registration.id) : endpoint('tum-urunler/'));
 			return;
@@ -2723,25 +2730,35 @@ $( document ).ready(function() {
 				return;
 			}
 
+			if (state) setProfileCompletionSubmitting(state, false);
 			notifyError('Bu eğitime zaten kayıtlısınız.');
 			return;
 		}
 
 		if (response.status === 409 && result.code === 'PRODUCT_MISMATCH') {
+			if (state) setProfileCompletionSubmitting(state, false);
 			notifyError('Eğitim bilgisi güncel değil. Lütfen sayfayı yenileyip tekrar deneyin.');
 			return;
 		}
 
-		if (response.status === 422 && result.code === 'PROFILE_INCOMPLETE') {
-			openProfileCompletion(productId, member);
+		if (response.status === 422 && result.code === 'REGISTRATION_PROFILE_INVALID') {
+			if (state) {
+				showEnrollmentErrors(state, result.errors || {}, result.message);
+				setProfileCompletionStatus(state, result.message || 'Eksik veya hatalı alanlar var.', true);
+				setProfileCompletionSubmitting(state, false);
+			} else {
+				notifyError(result.message || 'Eksik veya hatalı alanlar var.');
+			}
 			return;
 		}
 
 		if (response.status === 429) {
+			if (state) setProfileCompletionSubmitting(state, false);
 			notifyError(result.message || 'Çok fazla kayıt denemesi yaptınız. Lütfen daha sonra tekrar deneyin.');
 			return;
 		}
 
+		if (state) setProfileCompletionSubmitting(state, false);
 		notifyError(result.message || 'Kayıt tamamlanamadı. Lütfen tekrar deneyin.');
 	}
 
@@ -2770,18 +2787,8 @@ $( document ).ready(function() {
 					return null;
 				}
 
-				if (!isEnrollmentProfileComplete(result.member)) {
-					openProfileCompletion(productId, result.member);
-					return null;
-				}
-
-				return loadEnrollmentProtection()
-					.then(function(protection) {
-						return postEnrollment(productId, protection);
-					})
-					.then(function(payload) {
-						handleEnrollmentResult(productId, payload, result.member);
-					});
+				openProfileCompletion(productId, result.member);
+				return null;
 			})
 			.catch(function(error) {
 				notifyError(error.message || 'Kayıt başlatılamadı. Lütfen tekrar deneyin.');

@@ -55,6 +55,11 @@ enum InstallmentStatus {
   CANCELLED
 }
 
+enum IdentityDocumentType {
+  TC_ID
+  PASSPORT
+}
+
 model AdminUser {
   id                    Int                     @id @default(autoincrement())
   email                 String                  @unique
@@ -378,6 +383,11 @@ model EducationRegistration {
   surname        String?
   email          String?
   phone          String?
+  identityDocumentType            IdentityDocumentType?
+  identityDocumentNumberEncrypted String?              @db.Text
+  identityDocumentCountryCode     String?               @db.VarChar(2)
+  birthDateEncrypted              String?               @db.Text
+  addressEncrypted                String?               @db.Text
   note           String?
   advisorNote    String?
   advisorId      Int?

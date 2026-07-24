@@ -16,6 +16,11 @@ const {
   sendCardPaymentEmails
 } = require('../services/payment-notifications');
 const { syncPendingRegistrationAmount } = require('../services/registration-pricing');
+const { inspectRegistrationCheckoutProfile } = require('../services/registration-checkout');
+const {
+  RegistrationPiiConfigurationError,
+  RegistrationPiiDecryptionError
+} = require('../services/registration-pii');
 
 const router = express.Router();
 const paymentPageRateLimiter = createIpRateLimiter({
@@ -146,6 +151,25 @@ function renderPaymentResult(res, options) {
   });
 }
 
+function enrollmentFormUrl(registration) {
+  return registration?.product?.slug
+    ? `/urun/${registration.product.slug}/?enroll=1`
+    : '/tum-urunler/';
+}
+
+function renderIncompleteRegistration(res, registration) {
+  return renderPaymentResult(res, {
+    statusCode: 422,
+    pageTitle: 'Kayıt Bilgileri | Unityverse Academy',
+    type: 'failure',
+    eyebrow: 'Eksik Bilgi',
+    title: 'Ödemeden önce bilgilerinizi tamamlayın',
+    message: 'Ödeme başlatmak için kimlik, iletişim, doğum tarihi ve adres bilgilerinizi eksiksiz doldurmalısınız.',
+    registration,
+    courseUrl: enrollmentFormUrl(registration)
+  });
+}
+
 function callbackText(res, statusCode, message) {
   res.type('text/plain');
   return res.status(statusCode).send(message);
@@ -229,6 +253,10 @@ router.post('/:registrationId(\\d+)/havale', requirePublicCsrf, bankTransferRate
       });
     }
 
+    if (!inspectRegistrationCheckoutProfile(registration).isValid) {
+      return renderIncompleteRegistration(res, registration);
+    }
+
     const details = bankTransferDetails(registration);
     const notice = [
       'Üye Havale/EFT ödeme yöntemini seçti.',
@@ -264,6 +292,10 @@ router.post('/:registrationId(\\d+)/havale', requirePublicCsrf, bankTransferRate
         : '/tum-urunler/'
     });
   } catch (error) {
+    if (error instanceof RegistrationPiiConfigurationError || error instanceof RegistrationPiiDecryptionError) {
+      console.error('[payment] Registration PII could not be read:', error.message);
+      return res.status(503).send('Kayıt güvenliği yapılandırması nedeniyle ödeme şu anda başlatılamıyor.');
+    }
     return next(error);
   }
 });
@@ -435,6 +467,10 @@ router.get('/:registrationId(\\d+)', paymentPageRateLimiter, async (req, res, ne
       });
     }
 
+    if (!inspectRegistrationCheckoutProfile(registration).isValid) {
+      return renderIncompleteRegistration(res, registration);
+    }
+
     let paytr = null;
     let cardPaymentError = null;
 
@@ -473,6 +509,19 @@ router.get('/:registrationId(\\d+)', paymentPageRateLimiter, async (req, res, ne
       cardPaymentError
     });
   } catch (error) {
+    if (error instanceof RegistrationPiiConfigurationError || error instanceof RegistrationPiiDecryptionError) {
+      console.error('[payment] Registration PII could not be read:', error.message);
+      return renderPaymentResult(res, {
+        statusCode: 503,
+        pageTitle: 'Ödeme Sistemi | Unityverse Academy',
+        type: 'failure',
+        eyebrow: 'Ödeme Sistemi',
+        title: 'Ödeme güvenliği hazırlanıyor',
+        message: 'Kayıt güvenliği yapılandırması tamamlanmadan ödeme başlatılamaz.',
+        paymentUrl: null
+      });
+    }
+
     if (error instanceof PaytrConfigurationError) {
       console.error('[paytr] payment page configuration error:', error.message);
       return renderPaymentResult(res, {

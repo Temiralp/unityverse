@@ -235,9 +235,10 @@ async function main() {
         role: modal.querySelector('[role="dialog"]').getAttribute('role'),
         ariaModal: modal.querySelector('[role="dialog"]').getAttribute('aria-modal'),
         activeLabel: document.activeElement.getAttribute('aria-label'),
-        name: modal.querySelector('[data-enrollment-member-name]').value,
-        email: modal.querySelector('[data-enrollment-member-email]').value,
-        phone: modal.querySelector('[data-enrollment-member-phone]').value,
+        name: modal.querySelector('[name="name"]').value,
+        email: modal.querySelector('[name="email"]').value,
+        phone: modal.querySelector('[name="phone"]').value,
+        fieldCount: modal.querySelectorAll('[data-enrollment-form] [name]').length,
         submitEnabled: !submit.disabled,
         submitLabel: modal.querySelector('[data-enrollment-submit-label]').textContent.trim()
       };
@@ -255,7 +256,29 @@ async function main() {
     const mobileScreenshot = await client.send('Page.captureScreenshot', { format: 'png' });
     fs.writeFileSync('/tmp/unityverse-enrollment-mobile.png', Buffer.from(mobileScreenshot.data, 'base64'));
 
-    await evaluate(client, `document.querySelector('[data-enrollment-submit]').click()`);
+    await evaluate(client, `(() => {
+      const form = document.querySelector('[data-enrollment-form]');
+      const values = {
+        name: 'Frontend',
+        surname: 'Test',
+        email: 'checkout@example.com',
+        phone: '+90 555 000 00 00',
+        identityDocumentType: 'PASSPORT',
+        identityDocumentNumber: 'A1234567',
+        documentCountryCode: 'AZ',
+        birthDate: '1990-01-15',
+        country: 'Türkiye',
+        city: 'İstanbul',
+        district: 'Kadıköy',
+        postalCode: '34710',
+        addressLine: 'Örnek Mahallesi Test Sokak No 1'
+      };
+      Object.keys(values).forEach((name) => {
+        form.elements[name].value = values[name];
+      });
+      form.elements.identityDocumentType.dispatchEvent(new Event('change', { bubbles: true }));
+      form.requestSubmit();
+    })()`);
     for (let attempt = 0; attempt < 40; attempt += 1) {
       const pathname = await evaluate(client, 'location.pathname');
       if (pathname === '/odeme/999') break;

@@ -5,6 +5,11 @@ const { isLikelyBot } = require('../middleware/form-protection');
 const { requirePublicCsrf } = require('../middleware/public-csrf');
 const { createIpRateLimiter } = require('../middleware/rate-limit');
 const { createEnrollment } = require('../services/enrollment');
+const {
+  RegistrationPiiConfigurationError,
+  encryptRegistrationPii
+} = require('../services/registration-pii');
+const { validateRegistrationProfile } = require('../services/registration-profile');
 
 const router = express.Router();
 const enrollmentRateLimiter = createIpRateLimiter({
@@ -163,11 +168,13 @@ router.post('/', requirePublicCsrf, (req, res, next) => {
       return loginRequired(res, product);
     }
 
-    if (!member.name || !member.email || !member.phone) {
+    const profileResult = validateRegistrationProfile(req.body || {});
+    if (!profileResult.isValid) {
       return res.status(422).json({
         status: 'failure',
-        code: 'PROFILE_INCOMPLETE',
-        message: 'Kaydı tamamlamak için ad, e-posta ve telefon bilgileriniz eksiksiz olmalıdır.'
+        code: 'REGISTRATION_PROFILE_INVALID',
+        message: 'Ödemeye geçmek için zorunlu alanları eksiksiz ve doğru doldurunuz.',
+        errors: profileResult.errors
       });
     }
 
@@ -180,10 +187,13 @@ router.post('/', requirePublicCsrf, (req, res, next) => {
       });
     }
 
+    const encryptedPii = encryptRegistrationPii(profileResult.profile);
     const result = await createEnrollment(prisma, {
       member,
       product,
-      totalAmount
+      totalAmount,
+      profile: profileResult.profile,
+      encryptedPii
     });
 
     if (result.existingRegistration) {
@@ -208,6 +218,15 @@ router.post('/', requirePublicCsrf, (req, res, next) => {
       paymentUrl: paymentUrl(result.registration.id)
     });
   } catch (error) {
+    if (error instanceof RegistrationPiiConfigurationError) {
+      console.error('[enrollment] PII encryption configuration error:', error.message);
+      return res.status(503).json({
+        status: 'failure',
+        code: 'REGISTRATION_SECURITY_CONFIGURATION_ERROR',
+        message: 'Kayıt güvenliği yapılandırması tamamlanmamış. Lütfen daha sonra tekrar deneyin.'
+      });
+    }
+
     return next(error);
   }
 });

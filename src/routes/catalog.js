@@ -80,7 +80,7 @@ router.get(['/sayfa/iletisim-5', '/sayfa/iletisim-5/', '/sayfa/iletisim-bilgiler
     activeNav: 'contact',
     pageTitle: 'İletişim Bilgileri | Unityverse Academy',
     extraScripts: [
-      '/public/tema10/js/form-protection.js?v=4',
+      '/public/tema10/js/form-protection.js?v=6',
       '/public/tema10/js/contact-form.js'
     ],
     contactCourses
@@ -485,8 +485,8 @@ router.get(['/urun/:slug', '/urun/:slug/'], async (req, res, next) => {
     res.render('catalog/product', {
       activeNav: activeNavForProduct(product),
       pageTitle: `${product.title} | Unityverse Academy`,
-      extraStyles: ['/public/tema10/css/product-detail.css'],
-      extraScripts: ['/public/tema10/js/courses.js', '/public/tema10/js/product-detail.js'],
+      extraStyles: ['/public/tema10/css/product-detail.css?v=20260722-1'],
+      extraScripts: ['/public/tema10/js/courses.js', '/public/tema10/js/product-detail.js?v=20260722-1'],
       product: {
         ...product,
         displayPrice: productPrice(product)

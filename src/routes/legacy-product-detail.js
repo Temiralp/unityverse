@@ -125,16 +125,18 @@ function publicProductVariants(variants) {
 }
 
 function renderProductVariantOptions(product, variants) {
-  const visibleVariants = publicProductVariants(variants);
+  const visibleVariants = publicProductVariants(variants)
+    .filter((variant) => productVariantLabel(variant));
+  const productDuration = String(product.duration || '').trim();
   const rows = visibleVariants.length
     ? visibleVariants
-    : [{
+    : productDuration ? [{
       id: product.id,
       variantProductId: product.id,
       variantProduct: product,
-      label: product.duration || 'Eğitim',
+      label: productDuration,
       isDefault: true
-    }];
+    }] : [];
 
   return rows.map((variant) => {
     const variantProduct = variant.variantProduct;
@@ -146,17 +148,19 @@ function renderProductVariantOptions(product, variants) {
   }).join('\n');
 }
 
-function selectDefaultVariantProduct(product, variants) {
-  const visibleVariants = publicProductVariants(variants);
-  if (!visibleVariants.length) return product;
+function renderEducationOptions(product, variants) {
+  const options = renderProductVariantOptions(product, variants);
+  if (!options) return '';
 
-  const requestedVariant = visibleVariants.find((variant) => (
-    Number(variant.variantProductId) === Number(product.id)
-  ));
-  if (requestedVariant) return product;
-
-  const defaultVariant = visibleVariants.find((variant) => variant.isDefault) || visibleVariants[0];
-  return defaultVariant.variantProduct;
+  return `<h4>Eğitim Seçenekleri</h4>
+				<div class="w-100">
+					<div class="attr-detail attr-size ">
+						<strong class="mr-10">Eğitim Saatleri: </strong>
+						<ul class="list-filter size-filter font-small " name="poptions1_${product.id}" id="poptions1_${product.id}">
+							${options}
+						</ul>
+					</div>
+				</div>`;
 }
 
 async function loadProductVariantContext(prismaClient, slug) {
@@ -193,25 +197,8 @@ async function loadProductVariantContext(prismaClient, slug) {
     });
   }
 
-  const selectedProduct = selectDefaultVariantProduct(product, variants);
-  if (Number(selectedProduct.id) === Number(product.id)) {
-    return { product, variants: publicProductVariants(variants) };
-  }
-
-  const productDetails = await prismaClient.product.findFirst({
-    where: {
-      id: selectedProduct.id,
-      status: 'PUBLISHED'
-    },
-    include: {
-      category: true,
-      tabs: { orderBy: { sortOrder: 'asc' } },
-      learningOutcomes: { orderBy: { sortOrder: 'asc' } }
-    }
-  });
-
   return {
-    product: productDetails || product,
+    product,
     variants: publicProductVariants(variants)
   };
 }
@@ -223,9 +210,10 @@ function renderLegacyProductDetails(product, pageOrigin, variants = []) {
   const safeImage = escapeHtml(image);
   const code = escapeHtml(productCode(product));
   const category = escapeHtml(categoryName(product));
+  const categorySlug = escapeHtml(product.category?.slug || '');
   const categoryHref = escapeHtml(categoryUrl(product));
   const price = effectivePrice(product);
-  const formattedPrice = price > 0 ? `${formatMoney(price)} TL` : 'Fiyat bilgisi için giriş yapın';
+  const formattedPrice = price > 0 ? `${formatMoney(price)} TL` : 'Fiyatı görmek için giriş yapın';
   const productHref = `../../urun/${encodeURIComponent(product.slug)}/`;
   const overview = prepareLegacyTabContent(
     renderTabContent(product, 'OVERVIEW', 0, renderFallbackOverview),
@@ -283,15 +271,7 @@ function renderLegacyProductDetails(product, pageOrigin, variants = []) {
 				<div class="inner-box-desc product_features"></div>
 			</div>
 			<div id="product">
-				<h4>Eğitim Seçenekleri</h4>
-				<div class="w-100">
-					<div class="attr-detail attr-size ">
-						<strong class="mr-10">Eğitim Saatleri: </strong>
-						<ul class="list-filter size-filter font-small " name="poptions1_${product.id}" id="poptions1_${product.id}">
-							${renderProductVariantOptions(product, variants)}
-						</ul>
-					</div>
-				</div>
+				${renderEducationOptions(product, variants)}
 				<div class="pbl-product-detail-buy-box b2c">
 					<div class="pbl-product-detail-buy-box-quantity in_stock_class" data-buy-box-quantity="Adet">
 						<div class="pbl-product-detail-buy-box-quantity-input"><input type="number" id="productcount" data-count-factor="0" value="1"></div>
@@ -325,7 +305,7 @@ function renderLegacyProductDetails(product, pageOrigin, variants = []) {
 			<li data-tab="tab-additional-content3"><a data-toggle="tab" href="#tab-additional-content3">Neden Bu Eğitimi Almalısınız?</a></li>
 		</ul>
 		<div class="tab-content col-xs-12">
-			<div id="tab-info" class="tab-pane fade active in">${overview}</div>
+			<div id="tab-info" class="tab-pane fade active in" data-course-overview data-course-category="${categorySlug}">${overview}</div>
 			<div id="tab-additional-content2" class="tab-pane fade">${curriculum}</div>
 			<div id="tab-additional-content3" class="tab-pane fade">${why}</div>
 		</div>
@@ -364,6 +344,7 @@ document.addEventListener('DOMContentLoaded', function () {
 	checkFooterIntersection();
 	});
 	</script>
+	<script src="../../public/tema10/js/course-overview.js?v=20260722-2" defer></script>
 	</div>
 	</div>
 	</div>
@@ -435,5 +416,5 @@ router.get(['/urun/:slug', '/urun/:slug/'], async (req, res, next) => {
 module.exports = router;
 module.exports.loadProductVariantContext = loadProductVariantContext;
 module.exports.publicProductVariants = publicProductVariants;
+module.exports.renderEducationOptions = renderEducationOptions;
 module.exports.renderProductVariantOptions = renderProductVariantOptions;
-module.exports.selectDefaultVariantProduct = selectDefaultVariantProduct;

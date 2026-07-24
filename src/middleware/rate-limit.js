@@ -172,12 +172,43 @@ async function isLoginBlocked({ req, res, scope, email, limit }) {
   }
 }
 
+async function isIpBlocked({ req, res, scope, limit }) {
+  const identifier = requestIp(req);
+
+  try {
+    const attempt = await getAttempt(scope, identifier);
+
+    if (!attempt) {
+      return { blocked: false, identifier };
+    }
+
+    const retryAfter = setRateLimitHeaders(res, limit, attempt.hits, attempt.expiresAt);
+    if (attempt.hits < limit) {
+      return { blocked: false, identifier };
+    }
+
+    res.set('Retry-After', String(retryAfter));
+    return { blocked: true, identifier, retryAfter };
+  } catch (error) {
+    console.warn(`[rate-limit] ${scope} IP check unavailable:`, error.message);
+    return { blocked: false, identifier };
+  }
+}
+
 async function recordLoginFailure({ res, scope, identifier, limit, windowMs }) {
   try {
     const attempt = await increment(scope, identifier, windowMs);
     setRateLimitHeaders(res, limit, attempt.hits, attempt.expiresAt);
   } catch (error) {
     console.warn(`[rate-limit] ${scope} counter unavailable:`, error.message);
+  }
+}
+
+async function recordIpFailure({ scope, identifier, windowMs }) {
+  try {
+    await increment(scope, identifier, windowMs);
+  } catch (error) {
+    console.warn(`[rate-limit] ${scope} IP counter unavailable:`, error.message);
   }
 }
 
@@ -192,6 +223,8 @@ async function clearLoginFailures(scope, identifier) {
 module.exports = {
   clearLoginFailures,
   createIpRateLimiter,
+  isIpBlocked,
   isLoginBlocked,
+  recordIpFailure,
   recordLoginFailure
 };

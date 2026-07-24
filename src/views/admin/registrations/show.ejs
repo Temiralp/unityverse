@@ -1,6 +1,20 @@
 <%- include('../partials/header') %>
 <%
   const startsAtValue = registration.startsAt ? registration.startsAt.toISOString().slice(0, 10) : '';
+  const identityDocumentLabel = registrationProfile.identityDocumentType === 'TC_ID'
+    ? 'TC Kimlik'
+    : registrationProfile.identityDocumentType === 'PASSPORT'
+      ? 'Pasaport'
+      : '-';
+  const birthDateText = registrationProfile.birthDate
+    ? registrationProfile.birthDate.split('-').reverse().join('.')
+    : '-';
+  const hasRegistrationProfile = Boolean(
+    registrationProfile.identityDocumentType
+    || registrationProfile.identityDocumentNumber
+    || registrationProfile.birthDate
+    || registrationProfile.addressLine
+  );
 %>
 
 <div class="page-head">
@@ -39,6 +53,33 @@
       <div><dt>Kurs Kaydı</dt><dd><%= registration.product ? registration.product.title : '-' %></dd></div>
       <div><dt>Kayıt Tarihi</dt><dd><%= registration.createdAt.toLocaleString('tr-TR') %></dd></div>
     </dl>
+
+    <div class="registration-sensitive-info">
+      <h3>Kimlik ve adres bilgileri</h3>
+      <% if (hasRegistrationProfile) { %>
+        <dl class="info-list">
+          <div><dt>Belge Türü</dt><dd><%= identityDocumentLabel %></dd></div>
+          <div><dt>TC Kimlik / Pasaport</dt><dd><%= registrationProfile.identityDocumentNumber || '-' %></dd></div>
+          <div><dt>Belge Ülke Kodu</dt><dd><%= registrationProfile.documentCountryCode || '-' %></dd></div>
+          <div><dt>Doğum Tarihi</dt><dd><%= birthDateText %></dd></div>
+          <div><dt>Ülke</dt><dd><%= registrationProfile.country || '-' %></dd></div>
+          <div><dt>Şehir</dt><dd><%= registrationProfile.city || '-' %></dd></div>
+          <div><dt>İlçe / Rayon</dt><dd><%= registrationProfile.district || '-' %></dd></div>
+          <div><dt>Posta Kodu</dt><dd><%= registrationProfile.postalCode || '-' %></dd></div>
+          <div class="registration-address-row">
+            <dt>Açık Adres</dt>
+            <dd class="pre-wrap"><%= registrationProfile.addressLine || '-' %></dd>
+            <a
+              class="button button-secondary registration-address-edit"
+              href="/admin/registrations/<%= registration.id %>/edit?focus=address#registration-address-line"
+              aria-label="Açık adresi düzenle"
+            >Düzenle</a>
+          </div>
+        </dl>
+      <% } else { %>
+        <p class="legacy-profile-note">Bu eski kayıt için kimlik, doğum tarihi ve adres bilgisi bulunmuyor.</p>
+      <% } %>
+    </div>
   </article>
 
   <article class="panel detail-panel">

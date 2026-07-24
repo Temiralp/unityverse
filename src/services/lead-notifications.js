@@ -1,12 +1,18 @@
 const { adminEmailRecipients, sendTransactionalEmail } = require('./mail');
 const { renderMail } = require('./payment-notifications');
 
+const subjectBySource = Object.freeze({
+  '/sendHomepageInfoForm': 'Ana sayfa formundan yeni bilgi talebi',
+  '/sendInformationPageForm': 'Bilgi Al sayfasından yeni bilgi talebi'
+});
+
 function leadMailData({ lead, data }) {
   const payload = data || {};
   const name = String(lead?.name || '').trim() || 'Ziyaretçi';
+  const subjectPrefix = subjectBySource[lead?.source] || 'Yeni bilgi talebi';
 
   return {
-    subject: `Yeni bilgi talebi | ${name}`,
+    subject: `${subjectPrefix} | ${name}`,
     title: 'Yeni bilgi talebi alındı',
     intro: `${name} web sitesindeki bilgi al formunu doldurdu. En kısa sürede iletişime geçilmelidir.`,
     footer: 'Bu bildirim bilgi al formu gönderimi sonrası otomatik oluşturulmuştur.',

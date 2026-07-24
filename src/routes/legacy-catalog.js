@@ -4,12 +4,15 @@ const express = require('express');
 const prisma = require('../db');
 const { normalizeLegacyBlogDetailContent } = require('../services/legacy-blog-detail');
 const { ensureLegacyWhatsappButton } = require('../services/legacy-whatsapp');
+const { publicCatalogProductWhere } = require('../services/public-catalog');
 
 const router = express.Router();
 const rootDir = path.resolve(__dirname, '../..');
 const allProductsTemplatePath = path.join(rootDir, 'tum-urunler/index.html');
+const legacyCategoryRoot = path.join(rootDir, 'kategori');
 const legacyBlogDetailTemplatePath = path.join(rootDir, 'blog-detay', 'unreal-engine-egitimi-295', 'index.html');
 const productGridPattern = /<section class="pbl-product-card-area-4 pbl-product-card-area-mobile-2" style="--gap:10px">[\s\S]*?<\/section>/i;
+const productCountPattern = /<span\s+id=["']search_result["'][^>]*>[\s\S]*?<\/span>/i;
 const blogPaginationPattern = /<div class="box-pagination col-md-6 col-sm-6 text-right"><ul class="pagination">[\s\S]*?<\/ul><\/div>/i;
 const blogGridPattern = /(<div class="products-list row grid ana_urunler">)([\s\S]*?)(\s*<\/div>\s*<div class="product-filter product-filter-bottom filters-panel")/i;
 const blogSearchInputPattern = /(<input\b[^>]*\bid=["']blog_query["'][^>]*\bvalue=["'])[^"']*(["'])/i;
@@ -28,6 +31,13 @@ let allProductsTemplate = null;
 let legacyBlogCategoryTemplateMaxId = null;
 let legacyStaticBlogCards = null;
 let legacyBlogDetailTemplate = null;
+
+const LEGACY_CATEGORY_SLUG_ALIASES = new Map([
+  ['oyun-gelistirme-egitimleri-244', ['oyun-gelistirme']],
+  ['yazilim-egitimleri-245', ['yazilim', 'staj-garantili']],
+  ['grafik-tasarim-egitimleri-246', ['grafik-tasarim']],
+  ['3d-modelleme-egitimleri-247', ['3d-modelleme']]
+]);
 
 function escapeHtml(value) {
   return String(value || '')
@@ -90,7 +100,25 @@ function productImage(product) {
 }
 
 function productUrl(product) {
-  return `../urun/${encodeURIComponent(product.slug)}/`;
+  return `/urun/${encodeURIComponent(product.slug)}/`;
+}
+
+function legacyCategoryCandidateSlugs(value) {
+  const legacySlug = String(value || '').trim().toLowerCase();
+  if (!/^[a-z0-9-]+$/.test(legacySlug)) return [];
+
+  const aliases = LEGACY_CATEGORY_SLUG_ALIASES.get(legacySlug);
+  if (aliases) return [...aliases];
+
+  const withoutLegacyId = legacySlug.replace(/-\d+$/, '');
+  const withoutEducationSuffix = withoutLegacyId.replace(/-egitimleri?$/, '');
+  const withoutTrainingsSuffix = withoutLegacyId.replace(/-egitimler$/, '');
+
+  return [...new Set([
+    withoutLegacyId,
+    withoutEducationSuffix,
+    withoutTrainingsSuffix
+  ].filter(Boolean))];
 }
 
 function productSearchText(product) {
@@ -136,7 +164,7 @@ function renderLegacyProductCard(product, index) {
 		        </div></div><div class="pbl-product-card-item-name">
     <a href="${url}">${title}</a>
 </div><div class="pbl-product-card-item-brand">
-        <a href="../marka/unityverse-academy-1/">Unityverse Academy</a>
+        <a href="/marka/unityverse-academy-1/">Unityverse Academy</a>
     </div><div class="pbl-product-card-item-price-add-chart"><div class="add-cart">
 		<button class="add" onclick="return addToBasket(${product.id},1, false, 0, 0, ${index})">
                     Eğitime Kaydol
@@ -162,10 +190,53 @@ async function loadLegacyBlogDetailTemplate() {
 
 async function publishedProducts() {
   return prisma.product.findMany({
-    where: { status: 'PUBLISHED' },
+    where: publicCatalogProductWhere(),
     include: { category: true },
     orderBy: [{ sortOrder: 'asc' }, { id: 'desc' }]
   });
+}
+
+async function publishedProductsForLegacyCategory(prismaClient, legacySlug) {
+  const categorySlugs = legacyCategoryCandidateSlugs(legacySlug);
+  if (!categorySlugs.length) return [];
+
+  return prismaClient.product.findMany({
+    where: publicCatalogProductWhere({
+      category: { is: { slug: { in: categorySlugs } } }
+    }),
+    include: { category: true },
+    orderBy: [{ sortOrder: 'asc' }, { id: 'desc' }]
+  });
+}
+
+function renderLegacyProductGrid(products) {
+  const cards = products
+    .map((product, index) => renderLegacyProductCard(product, index))
+    .join('\n');
+
+  return `<section class="pbl-product-card-area-4 pbl-product-card-area-mobile-2" style="--gap:10px">\n${cards}\n</section>`;
+}
+
+function renderLegacyProductListing(template, products) {
+  if (typeof template !== 'string' || !productGridPattern.test(template)) {
+    throw new Error('Legacy product grid template could not be found.');
+  }
+
+  return template
+    .replace(productGridPattern, renderLegacyProductGrid(products))
+    .replace(productCountPattern, `<span id="search_result">${products.length} ürün bulundu</span>`);
+}
+
+async function loadLegacyCategoryTemplate(legacySlug) {
+  if (!/^[a-z0-9-]+$/.test(legacySlug)) return null;
+
+  const filePath = path.join(legacyCategoryRoot, legacySlug, 'index.html');
+  try {
+    return await fs.readFile(filePath, 'utf8');
+  } catch (error) {
+    if (error.code === 'ENOENT' || error.code === 'ENOTDIR') return null;
+    throw error;
+  }
 }
 
 function legacyPageInteger(value, fallback) {
@@ -549,6 +620,24 @@ router.get(['/blog-detay/:slug', '/blog-detay/:slug/'], async (req, res, next) =
   }
 });
 
+router.get(['/kategori/:legacySlug', '/kategori/:legacySlug/'], async (req, res, next) => {
+  try {
+    const legacySlug = String(req.params.legacySlug || '').trim().toLowerCase();
+    const template = await loadLegacyCategoryTemplate(legacySlug);
+    if (!template) return next();
+
+    const query = String(req.query.q || '').trim();
+    const products = (await publishedProductsForLegacyCategory(prisma, legacySlug))
+      .filter((product) => shouldIncludeProduct(product, query, ''));
+    const html = renderLegacyProductListing(template, products);
+
+    res.setHeader('Cache-Control', 'no-cache');
+    return res.send(html);
+  } catch (error) {
+    return next(error);
+  }
+});
+
 router.get(['/tum-urunler', '/tum-urunler/'], async (req, res, next) => {
   try {
     const [template, products] = await Promise.all([
@@ -557,12 +646,9 @@ router.get(['/tum-urunler', '/tum-urunler/'], async (req, res, next) => {
     ]);
     const query = String(req.query.q || '').trim();
     const categorySlug = String(req.query.kategori || req.query.category || '').trim();
-    const cards = products
-      .filter((product) => shouldIncludeProduct(product, query, categorySlug))
-      .map((product, index) => renderLegacyProductCard(product, index))
-      .join('\n');
-    const productGrid = `<section class="pbl-product-card-area-4 pbl-product-card-area-mobile-2" style="--gap:10px">\n${cards}\n</section>`;
-    const html = template.replace(productGridPattern, productGrid);
+    const visibleProducts = products
+      .filter((product) => shouldIncludeProduct(product, query, categorySlug));
+    const html = renderLegacyProductListing(template, visibleProducts);
 
     res.setHeader('Cache-Control', 'no-cache');
     res.send(html);
@@ -572,3 +658,7 @@ router.get(['/tum-urunler', '/tum-urunler/'], async (req, res, next) => {
 });
 
 module.exports = router;
+module.exports.legacyCategoryCandidateSlugs = legacyCategoryCandidateSlugs;
+module.exports.publishedProductsForLegacyCategory = publishedProductsForLegacyCategory;
+module.exports.renderLegacyProductCard = renderLegacyProductCard;
+module.exports.renderLegacyProductListing = renderLegacyProductListing;

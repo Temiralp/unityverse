@@ -151,7 +151,7 @@ body:not(.member-logged-in) :is(
   .uv-catalog-card__price,
   .uv-product-card__price
 )::after {
-  content: "Qiyməti görmək üçün giriş edin";
+  content: "Fiyatı görmek için giriş yapın";
   position: absolute;
   inset: 0;
   display: flex;

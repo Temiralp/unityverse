@@ -8,6 +8,8 @@
     : registration && registration.productCode
       ? registration.productCode
       : '';
+  const errorFor = (field) => fieldErrors && fieldErrors[field] ? fieldErrors[field] : '';
+  const invalidAttribute = (field) => errorFor(field) ? 'true' : 'false';
 %>
 
 <div class="page-head">
@@ -23,7 +25,7 @@
     <p class="alert"><%= error %></p>
   <% } %>
 
-  <form method="post" action="<%= action %>" class="form grid-form">
+  <form method="post" action="<%= action %>" class="form grid-form" autocomplete="off">
     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
     <label>
       Üye Bağla
@@ -61,22 +63,90 @@
 
     <label>
       Ad
-      <input name="name" value="<%= registration ? registration.name || '' : '' %>" required>
+      <input name="name" value="<%= registration ? registration.name || '' : '' %>" required aria-invalid="<%= invalidAttribute('name') %>" aria-describedby="admin-registration-error-name">
+      <% if (errorFor('name')) { %><small class="field-error" id="admin-registration-error-name"><%= errorFor('name') %></small><% } %>
     </label>
 
     <label>
       Soyad
-      <input name="surname" value="<%= registration ? registration.surname || '' : '' %>">
+      <input name="surname" value="<%= registration ? registration.surname || '' : '' %>" <%= profileRequired ? 'required' : '' %> aria-invalid="<%= invalidAttribute('surname') %>" aria-describedby="admin-registration-error-surname">
+      <% if (errorFor('surname')) { %><small class="field-error" id="admin-registration-error-surname"><%= errorFor('surname') %></small><% } %>
     </label>
 
     <label>
       E-posta
-      <input name="email" type="email" value="<%= registration ? registration.email || '' : '' %>">
+      <input name="email" type="email" value="<%= registration ? registration.email || '' : '' %>" <%= profileRequired ? 'required' : '' %> aria-invalid="<%= invalidAttribute('email') %>" aria-describedby="admin-registration-error-email">
+      <% if (errorFor('email')) { %><small class="field-error" id="admin-registration-error-email"><%= errorFor('email') %></small><% } %>
     </label>
 
     <label>
       Telefon
-      <input name="phone" value="<%= registration ? registration.phone || '' : '' %>" required>
+      <input name="phone" type="tel" value="<%= registration ? registration.phone || '' : '' %>" required aria-invalid="<%= invalidAttribute('phone') %>" aria-describedby="admin-registration-error-phone">
+      <% if (errorFor('phone')) { %><small class="field-error" id="admin-registration-error-phone"><%= errorFor('phone') %></small><% } %>
+    </label>
+
+    <div class="wide registration-profile-heading">
+      <h2>Kimlik ve adres bilgileri</h2>
+      <p>Bu alanlar şifreli olarak saklanır. Eski kayıtlarda boş bırakılabilir; herhangi birini doldurduğunuzda tüm zorunlu kişisel bilgileri tamamlayınız.</p>
+    </div>
+
+    <label>
+      Kimlik Belgesi
+      <select name="identityDocumentType" <%= profileRequired ? 'required' : '' %> aria-invalid="<%= invalidAttribute('identityDocumentType') %>" aria-describedby="admin-registration-error-identityDocumentType">
+        <option value="">Belge türü seçin</option>
+        <option value="TC_ID" <%= registration && registration.identityDocumentType === 'TC_ID' ? 'selected' : '' %>>TC Kimlik</option>
+        <option value="PASSPORT" <%= registration && registration.identityDocumentType === 'PASSPORT' ? 'selected' : '' %>>Pasaport</option>
+      </select>
+      <% if (errorFor('identityDocumentType')) { %><small class="field-error" id="admin-registration-error-identityDocumentType"><%= errorFor('identityDocumentType') %></small><% } %>
+    </label>
+
+    <label>
+      TC Kimlik / Pasaport Numarası
+      <input name="identityDocumentNumber" value="<%= registration ? registration.identityDocumentNumber || '' : '' %>" maxlength="20" autocomplete="off" <%= profileRequired ? 'required' : '' %> aria-invalid="<%= invalidAttribute('identityDocumentNumber') %>" aria-describedby="admin-registration-error-identityDocumentNumber">
+      <% if (errorFor('identityDocumentNumber')) { %><small class="field-error" id="admin-registration-error-identityDocumentNumber"><%= errorFor('identityDocumentNumber') %></small><% } %>
+    </label>
+
+    <label>
+      Belge Ülke Kodu
+      <input name="documentCountryCode" value="<%= registration ? registration.documentCountryCode || '' : '' %>" maxlength="2" placeholder="TR" autocomplete="off" aria-invalid="<%= invalidAttribute('documentCountryCode') %>" aria-describedby="admin-registration-error-documentCountryCode">
+      <span class="field-help">İki harfli ülke kodu. TC Kimlik için TR olarak kaydedilir.</span>
+      <% if (errorFor('documentCountryCode')) { %><small class="field-error" id="admin-registration-error-documentCountryCode"><%= errorFor('documentCountryCode') %></small><% } %>
+    </label>
+
+    <label>
+      Doğum Tarihi
+      <input name="birthDate" type="date" value="<%= registration ? registration.birthDate || '' : '' %>" <%= profileRequired ? 'required' : '' %> aria-invalid="<%= invalidAttribute('birthDate') %>" aria-describedby="admin-registration-error-birthDate">
+      <% if (errorFor('birthDate')) { %><small class="field-error" id="admin-registration-error-birthDate"><%= errorFor('birthDate') %></small><% } %>
+    </label>
+
+    <label>
+      Ülke
+      <input name="country" value="<%= registration ? registration.country || '' : '' %>" maxlength="100" autocomplete="off" <%= profileRequired ? 'required' : '' %> aria-invalid="<%= invalidAttribute('country') %>" aria-describedby="admin-registration-error-country">
+      <% if (errorFor('country')) { %><small class="field-error" id="admin-registration-error-country"><%= errorFor('country') %></small><% } %>
+    </label>
+
+    <label>
+      Şehir
+      <input name="city" value="<%= registration ? registration.city || '' : '' %>" maxlength="100" autocomplete="off" <%= profileRequired ? 'required' : '' %> aria-invalid="<%= invalidAttribute('city') %>" aria-describedby="admin-registration-error-city">
+      <% if (errorFor('city')) { %><small class="field-error" id="admin-registration-error-city"><%= errorFor('city') %></small><% } %>
+    </label>
+
+    <label>
+      İlçe / Rayon
+      <input name="district" value="<%= registration ? registration.district || '' : '' %>" maxlength="100" autocomplete="off" <%= profileRequired ? 'required' : '' %> aria-invalid="<%= invalidAttribute('district') %>" aria-describedby="admin-registration-error-district">
+      <% if (errorFor('district')) { %><small class="field-error" id="admin-registration-error-district"><%= errorFor('district') %></small><% } %>
+    </label>
+
+    <label>
+      Posta Kodu
+      <input name="postalCode" value="<%= registration ? registration.postalCode || '' : '' %>" maxlength="20" autocomplete="off" aria-invalid="<%= invalidAttribute('postalCode') %>" aria-describedby="admin-registration-error-postalCode">
+      <% if (errorFor('postalCode')) { %><small class="field-error" id="admin-registration-error-postalCode"><%= errorFor('postalCode') %></small><% } %>
+    </label>
+
+    <label class="wide">
+      Açık Adres
+      <textarea id="registration-address-line" name="addressLine" rows="3" maxlength="500" autocomplete="off" <%= profileRequired ? 'required' : '' %> <%= focusAddress ? 'autofocus' : '' %> aria-invalid="<%= invalidAttribute('addressLine') %>" aria-describedby="admin-registration-error-addressLine"><%= registration ? registration.addressLine || '' : '' %></textarea>
+      <% if (errorFor('addressLine')) { %><small class="field-error" id="admin-registration-error-addressLine"><%= errorFor('addressLine') %></small><% } %>
     </label>
 
     <label>

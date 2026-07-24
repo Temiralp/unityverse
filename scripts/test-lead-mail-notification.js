@@ -1,5 +1,3 @@
-require('dotenv').config();
-
 const assert = require('assert/strict');
 
 const { leadMailData, sendLeadNotificationEmail } = require('../src/services/lead-notifications');
@@ -49,6 +47,20 @@ async function main() {
 
   const mailData = leadMailData({ lead: { name: '' }, data: {} });
   assert.equal(mailData.subject, 'Yeni bilgi talebi | Ziyaretçi');
+  assert.equal(
+    leadMailData({
+      lead: { name: 'Ana Sayfa Ziyaretçisi', source: '/sendHomepageInfoForm' },
+      data: {}
+    }).subject,
+    'Ana sayfa formundan yeni bilgi talebi | Ana Sayfa Ziyaretçisi'
+  );
+  assert.equal(
+    leadMailData({
+      lead: { name: 'Bilgi Al Ziyaretçisi', source: '/sendInformationPageForm' },
+      data: {}
+    }).subject,
+    'Bilgi Al sayfasından yeni bilgi talebi | Bilgi Al Ziyaretçisi'
+  );
 
   process.env.SMTP_TO = '';
   process.env.SMTP_USER = '';

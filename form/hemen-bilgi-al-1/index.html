@@ -2263,7 +2263,7 @@ function postForm() {
 	var formdata = getJsonDataFromForm('custom_form_1');
 	$.ajax({
 		type: "post",
-		url: site_url + "ajax/sendCustomForm",
+		url: site_url + "ajax/sendInformationPageForm",
 		data: formdata,
 		dataType: 'json',
 		success: function(result) {

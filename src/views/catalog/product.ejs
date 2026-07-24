@@ -280,33 +280,100 @@
         </div>
       </dl>
 
-      <div class="uv-enrollment-member" aria-label="Üye bilgileri">
-        <label>
-          Ad Soyad
-          <input type="text" data-enrollment-member-name readonly>
-        </label>
-        <label>
-          E-posta
-          <input type="email" data-enrollment-member-email readonly>
-        </label>
-        <label>
-          Telefon
-          <input type="tel" data-enrollment-member-phone readonly>
-        </label>
-      </div>
+      <form class="uv-enrollment-form" novalidate data-enrollment-form>
+        <div class="uv-enrollment-form__warning" role="alert" tabindex="-1" data-enrollment-warning hidden>
+          Lütfen işaretli alanları kontrol edin.
+        </div>
 
-      <div class="uv-form-trap" aria-hidden="true">
-        <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" data-enrollment-website>
-      </div>
+        <div class="uv-enrollment-member" aria-label="Kayıt bilgileri">
+          <label>
+            Ad
+            <input name="name" type="text" autocomplete="given-name" maxlength="100" required aria-describedby="enrollment-error-name">
+            <span class="uv-enrollment-field-error" id="enrollment-error-name" data-enrollment-error="name"></span>
+          </label>
+          <label>
+            Soyad
+            <input name="surname" type="text" autocomplete="family-name" maxlength="100" required aria-describedby="enrollment-error-surname">
+            <span class="uv-enrollment-field-error" id="enrollment-error-surname" data-enrollment-error="surname"></span>
+          </label>
+          <label>
+            E-posta
+            <input name="email" type="email" autocomplete="email" maxlength="254" required aria-describedby="enrollment-error-email">
+            <span class="uv-enrollment-field-error" id="enrollment-error-email" data-enrollment-error="email"></span>
+          </label>
+          <label>
+            Telefon
+            <input name="phone" type="tel" autocomplete="tel" inputmode="tel" maxlength="32" required placeholder="+90 5xx xxx xx xx" aria-describedby="enrollment-error-phone">
+            <span class="uv-enrollment-field-error" id="enrollment-error-phone" data-enrollment-error="phone"></span>
+          </label>
+          <label>
+            Kimlik belgesi
+            <select name="identityDocumentType" required aria-describedby="enrollment-error-identityDocumentType">
+              <option value="TC_ID">T.C. Kimlik Kartı</option>
+              <option value="PASSPORT">Pasaport</option>
+            </select>
+            <span class="uv-enrollment-field-error" id="enrollment-error-identityDocumentType" data-enrollment-error="identityDocumentType"></span>
+          </label>
+          <label>
+            Kimlik / Pasaport numarası
+            <input name="identityDocumentNumber" type="text" autocomplete="off" maxlength="20" required aria-describedby="enrollment-error-identityDocumentNumber">
+            <span class="uv-enrollment-field-error" id="enrollment-error-identityDocumentNumber" data-enrollment-error="identityDocumentNumber"></span>
+          </label>
+          <label data-document-country-field hidden>
+            Belge ülke kodu
+            <input name="documentCountryCode" type="text" autocomplete="off" inputmode="text" maxlength="2" placeholder="Örn: AZ" aria-describedby="enrollment-error-documentCountryCode">
+            <span class="uv-enrollment-field-error" id="enrollment-error-documentCountryCode" data-enrollment-error="documentCountryCode"></span>
+          </label>
+          <label>
+            Doğum tarihi
+            <input name="birthDate" type="date" autocomplete="bday" required aria-describedby="enrollment-error-birthDate">
+            <span class="uv-enrollment-field-error" id="enrollment-error-birthDate" data-enrollment-error="birthDate"></span>
+          </label>
+          <label>
+            Ülke
+            <input name="country" type="text" autocomplete="country-name" maxlength="100" required aria-describedby="enrollment-error-country">
+            <span class="uv-enrollment-field-error" id="enrollment-error-country" data-enrollment-error="country"></span>
+          </label>
+          <label>
+            Şehir
+            <input name="city" type="text" autocomplete="address-level1" maxlength="100" required aria-describedby="enrollment-error-city">
+            <span class="uv-enrollment-field-error" id="enrollment-error-city" data-enrollment-error="city"></span>
+          </label>
+          <label>
+            İlçe
+            <input name="district" type="text" autocomplete="address-level2" maxlength="100" required aria-describedby="enrollment-error-district">
+            <span class="uv-enrollment-field-error" id="enrollment-error-district" data-enrollment-error="district"></span>
+          </label>
+          <label>
+            Posta kodu <span class="uv-enrollment-optional">(opsiyonel)</span>
+            <input name="postalCode" type="text" autocomplete="postal-code" maxlength="20" aria-describedby="enrollment-error-postalCode">
+            <span class="uv-enrollment-field-error" id="enrollment-error-postalCode" data-enrollment-error="postalCode"></span>
+          </label>
+          <label class="uv-enrollment-member__wide">
+            Açık adres
+            <textarea name="addressLine" autocomplete="street-address" maxlength="500" rows="3" required aria-describedby="enrollment-error-addressLine"></textarea>
+            <span class="uv-enrollment-field-error" id="enrollment-error-addressLine" data-enrollment-error="addressLine"></span>
+          </label>
+        </div>
 
-      <p class="uv-enrollment-status" role="status" aria-live="polite" data-enrollment-status></p>
+        <div class="uv-form-trap" aria-hidden="true">
+          <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" data-enrollment-website>
+        </div>
 
-      <div class="uv-enrollment-modal__actions">
-        <button class="btn-secondary" type="button" data-enrollment-close>Vazgeç</button>
-        <button class="btn-primary uv-enrollment-submit" type="button" data-enrollment-submit disabled>
-          <span data-enrollment-submit-label>Hazırlanıyor...</span>
-        </button>
-      </div>
+        <p class="uv-enrollment-privacy">
+          Bilgileriniz eğitim kaydı ve ödeme işlemleri için güvenli olarak işlenir.
+          <a href="/sayfa/uyelik-sozlesmesi-ve-gizlilik-politikasi-27/" target="_blank" rel="noopener">Gizlilik politikasını inceleyin</a>.
+        </p>
+
+        <p class="uv-enrollment-status" role="status" aria-live="polite" data-enrollment-status></p>
+
+        <div class="uv-enrollment-modal__actions">
+          <button class="btn-secondary" type="button" data-enrollment-close>Vazgeç</button>
+          <button class="btn-primary uv-enrollment-submit" type="submit" data-enrollment-submit disabled>
+            <span data-enrollment-submit-label>Hazırlanıyor...</span>
+          </button>
+        </div>
+      </form>
     </section>
   </div>
 </main>

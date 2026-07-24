@@ -4,7 +4,10 @@
   var tokenPromises = {};
   var csrfTokenPromise = null;
   var protectedPaths = [
-    { pattern: /\/ajax\/(?:sendCustomForm|askme)(?:\?|$)/, scope: 'lead' },
+    {
+      pattern: /\/ajax\/(?:sendCustomForm|sendHomepageInfoForm|sendInformationPageForm|askme)(?:\?|$)/,
+      scope: 'lead'
+    },
     { pattern: /\/ajax\/member\/(?:register|signin|logout|profile|password)(?:\?|$)/, scope: 'member' },
     { pattern: /\/ajax\/enroll(?:\?|$)/, scope: 'enrollment' }
   ];

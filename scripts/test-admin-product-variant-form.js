@@ -4,11 +4,15 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 const form = fs.readFileSync(path.join(root, 'src/views/admin/products/form.ejs'), 'utf8');
+const index = fs.readFileSync(path.join(root, 'src/views/admin/products/index.ejs'), 'utf8');
 const editor = fs.readFileSync(path.join(root, 'public/tema10/js/admin-product-editor.js'), 'utf8');
 const adminRoutes = fs.readFileSync(path.join(root, 'src/routes/admin.js'), 'utf8');
 const { findProductVariantCandidates } = require('../src/routes/admin');
 
 assert.match(form, /Görünen Süre/);
+assert.match(form, /<input name="duration"[^>]*value="<%= product \? product\.duration \|\| '' : '' %>"/);
+assert.match(index, /<th>Süre<\/th>/);
+assert.match(index, /product\.duration \|\| 'Belirtilmedi'/);
 assert.match(form, /Boş bırakılırsa bağlı kursun Süre değeri/);
 assert.doesNotMatch(form, /Görünən Müddət|Boşsa bağlı kursun Süre dəyəri/);
 assert.match(form, /data-variant-candidates-url="\/admin\/products\/variant-candidates"/);
@@ -21,6 +25,7 @@ assert.match(editor, /event\.target\.matches\('\[data-field="variantProductId"\]
 assert.match(editor, /data-field="variantProductId"/);
 assert.match(adminRoutes, /router\.get\('\/products\/variant-candidates'/);
 assert.match(adminRoutes, /findProductVariantCandidates\(prisma, req\.query\.excludeId\)/);
+assert.match(adminRoutes, /duration: nullableText\(body\.duration\)/);
 
 async function candidateQueryTest() {
   let query = null;

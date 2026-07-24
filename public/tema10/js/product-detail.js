@@ -164,6 +164,83 @@
     });
   }
 
+  function isValidTurkishId(value) {
+    var digits = String(value || '').trim();
+    if (!/^[1-9]\d{10}$/.test(digits)) return false;
+
+    var numbers = digits.split('').map(Number);
+    var oddTotal = numbers[0] + numbers[2] + numbers[4] + numbers[6] + numbers[8];
+    var evenTotal = numbers[1] + numbers[3] + numbers[5] + numbers[7];
+    var tenthDigit = (((oddTotal * 7) - evenTotal) % 10 + 10) % 10;
+    var eleventhDigit = numbers.slice(0, 10).reduce(function(total, number) {
+      return total + number;
+    }, 0) % 10;
+
+    return tenthDigit === numbers[9] && eleventhDigit === numbers[10];
+  }
+
+  function enrollmentFieldErrors(values) {
+    var errors = {};
+    var now = new Date();
+    var today = [
+      now.getUTCFullYear(),
+      String(now.getUTCMonth() + 1).padStart(2, '0'),
+      String(now.getUTCDate()).padStart(2, '0')
+    ].join('-');
+    var birthDate = /^\d{4}-\d{2}-\d{2}$/.test(values.birthDate)
+      ? new Date(values.birthDate + 'T00:00:00Z')
+      : null;
+
+    if (values.name.length < 2 || values.name.length > 100) errors.name = 'Ad 2-100 karakter arasında olmalıdır.';
+    if (values.surname.length < 2 || values.surname.length > 100) errors.surname = 'Soyad 2-100 karakter arasında olmalıdır.';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email) || values.email.length > 254) {
+      errors.email = 'Geçerli bir e-posta adresi giriniz.';
+    }
+    var phoneDigits = values.phone.replace(/\D/g, '');
+    if (phoneDigits.length < 10 || phoneDigits.length > 15) {
+      errors.phone = 'Telefon numarası 10-15 rakam içermelidir.';
+    }
+    if (values.identityDocumentType === 'TC_ID') {
+      if (!isValidTurkishId(values.identityDocumentNumber)) {
+        errors.identityDocumentNumber = 'Geçerli bir 11 haneli T.C. kimlik numarası giriniz.';
+      }
+    } else if (values.identityDocumentType === 'PASSPORT') {
+      if (!/^[A-Za-z0-9]{5,20}$/.test(values.identityDocumentNumber)) {
+        errors.identityDocumentNumber = 'Pasaport numarası 5-20 harf veya rakamdan oluşmalıdır.';
+      }
+      if (!/^[A-Za-z]{2}$/.test(values.documentCountryCode)) {
+        errors.documentCountryCode = 'Belge ülke kodunu 2 harf olarak giriniz.';
+      }
+    } else {
+      errors.identityDocumentType = 'Kimlik belgesi türünü seçiniz.';
+    }
+    if (
+      !birthDate
+      || Number.isNaN(birthDate.getTime())
+      || birthDate.toISOString().slice(0, 10) !== values.birthDate
+      || values.birthDate >= today
+    ) {
+      errors.birthDate = 'Geçerli ve geçmiş bir doğum tarihi giriniz.';
+    }
+    ['country', 'city', 'district'].forEach(function(field) {
+      if (values[field].length < 2 || values[field].length > 100) {
+        errors[field] = field === 'country'
+          ? 'Ülke alanını eksiksiz giriniz.'
+          : field === 'city'
+            ? 'Şehir alanını eksiksiz giriniz.'
+            : 'İlçe alanını eksiksiz giriniz.';
+      }
+    });
+    if (values.postalCode && (values.postalCode.length > 20 || !/^[\p{L}\p{N}\s-]+$/u.test(values.postalCode))) {
+      errors.postalCode = 'Posta kodu en fazla 20 harf, rakam, boşluk veya tire içerebilir.';
+    }
+    if (values.addressLine.length < 5 || values.addressLine.length > 500) {
+      errors.addressLine = 'Açık adresi en az 5, en fazla 500 karakter giriniz.';
+    }
+
+    return errors;
+  }
+
   function getFocusableElements(container) {
     return Array.prototype.slice.call(container.querySelectorAll(FOCUSABLE_SELECTOR))
       .filter(function(element) {
@@ -178,12 +255,21 @@
     if (!modal || !triggers.length) return;
 
     var closeButtons = Array.prototype.slice.call(modal.querySelectorAll('[data-enrollment-close]'));
+    var form = modal.querySelector('[data-enrollment-form]');
     var submitButton = modal.querySelector('[data-enrollment-submit]');
     var submitLabel = modal.querySelector('[data-enrollment-submit-label]');
     var statusNode = modal.querySelector('[data-enrollment-status]');
-    var nameInput = modal.querySelector('[data-enrollment-member-name]');
-    var emailInput = modal.querySelector('[data-enrollment-member-email]');
-    var phoneInput = modal.querySelector('[data-enrollment-member-phone]');
+    var warningNode = modal.querySelector('[data-enrollment-warning]');
+    var documentCountryField = modal.querySelector('[data-document-country-field]');
+    var fieldNames = [
+      'name', 'surname', 'email', 'phone', 'identityDocumentType',
+      'identityDocumentNumber', 'documentCountryCode', 'birthDate',
+      'country', 'city', 'district', 'postalCode', 'addressLine'
+    ];
+    var fields = {};
+    fieldNames.forEach(function(name) {
+      fields[name] = form.elements[name];
+    });
     var websiteInput = modal.querySelector('[data-enrollment-website]');
     var productId = modal.dataset.productId;
     var productSlug = modal.dataset.productSlug || currentProductSlug();
@@ -204,6 +290,52 @@
       submitLabel.textContent = label;
     }
 
+    function enrollmentValues() {
+      var values = {};
+      fieldNames.forEach(function(name) {
+        values[name] = String(fields[name].value || '').trim();
+      });
+      values.identityDocumentNumber = values.identityDocumentNumber.toUpperCase();
+      values.documentCountryCode = values.documentCountryCode.toUpperCase();
+      return values;
+    }
+
+    function clearFieldError(name) {
+      var input = fields[name];
+      var errorNode = modal.querySelector('[data-enrollment-error="' + name + '"]');
+      if (input) input.removeAttribute('aria-invalid');
+      if (errorNode) errorNode.textContent = '';
+    }
+
+    function clearErrors() {
+      fieldNames.forEach(clearFieldError);
+      warningNode.hidden = true;
+    }
+
+    function showErrors(errors, message) {
+      var firstInvalid = null;
+      clearErrors();
+      Object.keys(errors || {}).forEach(function(name) {
+        var input = fields[name];
+        var errorNode = modal.querySelector('[data-enrollment-error="' + name + '"]');
+        if (!input || !errorNode) return;
+        input.setAttribute('aria-invalid', 'true');
+        errorNode.textContent = errors[name];
+        if (!firstInvalid) firstInvalid = input;
+      });
+      warningNode.textContent = message || 'Lütfen işaretli alanları kontrol edin.';
+      warningNode.hidden = false;
+      if (firstInvalid) firstInvalid.focus();
+      else warningNode.focus();
+    }
+
+    function syncDocumentType() {
+      var passportSelected = fields.identityDocumentType.value === 'PASSPORT';
+      documentCountryField.hidden = !passportSelected;
+      fields.documentCountryCode.required = passportSelected;
+      if (!passportSelected) clearFieldError('documentCountryCode');
+    }
+
     function closeModal() {
       if (isSubmitting) return;
 
@@ -211,6 +343,7 @@
       document.body.classList.remove('uv-modal-open');
       protection = null;
       setStatus('', '');
+      clearErrors();
 
       if (lastFocus && typeof lastFocus.focus === 'function') {
         lastFocus.focus();
@@ -256,9 +389,10 @@
     }
 
     function populateMember(member) {
-      nameInput.value = [member.name, member.surname].filter(Boolean).join(' ');
-      emailInput.value = member.email || '';
-      phoneInput.value = member.phone || '';
+      if (!fields.name.value) fields.name.value = member.name || '';
+      if (!fields.surname.value) fields.surname.value = member.surname || '';
+      if (!fields.email.value) fields.email.value = member.email || '';
+      if (!fields.phone.value) fields.phone.value = member.phone || '';
     }
 
     function openModal(trigger) {
@@ -307,7 +441,16 @@
     function submitEnrollment() {
       if (!protection || isSubmitting) return;
 
+      var values = enrollmentValues();
+      var errors = enrollmentFieldErrors(values);
+      if (Object.keys(errors).length) {
+        showErrors(errors);
+        setStatus('Eksik veya hatalı alanlar var.', 'error');
+        return;
+      }
+
       isSubmitting = true;
+      clearErrors();
       setStatus('Kaydınız oluşturuluyor.', '');
       setSubmitState(true, true, 'Kaydediliyor...');
 
@@ -318,13 +461,13 @@
           'Content-Type': 'application/x-www-form-urlencoded',
           'X-Requested-With': 'XMLHttpRequest'
         },
-        body: new URLSearchParams({
+        body: new URLSearchParams(Object.assign({}, values, {
           productId: productId,
           productSlug: productSlug,
           _csrf: protection.csrfToken,
           _formToken: protection.formToken,
           website: websiteInput.value || ''
-        })
+        }))
       })
         .then(function(response) {
           return readJson(response).then(function(result) {
@@ -360,6 +503,13 @@
             return;
           }
 
+          if (response.status === 422 && result.code === 'REGISTRATION_PROFILE_INVALID') {
+            showErrors(result.errors || {}, result.message);
+            setStatus(result.message || 'Eksik veya hatalı alanlar var.', 'error');
+            setSubmitState(false, false, 'Tekrar Dene');
+            return;
+          }
+
           if (response.status === 403) {
             throw new Error('Güvenlik oturumunuz yenilendi. Pencereyi kapatıp tekrar deneyin.');
           }
@@ -389,7 +539,18 @@
       button.addEventListener('click', closeModal);
     });
 
-    submitButton.addEventListener('click', submitEnrollment);
+    form.addEventListener('submit', function(event) {
+      event.preventDefault();
+      submitEnrollment();
+    });
+    fields.identityDocumentType.addEventListener('change', syncDocumentType);
+    fieldNames.forEach(function(name) {
+      fields[name].addEventListener('input', function() {
+        clearFieldError(name);
+        if (!modal.querySelector('[aria-invalid="true"]')) warningNode.hidden = true;
+      });
+    });
+    syncDocumentType();
     modal.addEventListener('click', function(event) {
       if (event.target === modal) closeModal();
     });

@@ -74,7 +74,17 @@ function leadBotGuard(req, res, next) {
   return next();
 }
 
-router.post('/sendCustomForm', normalizeLeadRequest, requirePublicCsrf, leadBotGuard, leadRateLimiter, saveLead);
-router.post('/askme', normalizeLeadRequest, requirePublicCsrf, leadBotGuard, leadRateLimiter, saveLead);
+const leadHandlers = [
+  normalizeLeadRequest,
+  requirePublicCsrf,
+  leadBotGuard,
+  leadRateLimiter,
+  saveLead
+];
+
+router.post('/sendHomepageInfoForm', leadHandlers);
+router.post('/sendInformationPageForm', leadHandlers);
+router.post('/sendCustomForm', leadHandlers);
+router.post('/askme', leadHandlers);
 
 module.exports = router;

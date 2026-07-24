@@ -9,6 +9,11 @@ const {
   requestPaytrIframeToken
 } = require('../services/paytr');
 const { syncPendingRegistrationAmount } = require('../services/registration-pricing');
+const { inspectRegistrationCheckoutProfile } = require('../services/registration-checkout');
+const {
+  RegistrationPiiConfigurationError,
+  RegistrationPiiDecryptionError
+} = require('../services/registration-pii');
 
 const router = express.Router();
 const paytrTokenRateLimiter = createIpRateLimiter({
@@ -98,6 +103,16 @@ router.post('/token', requirePublicCsrf, paytrTokenRateLimiter, async (req, res,
       });
     }
 
+    const profileResult = inspectRegistrationCheckoutProfile(registration);
+    if (!profileResult.isValid) {
+      return res.status(422).json({
+        status: 'failure',
+        code: 'REGISTRATION_PROFILE_INCOMPLETE',
+        message: 'Ödeme başlatmadan önce kayıt bilgilerinizi tamamlayınız.',
+        errors: profileResult.errors
+      });
+    }
+
     const result = await requestPaytrIframeToken({
       registration,
       userIp: req.ip
@@ -110,6 +125,15 @@ router.post('/token', requirePublicCsrf, paytrTokenRateLimiter, async (req, res,
       paymentOptions: result.paymentOptions
     });
   } catch (error) {
+    if (error instanceof RegistrationPiiConfigurationError || error instanceof RegistrationPiiDecryptionError) {
+      console.error('[paytr] Registration PII could not be read:', error.message);
+      return res.status(503).json({
+        status: 'failure',
+        code: 'REGISTRATION_SECURITY_UNAVAILABLE',
+        message: 'Kayıt güvenliği yapılandırması nedeniyle ödeme şu anda başlatılamıyor.'
+      });
+    }
+
     if (error instanceof PaytrConfigurationError) {
       console.error('[paytr] configuration error:', error.message);
       return res.status(503).json({

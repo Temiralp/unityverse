@@ -3,13 +3,14 @@ const assert = require('assert/strict');
 const {
   ProductVariantValidationError,
   normalizeProductVariantRows,
+  productVariantLabel,
   replaceProductVariants
 } = require('../src/services/product-variants');
 const {
   loadProductVariantContext,
   publicProductVariants,
-  renderProductVariantOptions,
-  selectDefaultVariantProduct
+  renderEducationOptions,
+  renderProductVariantOptions
 } = require('../src/routes/legacy-product-detail');
 
 function product(id, overrides = {}) {
@@ -137,14 +138,22 @@ function publicRenderingTests() {
   ];
 
   assert.deepEqual(publicProductVariants(rows).map((row) => row.variantProductId), [2]);
-  assert.equal(selectDefaultVariantProduct(parent, rows).id, 2);
-  assert.equal(selectDefaultVariantProduct(eightMonth, rows).id, 2);
 
   const html = renderProductVariantOptions(eightMonth, rows);
   assert.match(html, /data-product-id="2"/);
   assert.match(html, /class="active "/);
   assert.match(html, /href="\.\.\/\.\.\/urun\/course-2"/);
   assert.doesNotMatch(html, /course-3|course-4/);
+
+  const noDuration = product(5, { duration: null });
+  assert.equal(productVariantLabel({ label: null, variantProduct: noDuration }), '');
+  assert.equal(renderProductVariantOptions(noDuration, []), '');
+  assert.equal(renderEducationOptions(noDuration, []), '');
+  assert.doesNotMatch(renderEducationOptions(noDuration, []), /Eğitim Saatleri|>Eğitim</);
+
+  const ownDurationHtml = renderEducationOptions(product(6, { duration: '4 ay' }), []);
+  assert.match(ownDurationHtml, /Eğitim Saatleri/);
+  assert.match(ownDurationHtml, />4 ay</);
 }
 
 async function contextTests() {
@@ -160,7 +169,7 @@ async function contextTests() {
     product: {
       async findFirst(args) {
         calls.push(args);
-        return calls.length === 1 ? parent : eightMonth;
+        return parent;
       }
     },
     productVariant: {
@@ -171,9 +180,12 @@ async function contextTests() {
   };
 
   const parentContext = await loadProductVariantContext(parentPrisma, parent.slug);
-  assert.equal(parentContext.product.id, 2);
+  assert.equal(parentContext.product.id, 1);
+  assert.equal(parentContext.product.slug, parent.slug);
   assert.equal(parentContext.variants.length, 1);
-  assert.equal(calls.length, 2);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].where.slug, parent.slug);
+  assert.equal(calls[0].where.status, 'PUBLISHED');
 
   const child = product(2, {
     productVariants: [],
@@ -194,7 +206,17 @@ async function contextTests() {
 
   const childContext = await loadProductVariantContext(childPrisma, child.slug);
   assert.equal(childContext.product.id, 2);
+  assert.equal(childContext.product.slug, child.slug);
   assert.equal(childContext.variants.length, 1);
+
+  const draftPrisma = {
+    product: {
+      async findFirst() {
+        return null;
+      }
+    }
+  };
+  assert.equal(await loadProductVariantContext(draftPrisma, 'draft-course'), null);
 }
 
 async function run() {

@@ -1,4 +1,10 @@
 const crypto = require('crypto');
+const { inspectRegistrationCheckoutProfile } = require('./registration-checkout');
+const {
+  RegistrationPiiConfigurationError,
+  RegistrationPiiDecryptionError,
+  formattedAddress
+} = require('./registration-pii');
 
 const PAYTR_TOKEN_URL = 'https://www.paytr.com/odeme/api/get-token';
 const PAYTR_REQUEST_TIMEOUT_MS = 20 * 1000;
@@ -74,7 +80,6 @@ function paytrConfig() {
     merchantId: requiredEnvironment('PAYTR_MERCHANT_ID'),
     ...secrets,
     publicBaseUrl,
-    defaultUserAddress: requiredEnvironment('PAYTR_DEFAULT_USER_ADDRESS'),
     testMode: String(process.env.PAYTR_TEST_MODE || '0').trim() === '1' ? '1' : '0',
     noInstallment: paytrFlag('PAYTR_NO_INSTALLMENT', '0'),
     maxInstallment: paytrMaxInstallment('PAYTR_MAX_INSTALLMENT', '0'),
@@ -215,6 +220,22 @@ function normalizeUserIp(value) {
 
 function buildPaytrPayload({ registration, userIp }) {
   const config = paytrConfig();
+  let checkoutProfile;
+  try {
+    const profileResult = inspectRegistrationCheckoutProfile(registration);
+    if (!profileResult.isValid) {
+      throw new PaytrRequestError('Ödeme için kayıt bilgileri eksik veya geçersiz.');
+    }
+    checkoutProfile = profileResult.profile;
+  } catch (error) {
+    if (error instanceof RegistrationPiiConfigurationError) {
+      throw new PaytrConfigurationError('Kayıt PII şifrələmə yapılandırması tamamlanmamış.');
+    }
+    if (error instanceof RegistrationPiiDecryptionError) {
+      throw new PaytrRequestError('Ödeme için kayıt bilgileri güvenli şekilde okunamadı.');
+    }
+    throw error;
+  }
   const amount = registration.totalAmount == null
     ? registration.product?.discountPrice ?? registration.product?.price
     : registration.totalAmount;
@@ -229,12 +250,13 @@ function buildPaytrPayload({ registration, userIp }) {
   const values = {
     userIp: normalizeUserIp(userIp),
     merchantOid,
-    email: String(registration.email || registration.member?.email || '').trim(),
+    email: checkoutProfile.email,
     paymentAmount,
     userBasket
   };
-  const userName = [registration.name, registration.surname].filter(Boolean).join(' ').trim();
-  const userPhone = String(registration.phone || registration.member?.phone || '').trim();
+  const userName = [checkoutProfile.name, checkoutProfile.surname].filter(Boolean).join(' ').trim();
+  const userPhone = checkoutProfile.phone;
+  const userAddress = formattedAddress(checkoutProfile);
 
   if (!values.email || !userName || !userPhone) {
     throw new PaytrRequestError('Ödeme için üye iletişim bilgileri eksik.');
@@ -248,7 +270,7 @@ function buildPaytrPayload({ registration, userIp }) {
   const merchantOkUrl = `${config.publicBaseUrl}/odeme/basarili${resultQuery}`;
   const merchantFailUrl = `${config.publicBaseUrl}/odeme/basarisiz${resultQuery}`;
   if (
-    config.defaultUserAddress.length > 400
+    userAddress.length > 400
     || merchantOkUrl.length > 400
     || merchantFailUrl.length > 400
   ) {
@@ -267,7 +289,7 @@ function buildPaytrPayload({ registration, userIp }) {
     no_installment: config.noInstallment,
     max_installment: config.maxInstallment,
     user_name: userName,
-    user_address: config.defaultUserAddress,
+    user_address: userAddress,
     user_phone: userPhone,
     merchant_ok_url: merchantOkUrl,
     merchant_fail_url: merchantFailUrl,

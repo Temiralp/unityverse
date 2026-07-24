@@ -183,18 +183,15 @@ if (legacyFrontendMode) {
   app.use(createLegacyProductVisibility(prisma));
   app.use(injectLegacyWhatsappIntoHtmlResponses);
   app.use((req, res, next) => {
-    if (
-      res.locals.legacyProductHasVariants
-      && /^\/urun\/[^/]+\/?$/.test(req.path)
-    ) {
+    if (/^\/urun\/[^/]+\/?$/.test(req.path)) {
       return legacyProductDetailRoutes(req, res, next);
     }
 
     return next();
   });
 }
-// In legacy frontend mode, keep the original course-listing interface while
-// rendering its product cards from admin-managed DB records.
+// In legacy frontend mode, keep the original presentation while rendering
+// public course lists and detail pages from admin-managed DB records.
 if (legacyFrontendMode) {
   app.use('/', legacyCatalogRoutes);
 } else {
@@ -256,16 +253,6 @@ legacyStaticDirectories.forEach((directory) => {
   app.use(`/${directory}`, express.static(path.join(rootDir, directory), legacyStaticOptions));
 });
 
-if (legacyFrontendMode) {
-  app.use((req, res, next) => {
-    if (/^\/urun\/[^/]+\/?$/.test(req.path)) {
-      return legacyProductDetailRoutes(req, res, next);
-    }
-
-    return next();
-  });
-}
-
 app.use((req, res) => {
   res.status(404).send('404 File Not Found');
 });
@@ -280,6 +267,6 @@ app.listen(port, () => {
   console.log(`Unityverse backend running at http://localhost:${port}`);
   console.log(`Admin panel: http://localhost:${port}/admin`);
   if (legacyFrontendMode) {
-    console.log('Legacy frontend mode: static frontend is active; /tum-urunler cards are DB-backed.');
+    console.log('Legacy frontend mode: public course lists and detail pages are DB-backed.');
   }
 });

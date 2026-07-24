@@ -1,6 +1,6 @@
 const ACTIVE_REGISTRATION_STATUSES = ['NEW', 'CONTACTED', 'CONFIRMED'];
 
-async function createEnrollment(prisma, { member, product, totalAmount }) {
+async function createEnrollment(prisma, { member, product, totalAmount, profile, encryptedPii }) {
   return prisma.$transaction(async (tx) => {
     await tx.$executeRaw`
       SELECT pg_advisory_xact_lock(${member.id}::int, ${product.id}::int)
@@ -21,6 +21,19 @@ async function createEnrollment(prisma, { member, product, totalAmount }) {
     });
 
     if (existingRegistration) {
+      if (existingRegistration.paymentStatus === 'PENDING') {
+        await tx.educationRegistration.update({
+          where: { id: existingRegistration.id },
+          data: {
+            name: profile.name,
+            surname: profile.surname,
+            email: profile.email,
+            phone: profile.phone,
+            ...encryptedPii
+          }
+        });
+      }
+
       return { existingRegistration };
     }
 
@@ -29,10 +42,11 @@ async function createEnrollment(prisma, { member, product, totalAmount }) {
         memberId: member.id,
         productId: product.id,
         courseTitle: product.title,
-        name: member.name,
-        surname: member.surname || null,
-        email: member.email,
-        phone: member.phone,
+        name: profile.name,
+        surname: profile.surname,
+        email: profile.email,
+        phone: profile.phone,
+        ...encryptedPii,
         source: 'website-enrollment',
         status: 'NEW',
         paymentStatus: 'PENDING',

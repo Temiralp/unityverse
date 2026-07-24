@@ -109,13 +109,36 @@ function frontendContractTests() {
   const root = path.resolve(__dirname, '..');
   const scriptsSource = fs.readFileSync(path.join(root, 'public/tema10/js/scripts.js'), 'utf8');
   const cssSource = fs.readFileSync(path.join(root, 'public/tema10/css/home2.css'), 'utf8');
+  const productScriptSource = fs.readFileSync(path.join(root, 'public/tema10/js/product-detail.js'), 'utf8');
+  const productCssSource = fs.readFileSync(path.join(root, 'public/tema10/css/product-detail.css'), 'utf8');
+  const productViewSource = fs.readFileSync(path.join(root, 'src/views/catalog/product.ejs'), 'utf8');
+  const requiredFields = [
+    'name', 'surname', 'email', 'phone', 'identityDocumentType',
+    'identityDocumentNumber', 'documentCountryCode', 'birthDate',
+    'country', 'city', 'district', 'postalCode', 'addressLine'
+  ];
 
-  assert.match(scriptsSource, /isEnrollmentProfileComplete/);
-  assert.match(scriptsSource, /ajax\/member\/profile/);
-  assert.match(scriptsSource, /startLegacyEnrollment\(productId\)/);
+  assert.match(scriptsSource, /openProfileCompletion\(productId, result\.member\)/);
+  assert.doesNotMatch(scriptsSource, /endpoint\('ajax\/member\/profile'\)/);
+  assert.match(scriptsSource, /REGISTRATION_PROFILE_INVALID/);
+  assert.match(scriptsSource, /showEnrollmentErrors/);
   assert.match(scriptsSource, /uv-legacy-profile-completion/);
   assert.match(cssSource, /\.uv-legacy-profile-completion/);
   assert.match(cssSource, /@media \(max-width:575px\)/);
+  assert.match(productScriptSource, /REGISTRATION_PROFILE_INVALID/);
+  assert.match(productScriptSource, /enrollmentFieldErrors/);
+  assert.match(productCssSource, /@media \(max-width: 640px\)/);
+  assert.match(productCssSource, /\[aria-invalid="true"\]/);
+  assert.match(scriptsSource, /Bilgileriniz eğitim kaydı ve ödeme işlemleri için güvenli olarak işlenir/);
+  assert.match(productViewSource, /Bilgileriniz eğitim kaydı ve ödeme işlemleri için güvenli olarak işlenir/);
+  assert.match(scriptsSource, /uyelik-sozlesmesi-ve-gizlilik-politikasi-27/);
+  assert.match(productViewSource, /uyelik-sozlesmesi-ve-gizlilik-politikasi-27/);
+
+  requiredFields.forEach((field) => {
+    assert.match(scriptsSource, new RegExp(`name="${field}"`), `legacy form is missing ${field}`);
+    assert.match(productViewSource, new RegExp(`name="${field}"`), `EJS form is missing ${field}`);
+    assert.match(productScriptSource, new RegExp(`['"]${field}['"]`), `EJS payload is missing ${field}`);
+  });
 }
 
 function assetVersionTests() {
