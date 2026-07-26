@@ -26,7 +26,13 @@
           <i class="fa <%= type === 'success' ? 'fa-check' : 'fa-exclamation' %>"></i>
         </span>
         <h2><%= type === 'success' ? 'İşlem bilginiz alındı' : 'İşlemi tamamlayamadık' %></h2>
-        <p><%= type === 'success' ? 'Ödeme sonucu PayTR bildirimiyle doğrulanır ve kaydınıza otomatik yansır.' : 'Kart bilgilerinizi kontrol ederek tekrar deneyebilir veya danışman desteği alabilirsiniz.' %></p>
+        <p>
+          <%= type === 'success'
+            ? resultMethod === 'bank'
+              ? 'Havale/EFT bildiriminiz alındı; ödeme banka hareketi kontrol edildikten sonra kaydınıza yansır.'
+              : 'Ödeme sonucu PayTR bildirimiyle doğrulanır ve kaydınıza otomatik yansır.'
+            : 'Kart bilgilerinizi kontrol ederek tekrar deneyebilir veya danışman desteği alabilirsiniz.' %>
+        </p>
 
         <% if (registration) { %>
           <dl>

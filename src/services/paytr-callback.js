@@ -52,6 +52,7 @@ async function processPaytrCallback(prisma, callback) {
         id: true,
         status: true,
         paymentStatus: true,
+        paymentMethod: true,
         totalAmount: true,
         courseTitle: true,
         name: true,
@@ -63,6 +64,13 @@ async function processPaytrCallback(prisma, callback) {
 
     if (!registration) {
       return { outcome: 'registration_not_found' };
+    }
+
+    if (registration.paymentMethod === 'BANK_TRANSFER') {
+      return {
+        outcome: 'payment_method_mismatch',
+        registrationId
+      };
     }
 
     const paymentNote = callbackPaymentNote(callback.merchantOid);
@@ -112,7 +120,8 @@ async function processPaytrCallback(prisma, callback) {
       where: { id: registrationId },
       data: {
         status: nextStatus,
-        paymentStatus: 'PAID'
+        paymentStatus: 'PAID',
+        paymentMethod: 'CARD'
       }
     });
 

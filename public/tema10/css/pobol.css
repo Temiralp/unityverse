@@ -1995,11 +1995,11 @@ html.pbl-urun .pbl-private-label{
 [class*="pbl-scl-tumblr"]{background-color:#2c4762 !important;}
 [class*="pbl-scl-tripadvisor"]{background-color:#00e0a4 !important;}
 [class*="pbl-scl-snapchat"]{background-color:#fffc00 !important;}
-[class*="pbl-scl-tiktok"]{background-color:#ff3b5c;!important}
+[class*="pbl-scl-tiktok"]{background-color:#ff3b5c !important}
 [class*="pbl-scl-apple"]{background-color:#a6b1b7 !important;}
 [class*="pbl-scl-amazon"]{background-color:#ff9900 !important;}
 [class*="pbl-scl-periscope"]{background-color:#40a4c4 !important;}
-[class*="pbl-scl-foursquare"]{background-color:#f94877;!important}
+[class*="pbl-scl-foursquare"]{background-color:#f94877 !important}
 [class*="pbl-scl-swarm"]{background-color:#ffa633 !important;}
 [class*="pbl-scl-skype"]{background-color:#00aff0 !important;}
 [class*="pbl-scl-android"]{background-color:#a4c639 !important;}
@@ -2444,7 +2444,7 @@ body:not(.member-logged-in) :is(
     .buy-together-footer-price,
     .complementary-products-carousel-item-price
 )::after {
-    content: "Fiyatı görmek için giriş yapın";
+    content: "Fiyatlandırmaları görmek için giriş yapınız";
     position: absolute;
     inset: 0;
     display: flex;

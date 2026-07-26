@@ -2,6 +2,7 @@ const fs = require('fs/promises');
 const path = require('path');
 const express = require('express');
 const prisma = require('../db');
+const { bankTransferQuote } = require('../services/bank-transfer-pricing');
 const { productVariantLabel } = require('../services/product-variants');
 const { prepareLegacyTabContent } = require('../services/youtube-embeds');
 
@@ -45,6 +46,12 @@ function formatMoney(value) {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   }).format(toNumber(value));
+}
+
+function formatRate(value) {
+  return Number(value).toLocaleString('tr-TR', {
+    maximumFractionDigits: 2
+  });
 }
 
 function normalizeLegacyAssetPath(value) {
@@ -214,6 +221,10 @@ function renderLegacyProductDetails(product, pageOrigin, variants = []) {
   const categoryHref = escapeHtml(categoryUrl(product));
   const price = effectivePrice(product);
   const formattedPrice = price > 0 ? `${formatMoney(price)} TL` : 'Fiyatı görmek için giriş yapın';
+  const transferQuote = bankTransferQuote(product);
+  const transferDiscount = price > 0 && transferQuote.hasDiscount
+    ? `<small class="uv-bank-transfer-discount">Havale ile %${escapeHtml(formatRate(transferQuote.discountRate))} indirim: <strong>${escapeHtml(formatMoney(transferQuote.amount))} TL</strong></small>`
+    : '';
   const productHref = `../../urun/${encodeURIComponent(product.slug)}/`;
   const overview = prepareLegacyTabContent(
     renderTabContent(product, 'OVERVIEW', 0, renderFallbackOverview),
@@ -258,7 +269,7 @@ function renderLegacyProductDetails(product, pageOrigin, variants = []) {
 		<div class="content-product-right col-sm-7 col-xs-12">
 			<div class="title-product"><h1>${title}</h1></div>
 			<div class="pbl-stock-code"><span>Eğitim Kodu :</span><a href="javascript:void(0)" onclick="return copyToClipboard('${code}')"> ${code}</a></div>
-			<div class="product-label form-group"><div class="product_page_price price"><span class="price-new">${formattedPrice}</span></div></div>
+			<div class="product-label form-group"><div class="uv-product-price-row"><div class="product_page_price price"><span class="price-new">${formattedPrice}</span></div>${transferDiscount}</div></div>
 			<div class="d-flex flex-row" style="gap:10px">
 				<button onclick="return alarmWhenPriceDrop(${product.id})" class="pbl-notifyme-price-drops"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 15 15"><path fill="currentColor" fill-rule="evenodd" d="m6.448.436l-1.13 1.129a.5.5 0 0 1-.344.143H3.196c-.822 0-1.488.666-1.488 1.488v1.778a.5.5 0 0 1-.143.345L.435 6.448a1.49 1.49 0 0 0 0 2.104l1.13 1.13a.5.5 0 0 1 .143.344v1.778c0 .822.666 1.488 1.488 1.488h1.778a.5.5 0 0 1 .345.143l1.129 1.13a1.49 1.49 0 0 0 2.104 0l1.13-1.13a.5.5 0 0 1 .344-.143h1.778c.822 0 1.488-.666 1.488-1.488v-1.778a.5.5 0 0 1 .143-.345l1.13-1.129a1.49 1.49 0 0 0 0-2.104l-1.13-1.13a.5.5 0 0 1-.143-.344V3.196c0-.822-.666-1.488-1.488-1.488h-1.778a.5.5 0 0 1-.345-.143L8.552.435a1.49 1.49 0 0 0-2.104 0m-1.802 9.21l5-5l.708.708l-5 5zM5 5v1h1V5zm4 5h1V9H9z" clip-rule="evenodd" /></svg> Fiyatı Düşünce Haber Ver</button>
 				<button onclick="return openRecommendProduct(${product.id})" class="pbl-notifyme-price-drops"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="currentColor"><path d="M22 7.535V17a3 3 0 0 1-2.824 2.995L19 20H5a3 3 0 0 1-2.995-2.824L2 17V7.535l9.445 6.297l.116.066a1 1 0 0 0 .878 0l.116-.066z"/><path d="M19 4c1.08 0 2.027.57 2.555 1.427L12 11.797l-9.555-6.37a3 3 0 0 1 2.354-1.42L5 4z"/></g></svg> Ürünü Tavsiye Et</button>
@@ -344,7 +355,7 @@ document.addEventListener('DOMContentLoaded', function () {
 	checkFooterIntersection();
 	});
 	</script>
-	<script src="../../public/tema10/js/course-overview.js?v=20260722-2" defer></script>
+	<script src="../../public/tema10/js/course-overview.js?v=20260726-2" defer></script>
 	</div>
 	</div>
 	</div>
@@ -381,6 +392,7 @@ function renderPage(template, footer, product, pageOrigin, variants = []) {
   const title = escapeHtml(product.title);
   let html = template
     .replace(/<title>[\s\S]*?<\/title>/i, `<title>${title}</title>`)
+    .replace('</head>', '<link rel="stylesheet" href="../../public/tema10/css/bank-transfer-discount.css?v=20260725-1"></head>')
     .replace(breadcrumbPattern, renderBreadcrumb(product))
     .replace(productDetailsPattern, renderLegacyProductDetails(product, pageOrigin, variants));
 
@@ -417,4 +429,5 @@ module.exports = router;
 module.exports.loadProductVariantContext = loadProductVariantContext;
 module.exports.publicProductVariants = publicProductVariants;
 module.exports.renderEducationOptions = renderEducationOptions;
+module.exports.renderLegacyProductDetails = renderLegacyProductDetails;
 module.exports.renderProductVariantOptions = renderProductVariantOptions;

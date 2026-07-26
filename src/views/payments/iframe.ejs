@@ -4,6 +4,9 @@
   const installmentsEnabled = paytrPaymentOptions.installmentsEnabled === true;
   const maxInstallment = String(paytrPaymentOptions.maxInstallment || '0');
   const installmentLabel = maxInstallment === '0' ? 'PayTR izin verilen taksitler' : `${maxInstallment} taksite kadar`;
+  const activePaymentMethod = typeof selectedPaymentMethod !== 'undefined' && selectedPaymentMethod === 'bank'
+    ? 'bank'
+    : 'card';
 %>
 
 <main class="uv-payment-page">
@@ -38,7 +41,11 @@
           </div>
           <div>
             <dt>Ödenecek Tutar</dt>
-            <dd><%= formattedAmount %> TL</dd>
+            <dd
+              data-payment-summary-amount
+              data-card-amount="<%= formattedAmount %>"
+              data-bank-amount="<%= bankTransfer.amount %>"
+            ><%= activePaymentMethod === 'bank' ? bankTransfer.amount : formattedAmount %> TL</dd>
           </div>
         </dl>
         <ul class="uv-payment-trust">
@@ -101,17 +108,17 @@
           </section>
 
           <div class="uv-payment-methods" role="tablist" aria-label="Ödeme yöntemi seçimi">
-            <button class="uv-payment-method is-active" type="button" id="payment-method-card" role="tab" aria-selected="true" aria-controls="payment-panel-card" data-payment-method="card">
+            <button class="uv-payment-method<%= activePaymentMethod === 'card' ? ' is-active' : '' %>" type="button" id="payment-method-card" role="tab" aria-selected="<%= activePaymentMethod === 'card' %>" aria-controls="payment-panel-card" data-payment-method="card">
               <i class="fa fa-credit-card" aria-hidden="true"></i>
               <span>Kart ile Ödeme</span>
             </button>
-            <button class="uv-payment-method" type="button" id="payment-method-bank" role="tab" aria-selected="false" aria-controls="payment-panel-bank" data-payment-method="bank">
+            <button class="uv-payment-method<%= activePaymentMethod === 'bank' ? ' is-active' : '' %>" type="button" id="payment-method-bank" role="tab" aria-selected="<%= activePaymentMethod === 'bank' %>" aria-controls="payment-panel-bank" data-payment-method="bank">
               <i class="fa fa-bank" aria-hidden="true"></i>
               <span>Havale / EFT</span>
             </button>
           </div>
 
-          <div class="uv-payment-method-panel is-active" id="payment-panel-card" role="tabpanel" aria-labelledby="payment-method-card" data-payment-panel="card">
+          <div class="uv-payment-method-panel<%= activePaymentMethod === 'card' ? ' is-active' : '' %>" id="payment-panel-card" role="tabpanel" aria-labelledby="payment-method-card" data-payment-panel="card" <%= activePaymentMethod === 'card' ? '' : 'hidden' %>>
             <% if (iframeUrl) { %>
               <div class="uv-payment-frame__shell is-disabled" data-payment-frame-shell aria-disabled="true">
                 <iframe
@@ -137,7 +144,7 @@
             <% } %>
           </div>
 
-          <div class="uv-payment-method-panel" id="payment-panel-bank" role="tabpanel" aria-labelledby="payment-method-bank" data-payment-panel="bank" hidden>
+          <div class="uv-payment-method-panel<%= activePaymentMethod === 'bank' ? ' is-active' : '' %>" id="payment-panel-bank" role="tabpanel" aria-labelledby="payment-method-bank" data-payment-panel="bank" <%= activePaymentMethod === 'bank' ? '' : 'hidden' %>>
             <form class="uv-bank-transfer is-disabled" method="post" action="/odeme/<%= registration.id %>/havale" data-bank-transfer aria-disabled="true">
               <input type="hidden" name="_csrf" value="<%= csrfToken %>">
               <input type="hidden" name="distanceSalesAgreement" value="0" data-payment-agreement-hidden="distanceSalesAgreement">
@@ -148,7 +155,13 @@
                   <h3>Havale / EFT Bilgileri</h3>
                   <p>Ödeme açıklamasına kayıt numaranızı yazmanız, işlemin hızlı eşleşmesini sağlar.</p>
                 </div>
-                <span><%= bankTransfer.amount %> TL</span>
+                <div class="uv-bank-transfer__price">
+                  <% if (bankTransfer.discountRate !== '0.00') { %>
+                    <small>Havale ile %<%= bankTransfer.discountRate %> indirim</small>
+                    <s><%= bankTransfer.originalAmount %> TL</s>
+                  <% } %>
+                  <strong><%= bankTransfer.amount %> TL</strong>
+                </div>
               </div>
               <!-- <dl class="uv-bank-transfer__details">
                 <div>

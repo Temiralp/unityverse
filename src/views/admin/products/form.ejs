@@ -61,6 +61,10 @@
       <input name="vatRate" type="number" step="0.01" min="0" value="<%= product && product.vatRate != null ? product.vatRate : '20' %>">
     </label>
     <label>
+      Havale İndirimi (%)
+      <input name="bankTransferDiscountRate" type="number" step="0.01" min="0" max="99.99" value="<%= product && product.bankTransferDiscountRate != null ? product.bankTransferDiscountRate : '10' %>" required>
+    </label>
+    <label>
       Süre
       <input name="duration" value="<%= product ? product.duration || '' : '' %>" placeholder="3 ay, 120 saat vb.">
     </label>

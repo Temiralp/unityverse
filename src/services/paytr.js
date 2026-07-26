@@ -219,6 +219,10 @@ function normalizeUserIp(value) {
 }
 
 function buildPaytrPayload({ registration, userIp }) {
+  if (registration.paymentMethod === 'BANK_TRANSFER') {
+    throw new PaytrRequestError('Havale/EFT seçilmiş kayıt için kart ödemesi başlatılamaz.');
+  }
+
   const config = paytrConfig();
   let checkoutProfile;
   try {

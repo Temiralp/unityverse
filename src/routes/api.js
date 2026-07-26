@@ -2,6 +2,7 @@ const express = require('express');
 
 const prisma = require('../db');
 const { createFormToken } = require('../security/form-protection');
+const { bankTransferQuote } = require('../services/bank-transfer-pricing');
 
 const router = express.Router();
 
@@ -41,12 +42,18 @@ router.get('/products', async (req, res, next) => {
 });
 
 function serializeMemberPrices(products) {
-  return products.map((product) => ({
-    id: product.id,
-    slug: product.slug,
-    price: product.price == null ? null : String(product.price),
-    discountPrice: product.discountPrice == null ? null : String(product.discountPrice)
-  }));
+  return products.map((product) => {
+    const transferQuote = bankTransferQuote(product);
+
+    return {
+      id: product.id,
+      slug: product.slug,
+      price: product.price == null ? null : String(product.price),
+      discountPrice: product.discountPrice == null ? null : String(product.discountPrice),
+      bankTransferDiscountRate: transferQuote.discountRate,
+      bankTransferAmount: transferQuote.amount
+    };
+  });
 }
 
 router.get('/member-prices', async (req, res, next) => {
@@ -61,7 +68,8 @@ router.get('/member-prices', async (req, res, next) => {
         id: true,
         slug: true,
         price: true,
-        discountPrice: true
+        discountPrice: true,
+        bankTransferDiscountRate: true
       }
     });
 

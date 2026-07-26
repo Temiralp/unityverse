@@ -91,6 +91,9 @@
               <% } %>
               <small class="table-muted">KDV: %<%= product.pricing.vatRate %> · <%= product.pricing.vatAmount %> TL</small>
               <small class="table-muted">KDV Dahil: <%= product.pricing.priceWithVat %> TL</small>
+              <small class="table-muted">
+                Havale: %<%= product.pricing.bankTransferDiscountRate %> · <%= product.pricing.bankTransferAmount %> TL
+              </small>
             <% } else { %>
               -
             <% } %>

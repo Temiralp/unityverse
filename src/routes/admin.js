@@ -38,6 +38,13 @@ const {
   decryptRegistrationPii,
   encryptRegistrationPii
 } = require('../services/registration-pii');
+const {
+  DEFAULT_BANK_TRANSFER_DISCOUNT_RATE,
+  bankTransferQuote,
+  isValidBankTransferDiscountRate,
+  normalizeBankTransferDiscountRate,
+  registrationPayableAmount
+} = require('../services/bank-transfer-pricing');
 
 const router = express.Router();
 const ADMIN_LOGIN_SCOPE = 'admin-login';
@@ -624,18 +631,22 @@ function getProductPricing(product) {
   const vatRate = product.vatRate == null ? 0 : Number(product.vatRate);
   const vatAmount = effectivePrice * vatRate / 100;
   const priceWithVat = effectivePrice + vatAmount;
+  const transferQuote = bankTransferQuote(product);
 
   return {
     basePrice: formatMoney(basePrice),
     effectivePrice: formatMoney(effectivePrice),
     vatRate: formatMoney(vatRate),
     vatAmount: formatMoney(vatAmount),
-    priceWithVat: formatMoney(priceWithVat)
+    priceWithVat: formatMoney(priceWithVat),
+    bankTransferDiscountRate: transferQuote.discountRate,
+    bankTransferAmount: formatMoney(transferQuote.amount)
   };
 }
 
 function getRegistrationFinance(registration) {
-  const totalAmount = registration.totalAmount == null ? 0 : Number(registration.totalAmount);
+  const payableAmount = registrationPayableAmount(registration);
+  const totalAmount = payableAmount == null ? 0 : Number(payableAmount);
   const paidAmount = (registration.payments || []).reduce((sum, payment) => {
     return sum + Number(payment.amount || 0);
   }, 0);
@@ -694,8 +705,17 @@ function validateProductForm(body) {
     return 'Başlık alanı zorunludur.';
   }
 
-  if (isInvalidDecimal(body.price) || isInvalidDecimal(body.discountValue) || isInvalidDecimal(body.vatRate)) {
-    return 'Fiyat, indirim değeri ve KDV alanları geçerli pozitif sayı olmalıdır.';
+  if (
+    isInvalidDecimal(body.price)
+    || isInvalidDecimal(body.discountValue)
+    || isInvalidDecimal(body.vatRate)
+    || !isValidBankTransferDiscountRate(
+      String(body.bankTransferDiscountRate || '').trim()
+        ? body.bankTransferDiscountRate
+        : DEFAULT_BANK_TRANSFER_DISCOUNT_RATE
+    )
+  ) {
+    return 'Fiyat, indirim değeri, KDV ve Havale indirimi alanları geçerli sayı olmalıdır.';
   }
 
   const price = optionalDecimal(body.price);
@@ -716,6 +736,10 @@ function validateProductForm(body) {
 
   if (discountType === 'AMOUNT' && price && Number(discountValue) > Number(price)) {
     return 'Tutar indirimi normal fiyattan büyük olamaz.';
+  }
+
+  if (Number(body.bankTransferDiscountRate) >= 100) {
+    return 'Havale indirimi 100 değerinden küçük olmalıdır.';
   }
 
   try {
@@ -762,6 +786,10 @@ function buildProductData(body) {
     discountValue: discountType ? discountValue : null,
     discountPrice: calculateDiscountPrice(price, discountType, discountValue),
     vatRate: decimalOrDefault(body.vatRate, '20'),
+    bankTransferDiscountRate: normalizeBankTransferDiscountRate(
+      body.bankTransferDiscountRate,
+      DEFAULT_BANK_TRANSFER_DISCOUNT_RATE
+    ),
     duration: nullableText(body.duration),
     lessonType: nullableText(body.lessonType),
     certificate: nullableText(body.certificate),

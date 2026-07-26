@@ -29,6 +29,7 @@
     var iframe = checkout.querySelector('[data-payment-iframe]');
     var bankTransfer = checkout.querySelector('[data-bank-transfer]');
     var bankSubmit = checkout.querySelector('[data-bank-transfer-submit]');
+    var summaryAmount = document.querySelector('[data-payment-summary-amount]');
     var methodButtons = Array.prototype.slice.call(checkout.querySelectorAll('[data-payment-method]'));
     var methodPanels = Array.prototype.slice.call(checkout.querySelectorAll('[data-payment-panel]'));
 
@@ -75,6 +76,13 @@
         panel.classList.toggle('is-active', isActive);
         panel.hidden = !isActive;
       });
+
+      if (summaryAmount) {
+        var amount = method === 'bank'
+          ? summaryAmount.dataset.bankAmount
+          : summaryAmount.dataset.cardAmount;
+        if (amount) summaryAmount.textContent = amount + ' TL';
+      }
     }
 
     agreements.forEach(function(agreement) {

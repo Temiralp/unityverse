@@ -209,6 +209,20 @@ app.get(['/uye-ol', '/uye-ol/'], (req, res) => {
   res.redirect(301, '/uye-girisi/?tab=register');
 });
 
+app.get(['/uye', '/uye/'], (req, res) => {
+  res.render('members/profile', {
+    activeNav: '',
+    pageTitle: 'Profilim | Unityverse Academy',
+    noindex: true,
+    bodyClass: 'member-profile-page',
+    extraStyles: [
+      '/public/tema10/css/payment.css',
+      '/public/tema10/css/member-profile.css?v=20260724-2'
+    ],
+    extraScripts: ['/public/tema10/js/member-profile.js']
+  });
+});
+
 const legacyStaticOptions = {
   extensions: ['html'],
   index: 'index.html',

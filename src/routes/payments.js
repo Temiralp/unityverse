@@ -15,7 +15,14 @@ const {
   sendBankTransferEmails,
   sendCardPaymentEmails
 } = require('../services/payment-notifications');
-const { syncPendingRegistrationAmount } = require('../services/registration-pricing');
+const {
+  bankTransferQuote,
+  normalizeBankTransferDiscountRate
+} = require('../services/bank-transfer-pricing');
+const {
+  currentProductAmount,
+  syncPendingRegistrationAmount
+} = require('../services/registration-pricing');
 const { inspectRegistrationCheckoutProfile } = require('../services/registration-checkout');
 const {
   RegistrationPiiConfigurationError,
@@ -84,18 +91,38 @@ function hasRequiredAgreements(body) {
 }
 
 function bankTransferDetails(registration) {
-  const amount = registration ? formatMoney(registration.totalAmount) : '';
+  const isLocked = registration?.paymentMethod === 'BANK_TRANSFER'
+    && registration.bankTransferAmount != null;
+  const quote = isLocked
+    ? {
+      discountRate: normalizeBankTransferDiscountRate(registration.bankTransferDiscountRate, '0.00'),
+      amount: String(registration.bankTransferAmount)
+    }
+    : bankTransferQuote(registration?.product, registration?.totalAmount);
 
-return {
-  accountName: String(process.env.BANK_TRANSFER_ACCOUNT_NAME || 'Unityverse Academy').trim(),
-  bankName: String(process.env.BANK_TRANSFER_BANK_NAME || '').trim(),
-  accountNo: String(process.env.BANK_TRANSFER_ACCOUNT_NO || '').trim(),
-  iban: String(process.env.BANK_TRANSFER_IBAN || '').trim(),
-  branch: String(process.env.BANK_TRANSFER_BRANCH || '').trim(),
-  reference: registration ? `UV-${registration.id}` : '',
-  amount
-};
+  return {
+    accountName: String(process.env.BANK_TRANSFER_ACCOUNT_NAME || 'Unityverse Academy').trim(),
+    bankName: String(process.env.BANK_TRANSFER_BANK_NAME || '').trim(),
+    accountNo: String(process.env.BANK_TRANSFER_ACCOUNT_NO || '').trim(),
+    iban: String(process.env.BANK_TRANSFER_IBAN || '').trim(),
+    branch: String(process.env.BANK_TRANSFER_BRANCH || '').trim(),
+    reference: registration ? `UV-${registration.id}` : '',
+    originalAmount: registration ? formatMoney(registration.totalAmount) : '',
+    discountRate: quote.discountRate,
+    amount: formatMoney(quote.amount),
+    isLocked
+  };
+}
 
+function bankTransferNotice(details) {
+  return [
+    'Üye Havale/EFT ödeme yöntemini seçti.',
+    `Havale indirimi: %${details.discountRate}`,
+    `Beklenen tutar: ${details.amount} TL`,
+    `Açıklama: ${details.reference}`,
+    details.iban ? `IBAN: ${details.iban}` : '',
+    details.bankName ? `Banka: ${details.bankName}` : ''
+  ].filter(Boolean).join('\n');
 }
 
 function whatsappInstallmentUrl(registration) {
@@ -129,10 +156,105 @@ async function ownRegistration(req, registrationId) {
         select: {
           slug: true,
           price: true,
-          discountPrice: true
+          discountPrice: true,
+          bankTransferDiscountRate: true
         }
       }
     }
+  });
+}
+
+async function lockBankTransferRegistration(prismaClient, req, registrationId) {
+  const memberId = positiveId(req.session.member?.id);
+  if (!memberId) return { registration: null, newlyLocked: false };
+
+  return prismaClient.$transaction(async (tx) => {
+    await tx.$executeRaw`
+      SELECT pg_advisory_xact_lock(${registrationId}::int)
+    `;
+
+    const registration = await tx.educationRegistration.findFirst({
+      where: {
+        id: registrationId,
+        memberId
+      },
+      include: {
+        member: {
+          select: {
+            email: true,
+            phone: true
+          }
+        },
+        product: {
+          select: {
+            slug: true,
+            price: true,
+            discountPrice: true,
+            bankTransferDiscountRate: true
+          }
+        }
+      }
+    });
+
+    if (
+      !registration
+      || registration.paymentStatus !== 'PENDING'
+      || registration.status === 'CANCELLED'
+      || registration.paymentMethod === 'CARD'
+    ) {
+      return { registration, newlyLocked: false };
+    }
+
+    if (
+      registration.paymentMethod === 'BANK_TRANSFER'
+      && registration.bankTransferAmount != null
+    ) {
+      return { registration, newlyLocked: false };
+    }
+
+    const latestAmount = currentProductAmount(registration.product);
+    const totalAmount = latestAmount == null ? registration.totalAmount : latestAmount;
+    const quote = bankTransferQuote(registration.product, totalAmount);
+
+    if (quote.amount == null) {
+      return { registration, newlyLocked: false };
+    }
+
+    const lockedRegistration = await tx.educationRegistration.update({
+      where: { id: registrationId },
+      data: {
+        totalAmount,
+        paymentMethod: 'BANK_TRANSFER',
+        bankTransferDiscountRate: quote.discountRate,
+        bankTransferAmount: quote.amount
+      },
+      include: {
+        member: {
+          select: {
+            email: true,
+            phone: true
+          }
+        },
+        product: {
+          select: {
+            slug: true,
+            price: true,
+            discountPrice: true,
+            bankTransferDiscountRate: true
+          }
+        }
+      }
+    });
+
+    await tx.educationRegistrationNote.create({
+      data: {
+        registrationId,
+        note: bankTransferNotice(bankTransferDetails(lockedRegistration)),
+        authorName: 'Üye'
+      }
+    });
+
+    return { registration: lockedRegistration, newlyLocked: true };
   });
 }
 
@@ -145,6 +267,7 @@ function renderPaymentResult(res, options) {
     eyebrow: options.eyebrow,
     title: options.title,
     message: options.message,
+    resultMethod: options.resultMethod || null,
     registration: options.registration || null,
     paymentUrl: options.paymentUrl || null,
     courseUrl: options.courseUrl || '/tum-urunler/'
@@ -257,34 +380,45 @@ router.post('/:registrationId(\\d+)/havale', requirePublicCsrf, bankTransferRate
       return renderIncompleteRegistration(res, registration);
     }
 
+    const bankSelection = await lockBankTransferRegistration(prisma, req, registrationId);
+    registration = bankSelection.registration;
+
+    if (
+      !registration
+      || registration.paymentMethod !== 'BANK_TRANSFER'
+      || registration.bankTransferAmount == null
+    ) {
+      return renderPaymentResult(res, {
+        statusCode: 409,
+        pageTitle: 'Havale/EFT Bildirimi | Unityverse Academy',
+        type: 'failure',
+        eyebrow: 'Ödeme Yöntemi',
+        title: 'Havale yöntemi kilitlenemedi',
+        message: 'Kayıt durumu değiştiği için havale yöntemi seçilemedi. Lütfen ödeme sayfasını yenileyin.',
+        registration,
+        paymentUrl: `/odeme/${registrationId}`,
+        courseUrl: registration?.product?.slug
+          ? `/urun/${registration.product.slug}/`
+          : '/tum-urunler/'
+      });
+    }
+
     const details = bankTransferDetails(registration);
-    const notice = [
-      'Üye Havale/EFT ödeme yöntemini seçti.',
-      `Beklenen tutar: ${details.amount} TL`,
-      `Açıklama: ${details.reference}`,
-      details.iban ? `IBAN: ${details.iban}` : '',
-      details.bankName ? `Banka: ${details.bankName}` : ''
-    ].filter(Boolean).join('\n');
 
-    await prisma.educationRegistrationNote.create({
-      data: {
-        registrationId,
-        note: notice,
-        authorName: 'Üye'
-      }
-    });
-
-    void sendBankTransferEmails({
-      registration,
-      bankTransfer: details
-    });
+    if (bankSelection.newlyLocked) {
+      void sendBankTransferEmails({
+        registration,
+        bankTransfer: details
+      });
+    }
 
     return renderPaymentResult(res, {
       pageTitle: 'Havale/EFT Bildirimi Alındı | Unityverse Academy',
       type: 'success',
+      resultMethod: 'bank',
       eyebrow: 'Havale/EFT',
       title: 'Havale bildiriminiz alındı',
-      message: `Ödeme açıklamasına ${details.reference} yazarak havalenizi gerçekleştirebilirsiniz. Ödemeniz danışman ekibimiz tarafından kontrol edildikten sonra kaydınıza işlenecektir.`,
+      message: `%${details.discountRate} havale indirimiyle ${details.amount} TL ödeme yapabilirsiniz. Ödeme açıklamasına ${details.reference} yazın; ödemeniz banka hareketi kontrol edildikten sonra kaydınıza işlenecektir.`,
       registration,
       paymentUrl: `/odeme/${registrationId}`,
       courseUrl: registration.product?.slug
@@ -347,6 +481,11 @@ router.post('/callback', requirePaytrCallbackIp, async (req, res, next) => {
         paymentAmount
       });
       return callbackText(res, 422, 'PAYTR notification failed: amount mismatch');
+    }
+
+    if (result.outcome === 'payment_method_mismatch') {
+      console.error('[paytr] callback payment method mismatch', { merchantOid });
+      return callbackText(res, 409, 'PAYTR notification failed: payment method mismatch');
     }
 
     if (result.outcome === 'failed') {
@@ -474,22 +613,26 @@ router.get('/:registrationId(\\d+)', paymentPageRateLimiter, async (req, res, ne
     let paytr = null;
     let cardPaymentError = null;
 
-    try {
-      paytr = await requestPaytrIframeToken({
-        registration,
-        userIp: req.ip
-      });
-    } catch (error) {
-      if (!(error instanceof PaytrConfigurationError) && !(error instanceof PaytrRequestError)) {
-        throw error;
-      }
+    if (registration.paymentMethod === 'BANK_TRANSFER') {
+      cardPaymentError = 'Bu kayıt için Havale/EFT yöntemi seçildi. Kartla ödeme yeniden başlatılamaz.';
+    } else {
+      try {
+        paytr = await requestPaytrIframeToken({
+          registration,
+          userIp: req.ip
+        });
+      } catch (error) {
+        if (!(error instanceof PaytrConfigurationError) && !(error instanceof PaytrRequestError)) {
+          throw error;
+        }
 
-      console.error('[paytr] payment page token failed:', {
-        message: error.message,
-        reason: error.reason,
-        statusCode: error.statusCode
-      });
-      cardPaymentError = 'Kartla ödeme formu şu anda başlatılamıyor. Havale/EFT ile ödeme yapabilir veya daha sonra tekrar deneyebilirsiniz.';
+        console.error('[paytr] payment page token failed:', {
+          message: error.message,
+          reason: error.reason,
+          statusCode: error.statusCode
+        });
+        cardPaymentError = 'Kartla ödeme formu şu anda başlatılamıyor. Havale/EFT ile ödeme yapabilir veya daha sonra tekrar deneyebilirsiniz.';
+      }
     }
 
     return res.render('payments/iframe', {
@@ -504,6 +647,7 @@ router.get('/:registrationId(\\d+)', paymentPageRateLimiter, async (req, res, ne
       formattedAmount: formatMoney(registration.totalAmount),
       installmentWhatsappUrl: whatsappInstallmentUrl(registration),
       bankTransfer: bankTransferDetails(registration),
+      selectedPaymentMethod: registration.paymentMethod === 'BANK_TRANSFER' ? 'bank' : 'card',
       paymentOptions: paytr ? paytr.paymentOptions : paymentOptionsFromEnv(),
       iframeUrl: paytr ? `https://www.paytr.com/odeme/guvenli/${encodeURIComponent(paytr.token)}` : '',
       cardPaymentError
@@ -561,3 +705,5 @@ router.get('/:registrationId(\\d+)', paymentPageRateLimiter, async (req, res, ne
 });
 
 module.exports = router;
+module.exports.bankTransferDetails = bankTransferDetails;
+module.exports.lockBankTransferRegistration = lockBankTransferRegistration;

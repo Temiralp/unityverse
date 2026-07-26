@@ -45,8 +45,21 @@
       <div><dt>Sonraki Takip</dt><dd><%= registration.nextFollowUpAt ? registration.nextFollowUpAt.toLocaleString('tr-TR') : '-' %></dd></div>
       <div><dt>Durum</dt><dd><span class="status-pill status-registration-<%= registration.status.toLowerCase() %>"><%= statusLabels[registration.status] || registration.status %></span></dd></div>
       <div><dt>Ödeme</dt><dd><span class="status-pill status-payment-<%= (registration.paymentStatus || 'PENDING').toLowerCase() %>"><%= paymentStatusLabels[registration.paymentStatus] || registration.paymentStatus || '-' %></span></dd></div>
+      <div>
+        <dt>Ödeme Yöntemi</dt>
+        <dd>
+          <%= registration.paymentMethod === 'BANK_TRANSFER'
+            ? `Havale / EFT (%${registration.bankTransferDiscountRate} indirim)`
+            : registration.paymentMethod === 'CARD'
+              ? 'Kart'
+              : 'Seçilmedi' %>
+        </dd>
+      </div>
       <div><dt>Fatura</dt><dd><%= invoiceStatusLabels[registration.invoiceStatus] || registration.invoiceStatus || '-' %></dd></div>
       <div><dt>Tutar</dt><dd><%= finance.totalAmountText %> TL</dd></div>
+      <% if (registration.paymentMethod === 'BANK_TRANSFER' && registration.totalAmount != null) { %>
+        <div><dt>Kart Fiyatı</dt><dd><%= Number(registration.totalAmount).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> TL</dd></div>
+      <% } %>
       <div><dt>Kalan</dt><dd><%= finance.remainingAmountText %> TL</dd></div>
       <div><dt>Başlangıç</dt><dd><%= registration.startsAt ? registration.startsAt.toLocaleDateString('tr-TR') : '-' %></dd></div>
       <div><dt>Üye</dt><dd><%= registration.member ? [registration.member.name, registration.member.surname].filter(Boolean).join(' ') : '-' %></dd></div>

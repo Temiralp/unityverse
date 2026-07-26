@@ -2,6 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 
 const prisma = require('../db');
+const { registrationPayableAmount } = require('../services/bank-transfer-pricing');
 const { isLikelyBot, silentSuccess } = require('../middleware/form-protection');
 const { requirePublicCsrf } = require('../middleware/public-csrf');
 const {
@@ -136,7 +137,8 @@ function productContent(product) {
 }
 
 function financeSummary(registration) {
-  const totalAmount = registration.totalAmount == null ? 0 : Number(registration.totalAmount);
+  const payableAmount = registrationPayableAmount(registration);
+  const totalAmount = payableAmount == null ? 0 : Number(payableAmount);
   const paidAmount = (registration.payments || []).reduce((sum, payment) => {
     return sum + Number(payment.amount || 0);
   }, 0);
@@ -167,6 +169,15 @@ function serializeRegistration(registration) {
     statusLabel: registrationStatusLabels[registration.status] || registration.status,
     paymentStatus: registration.paymentStatus,
     paymentStatusLabel: paymentStatusLabels[registration.paymentStatus] || registration.paymentStatus,
+    paymentMethod: registration.paymentMethod,
+    paymentMethodLabel: registration.paymentMethod === 'BANK_TRANSFER'
+      ? 'Havale / EFT'
+      : registration.paymentMethod === 'CARD'
+        ? 'Kart'
+        : 'Seçilmedi',
+    bankTransferDiscountRate: registration.bankTransferDiscountRate == null
+      ? null
+      : Number(registration.bankTransferDiscountRate),
     invoiceStatus: registration.invoiceStatus,
     invoiceStatusLabel: invoiceStatusLabels[registration.invoiceStatus] || registration.invoiceStatus,
     startsAt: isoDate(registration.startsAt),

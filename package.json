@@ -17,6 +17,7 @@
     "test:payment-mails": "node scripts/test-payment-mail-notifications.js",
     "test:lead-mail": "node scripts/test-lead-mail-notification.js",
     "test:legacy-youtube": "node scripts/test-legacy-youtube-embeds.js",
+    "test:course-overview": "node scripts/test-course-overview.js",
     "test:legacy-whatsapp": "node scripts/test-legacy-whatsapp.js",
     "test:legacy-header": "node scripts/test-legacy-header-layout.js",
     "test:legacy-homepage": "node scripts/test-legacy-homepage-responsive.js",
@@ -24,6 +25,7 @@
     "test:legacy-variant-navigation": "node scripts/test-legacy-variant-navigation.js",
     "test:product-variants": "node scripts/test-product-variants.js",
     "test:admin-product-variant-form": "node scripts/test-admin-product-variant-form.js",
+    "test:bank-transfer-discount": "node scripts/test-bank-transfer-discount.js",
     "test:course-data-migration": "node scripts/test-course-data-migration.js",
     "test:course-duration": "node scripts/test-course-duration.js",
     "audit:course-duration-db": "node scripts/audit-course-durations.js",
@@ -35,6 +37,7 @@
     "audit:blog-categories-db": "node scripts/audit-blog-category-db.js",
     "test:social-oauth": "node scripts/test-social-oauth.js",
     "test:profile-completion": "node scripts/test-profile-completion.js",
+    "test:member-profile-layout": "node scripts/test-member-profile-layout.js",
     "test:member-registration": "node scripts/test-member-registration.js",
     "test:rate-limit": "node scripts/test-rate-limit.js",
     "seed": "node prisma/seed.js"

@@ -1,6 +1,7 @@
 const express = require('express');
 
 const prisma = require('../db');
+const { bankTransferQuote } = require('../services/bank-transfer-pricing');
 
 const router = express.Router();
 const BLOG_PAGE_SIZE = 9;
@@ -199,11 +200,19 @@ function formatMoney(value) {
 function productPrice(product) {
   const basePrice = product.price == null ? null : Number(product.price);
   const effectivePrice = product.discountPrice == null ? basePrice : Number(product.discountPrice);
+  const transferQuote = bankTransferQuote(product);
 
   return {
     base: basePrice == null ? null : formatMoney(basePrice),
     effective: effectivePrice == null ? null : formatMoney(effectivePrice),
-    hasDiscount: basePrice != null && effectivePrice != null && effectivePrice < basePrice
+    hasDiscount: basePrice != null && effectivePrice != null && effectivePrice < basePrice,
+    bankTransfer: {
+      discountRate: Number(transferQuote.discountRate).toLocaleString('tr-TR', {
+        maximumFractionDigits: 2
+      }),
+      amount: transferQuote.amount == null ? null : formatMoney(transferQuote.amount),
+      hasDiscount: transferQuote.hasDiscount
+    }
   };
 }
 

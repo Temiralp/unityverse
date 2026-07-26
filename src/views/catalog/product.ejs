@@ -192,6 +192,12 @@
                 <s><%= product.displayPrice.base %> TL</s>
               <% } %>
               <strong><%= product.displayPrice.effective %> TL</strong>
+              <% if (product.displayPrice.bankTransfer.hasDiscount) { %>
+                <small class="uv-bank-transfer-discount">
+                  Havale ile %<%= product.displayPrice.bankTransfer.discountRate %> indirim:
+                  <b><%= product.displayPrice.bankTransfer.amount %> TL</b>
+                </small>
+              <% } %>
             <% } else { %>
               <strong>Bilgi Al</strong>
             <% } %>
@@ -237,7 +243,12 @@
   </div>
 
   <div class="uv-mobile-enroll">
-    <span><%= product.displayPrice.effective ? `${product.displayPrice.effective} TL` : 'Bilgi Al' %></span>
+    <span>
+      <%= product.displayPrice.effective ? `${product.displayPrice.effective} TL` : 'Bilgi Al' %>
+      <% if (product.displayPrice.bankTransfer.hasDiscount) { %>
+        <small>Havale: <%= product.displayPrice.bankTransfer.amount %> TL</small>
+      <% } %>
+    </span>
     <button class="btn-primary" type="button" data-enroll-trigger>Kaydol</button>
   </div>
 

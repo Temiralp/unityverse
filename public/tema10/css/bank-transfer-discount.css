@@ -1,0 +1,36 @@
+.uv-product-price-row {
+  display: flex;
+  max-width: 100%;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+}
+
+.uv-product-price-row .product_page_price {
+  flex: 0 0 auto;
+}
+
+.uv-product-price-row .uv-bank-transfer-discount {
+  display: inline-block;
+  max-width: 100%;
+  color: #07883d;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.uv-product-price-row .uv-bank-transfer-discount strong {
+  font-weight: 800;
+}
+
+body:not(.member-logged-in) .uv-product-price-row .uv-bank-transfer-discount {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .uv-product-price-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+}

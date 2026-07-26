@@ -418,6 +418,31 @@
   line-height: var(--uv-line-height-heading);
 }
 
+.uv-bank-transfer-discount {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  color: #07883d;
+  font-size: 13px;
+  font-weight: var(--uv-font-weight-bold);
+  line-height: 1.4;
+}
+
+.uv-bank-transfer-discount b {
+  font-weight: var(--uv-font-weight-black);
+}
+
+.uv-mobile-enroll > span {
+  display: grid;
+  gap: 1px;
+}
+
+.uv-mobile-enroll > span small {
+  color: #07883d;
+  font-size: 10px;
+  font-weight: var(--uv-font-weight-bold);
+}
+
 .uv-enroll-card dl {
   display: grid;
   gap: var(--uv-space-3);

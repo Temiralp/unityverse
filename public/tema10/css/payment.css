@@ -726,12 +726,31 @@
   line-height: 1.5;
 }
 
-.uv-bank-transfer__head > span {
+.uv-bank-transfer__price {
+  display: grid;
+  flex: 0 0 auto;
+  justify-items: end;
+  gap: 2px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.uv-bank-transfer__price small {
+  color: #07883d;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.uv-bank-transfer__price s {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.uv-bank-transfer__price strong {
   flex: 0 0 auto;
   color: #111827;
   font-size: 18px;
   font-weight: 900;
-  white-space: nowrap;
 }
 
 .uv-bank-transfer__details {
@@ -1042,6 +1061,11 @@
 
   .uv-bank-transfer__head {
     flex-direction: column;
+  }
+
+  .uv-bank-transfer__price {
+    justify-items: start;
+    text-align: left;
   }
 
   .uv-bank-transfer__details div {
