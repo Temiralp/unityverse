@@ -1899,7 +1899,7 @@ fbq("trackCustom", "ViewCategory", {
     					<div class="module tags-product titleLine display-none" v-bind:class="{ 'display-block': selected_filters && selected_filters.length>0, 'display-none': selected_filters && selected_filters.length==0}"><h3 class="modtitle"> Seçimleriniz </h3></div>
                         <div class="modcontent display-none" v-bind:class="{'display-block': selected_filters && selected_filters.length>0, 'display-none': selected_filters && selected_filters.length==0}" id="rfilter">
                             <ul class="tags_cloud">
-                            	<li v-for="(row,index) in selected_filters"><a href="#!" v-on:click="return rfilter(row.type, row.value)" class="button_grey">${row.name} <i class="fa fa-times-circle-o"></i></a></li>
+                            	<li v-for="(row,index) in selected_filters"><a href="#" v-on:click="return rfilter(row.type, row.value)" class="button_grey">${row.name} <i class="fa fa-times-circle-o"></i></a></li>
                             	<li><a href="#" onclick="return rfilter('all', 0)" class="button_grey">Tüm Filtreyi Temizle <i class="fa fa-times-circle-o"></i></a></li>
                             </ul>
                         </div>
