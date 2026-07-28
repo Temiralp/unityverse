@@ -1,4 +1,16 @@
 User-agent: *
 Allow: /
 
+Disallow: /uye-girisi
+Disallow: /sifremi-unuttum
+Disallow: /uye-ol
+Disallow: /uye/
+Disallow: /ajax/
+Disallow: /pbl/
+Disallow: /arama
+Disallow: /siparis-takip
+Disallow: /form/
+Disallow: /marka/
+Disallow: /Captcha
+
 Sitemap: https://unityverseacademy.com/sitemap.xml
