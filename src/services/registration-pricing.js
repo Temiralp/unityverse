@@ -21,6 +21,7 @@ async function syncPendingRegistrationAmount(prisma, registration) {
     || registration.paymentStatus !== 'PENDING'
     || registration.status === 'CANCELLED'
     || registration.paymentMethod === 'BANK_TRANSFER'
+    || registration.couponId != null
     || currentAmount == null
     || decimalCents(registration.totalAmount) === decimalCents(currentAmount)
   ) {
