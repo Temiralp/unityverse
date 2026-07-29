@@ -726,10 +726,10 @@ router.get('/:registrationId(\\d+)', paymentPageRateLimiter, async (req, res, ne
     return res.render('payments/iframe', {
       activeNav: '',
       pageTitle: `Güvenli Ödeme | ${registration.courseTitle}`,
-      extraStyles: ['/public/tema10/css/payment.css'],
+      extraStyles: ['/public/tema10/css/payment.css?v=2.0'],
       extraScripts: [
         'https://www.paytr.com/js/iframeResizer.min.js',
-        '/public/tema10/js/payment.js'
+        '/public/tema10/js/payment.js?v=2.0'
       ],
       registration,
       formattedAmount: formatMoney(registration.totalAmount),
