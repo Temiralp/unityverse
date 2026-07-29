@@ -183,10 +183,9 @@ if (legacyFrontendMode) {
   app.use(createLegacyProductVisibility(prisma));
   app.use(injectLegacyWhatsappIntoHtmlResponses);
   app.use((req, res, next) => {
-    // ROLLBACK: Statik HTML dosyalarını doğrudan servis et (SEO fix)
-    // if (/^\/urun\/[^/]+\/?$/.test(req.path)) {
-    //   return legacyProductDetailRoutes(req, res, next);
-    // }
+    if (/^\/urun\/[^/]+\/?$/.test(req.path)) {
+      return legacyProductDetailRoutes(req, res, next);
+    }
 
     return next();
   });

@@ -390,8 +390,14 @@ async function loadHomeFooterTemplate() {
 
 function renderPage(template, footer, product, pageOrigin, variants = []) {
   const title = escapeHtml(product.title);
+  const canonicalUrl = `${pageOrigin}/urun/${encodeURIComponent(product.slug)}/`;
+  const description = escapeHtml(product.summary || `${product.title} - Unityverse Academy`);
   let html = template
     .replace(/<title>[\s\S]*?<\/title>/i, `<title>${title}</title>`)
+    .replace(/<link\s+rel=["']canonical["']\s+href=["'][^"']*["']\s*\/?>/i, `<link rel="canonical" href="${canonicalUrl}" />`)
+    .replace(/<meta\s+property=["']og:url["']\s+content=["'][^"']*["']\s*\/?>/i, `<meta property="og:url" content="${canonicalUrl}" />`)
+    .replace(/<meta\s+property=["']og:title["']\s+content=["'][^"']*["']\s*\/?>/i, `<meta property="og:title" content="${title}" />`)
+    .replace(/<meta\s+name=["']description["']\s+content=["'][^"']*["']\s*\/?>/i, `<meta name="description" content="${description}" />`)
     .replace('</head>', '<link rel="stylesheet" href="../../public/tema10/css/bank-transfer-discount.css?v=20260725-1"></head>')
     .replace(breadcrumbPattern, renderBreadcrumb(product))
     .replace(productDetailsPattern, renderLegacyProductDetails(product, pageOrigin, variants));
