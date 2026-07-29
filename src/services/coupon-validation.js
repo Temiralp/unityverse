@@ -1,5 +1,3 @@
-const { Decimal } = require('@prisma/client/runtime/library');
-
 class CouponValidationError extends Error {
   constructor(message, code) {
     super(message);
@@ -32,22 +30,38 @@ const ERROR_MESSAGES = {
   INVALID_REGISTRATION: 'Kayıt durumu kupon uygulamaya uygun değil.'
 };
 
+function toNumber(value) {
+  if (value == null) return 0;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function toDecimalString(value) {
+  return toNumber(value).toFixed(2);
+}
+
 function calculateDiscount(totalAmount, discountType, discountValue) {
-  const amount = new Decimal(totalAmount);
-  const value = new Decimal(discountValue);
+  const amount = toNumber(totalAmount);
+  const value = toNumber(discountValue);
+
+  let discount;
 
   if (discountType === 'PERCENT') {
-    const discount = amount.mul(value).div(100);
-    return {
-      discount: Decimal.min(discount, amount.sub(1)),
-      newTotal: Decimal.max(amount.sub(discount), new Decimal('1.00'))
-    };
+    discount = amount * value / 100;
+  } else {
+    // AMOUNT (fixed TL)
+    discount = value;
   }
 
-  // AMOUNT (fixed TL)
+  // Cap discount so total doesn't go below 1 TL
+  discount = Math.min(discount, amount - 1);
+  discount = Math.max(discount, 0);
+
+  const newTotal = Math.max(amount - discount, 1);
+
   return {
-    discount: Decimal.min(value, amount.sub(1)),
-    newTotal: Decimal.max(amount.sub(value), new Decimal('1.00'))
+    discount: toDecimalString(discount),
+    newTotal: toDecimalString(newTotal)
   };
 }
 
@@ -195,13 +209,13 @@ async function applyCoupon(prisma, registrationId, couponCode, memberId) {
     return {
       registration: updated,
       coupon,
-      discount: String(discount),
-      newTotal: String(newTotal)
+      discount,
+      newTotal
     };
   });
 }
 
-async function removeCoupon(prisma, registrationId, memberId) {
+async function removeCoupon(prisma, registrationId) {
   const registration = await prisma.educationRegistration.findUnique({
     where: { id: registrationId },
     include: {
@@ -231,7 +245,9 @@ async function removeCoupon(prisma, registrationId, memberId) {
     ? registration.product.discountPrice
     : registration.product?.price;
 
-  const originalTotal = baseAmount || new Decimal(String(registration.totalAmount)).add(new Decimal(String(registration.couponDiscount)));
+  const originalTotal = baseAmount
+    ? toDecimalString(baseAmount)
+    : toDecimalString(toNumber(registration.totalAmount) + toNumber(registration.couponDiscount));
 
   return prisma.$transaction(async (tx) => {
     const updated = await tx.educationRegistration.update({
@@ -269,7 +285,7 @@ async function removeCoupon(prisma, registrationId, memberId) {
 
     return {
       registration: updated,
-      newTotal: String(originalTotal)
+      newTotal: originalTotal
     };
   });
 }
