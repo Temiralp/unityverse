@@ -182,13 +182,13 @@ app.use('/api', apiRoutes);
 if (legacyFrontendMode) {
   app.use(createLegacyProductVisibility(prisma));
   app.use(injectLegacyWhatsappIntoHtmlResponses);
-  app.use((req, res, next) => {
-    if (/^\/urun\/[^/]+\/?$/.test(req.path)) {
-      return legacyProductDetailRoutes(req, res, next);
-    }
-
-    return next();
-  });
+  // app.use((req, res, next) => {
+  //   if (/^\/urun\/[^/]+\/?$/.test(req.path)) {
+  //     return legacyProductDetailRoutes(req, res, next);
+  //   }
+  //
+  //   return next();
+  // });
 }
 // In legacy frontend mode, keep the original presentation while rendering
 // public course lists and detail pages from admin-managed DB records.
