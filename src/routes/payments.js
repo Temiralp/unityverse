@@ -25,6 +25,11 @@ const {
 } = require('../services/registration-pricing');
 const { inspectRegistrationCheckoutProfile } = require('../services/registration-checkout');
 const {
+  CouponValidationError,
+  applyCoupon,
+  removeCoupon
+} = require('../services/coupon-validation');
+const {
   RegistrationPiiConfigurationError,
   RegistrationPiiDecryptionError
 } = require('../services/registration-pii');
@@ -308,6 +313,89 @@ function callbackInstallmentCount(body) {
 
   return /^[1-9]\d*$/.test(value) ? value : '';
 }
+
+router.post('/:registrationId(\\d+)/coupon', async (req, res, next) => {
+  try {
+    const registrationId = positiveId(req.params.registrationId);
+
+    if (!registrationId) {
+      return res.status(404).json({ success: false, message: 'Kayıt bulunamadı.' });
+    }
+
+    if (!req.session.member) {
+      return res.status(401).json({ success: false, message: 'Oturum açmanız gerekiyor.' });
+    }
+
+    const memberId = positiveId(req.session.member.id);
+    const code = String(req.body.code || '').trim();
+
+    if (!code) {
+      return res.status(400).json({ success: false, message: 'Kupon kodu giriniz.' });
+    }
+
+    // Verify ownership
+    const owns = await ownRegistration(req, registrationId);
+    if (!owns) {
+      return res.status(404).json({ success: false, message: 'Kayıt bulunamadı.' });
+    }
+
+    const result = await applyCoupon(prisma, registrationId, code, memberId);
+    const btQuote = bankTransferQuote(result.registration.product, result.newTotal);
+
+    return res.json({
+      success: true,
+      message: 'Kupon uygulandı!',
+      discount: formatMoney(result.discount),
+      newTotal: formatMoney(result.newTotal),
+      bankTransferAmount: formatMoney(btQuote.amount),
+      couponCode: result.coupon.code,
+      couponTitle: result.coupon.title,
+      discountType: result.coupon.discountType,
+      discountValue: String(result.coupon.discountValue)
+    });
+  } catch (error) {
+    if (error instanceof CouponValidationError) {
+      return res.status(400).json({ success: false, message: error.message, code: error.code });
+    }
+    return next(error);
+  }
+});
+
+router.post('/:registrationId(\\d+)/coupon/remove', async (req, res, next) => {
+  try {
+    const registrationId = positiveId(req.params.registrationId);
+
+    if (!registrationId) {
+      return res.status(404).json({ success: false, message: 'Kayıt bulunamadı.' });
+    }
+
+    if (!req.session.member) {
+      return res.status(401).json({ success: false, message: 'Oturum açmanız gerekiyor.' });
+    }
+
+    const owns = await ownRegistration(req, registrationId);
+    if (!owns) {
+      return res.status(404).json({ success: false, message: 'Kayıt bulunamadı.' });
+    }
+
+    const result = await removeCoupon(prisma, registrationId, positiveId(req.session.member.id));
+
+    if (!result) {
+      return res.status(400).json({ success: false, message: 'Kaldırılacak kupon bulunamadı.' });
+    }
+
+    const btQuote = bankTransferQuote(result.registration.product, result.newTotal);
+
+    return res.json({
+      success: true,
+      message: 'Kupon kaldırıldı.',
+      newTotal: formatMoney(result.newTotal),
+      bankTransferAmount: formatMoney(btQuote.amount)
+    });
+  } catch (error) {
+    return next(error);
+  }
+});
 
 router.post('/:registrationId(\\d+)/havale', requirePublicCsrf, bankTransferRateLimiter, async (req, res, next) => {
   try {
@@ -650,7 +738,11 @@ router.get('/:registrationId(\\d+)', paymentPageRateLimiter, async (req, res, ne
       selectedPaymentMethod: registration.paymentMethod === 'BANK_TRANSFER' ? 'bank' : 'card',
       paymentOptions: paytr ? paytr.paymentOptions : paymentOptionsFromEnv(),
       iframeUrl: paytr ? `https://www.paytr.com/odeme/guvenli/${encodeURIComponent(paytr.token)}` : '',
-      cardPaymentError
+      cardPaymentError,
+      appliedCoupon: registration.couponId ? {
+        code: registration.couponCode,
+        discount: formatMoney(registration.couponDiscount)
+      } : null
     });
   } catch (error) {
     if (error instanceof RegistrationPiiConfigurationError || error instanceof RegistrationPiiDecryptionError) {

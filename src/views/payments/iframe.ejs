@@ -48,6 +48,41 @@
             ><%= activePaymentMethod === 'bank' ? bankTransfer.amount : formattedAmount %> TL</dd>
           </div>
         </dl>
+        <div class="uv-coupon-section" data-coupon-section data-registration-id="<%= registration.id %>">
+          <h3 class="uv-coupon-title">Kupon Kodu</h3>
+          <% if (appliedCoupon) { %>
+            <div class="uv-coupon-applied" data-coupon-applied>
+              <div class="uv-coupon-applied__info">
+                <i class="fa fa-check-circle" aria-hidden="true"></i>
+                <div>
+                  <strong><%= appliedCoupon.code %></strong>
+                  <span>-<%= appliedCoupon.discount %> TL indirim</span>
+                </div>
+              </div>
+              <button type="button" class="uv-coupon-remove" data-coupon-remove>Kaldır</button>
+            </div>
+            <div class="uv-coupon-input-group" data-coupon-input-group style="display:none">
+              <input type="text" id="couponCode" placeholder="Kupon kodunu girin" data-coupon-input maxlength="32" autocomplete="off">
+              <button type="button" class="btn-coupon-apply" data-coupon-apply>Uygula</button>
+            </div>
+          <% } else { %>
+            <div class="uv-coupon-applied" data-coupon-applied style="display:none">
+              <div class="uv-coupon-applied__info">
+                <i class="fa fa-check-circle" aria-hidden="true"></i>
+                <div>
+                  <strong data-coupon-applied-code></strong>
+                  <span data-coupon-applied-discount></span>
+                </div>
+              </div>
+              <button type="button" class="uv-coupon-remove" data-coupon-remove>Kaldır</button>
+            </div>
+            <div class="uv-coupon-input-group" data-coupon-input-group>
+              <input type="text" id="couponCode" placeholder="Kupon kodunu girin" data-coupon-input maxlength="32" autocomplete="off">
+              <button type="button" class="btn-coupon-apply" data-coupon-apply>Uygula</button>
+            </div>
+          <% } %>
+          <p class="uv-coupon-message" data-coupon-message></p>
+        </div>
         <ul class="uv-payment-trust">
           <li><i class="fa fa-lock" aria-hidden="true"></i> Kart bilgileriniz saklanmaz.</li>
           <li><i class="fa fa-shield" aria-hidden="true"></i> Ödeme PayTR ekranında tamamlanır.</li>

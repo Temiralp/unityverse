@@ -1090,3 +1090,143 @@
     width: 100%;
   }
 }
+
+/* Coupon Section */
+.uv-coupon-section {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.uv-coupon-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #171923;
+  margin: 0 0 12px;
+}
+
+.uv-coupon-input-group {
+  display: flex;
+  gap: 8px;
+}
+
+.uv-coupon-input-group input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #171923;
+  background: #fff;
+  transition: border-color 0.2s;
+  text-transform: uppercase;
+}
+
+.uv-coupon-input-group input:focus {
+  outline: none;
+  border-color: #130b5f;
+  box-shadow: 0 0 0 3px rgba(19, 11, 95, 0.1);
+}
+
+.uv-coupon-input-group input::placeholder {
+  text-transform: none;
+  color: #9ca3af;
+}
+
+.btn-coupon-apply {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  background: #130b5f;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+  white-space: nowrap;
+}
+
+.btn-coupon-apply:hover {
+  background: #1a0f80;
+}
+
+.btn-coupon-apply:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.uv-coupon-applied {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: #f0fdf4;
+  border: 1.5px solid #86efac;
+  border-radius: 8px;
+}
+
+.uv-coupon-applied__info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.uv-coupon-applied__info i {
+  color: #16a34a;
+  font-size: 18px;
+}
+
+.uv-coupon-applied__info strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: #171923;
+  letter-spacing: 0.5px;
+}
+
+.uv-coupon-applied__info span {
+  display: block;
+  font-size: 13px;
+  color: #16a34a;
+  font-weight: 500;
+}
+
+.uv-coupon-remove {
+  padding: 6px 14px;
+  border: 1.5px solid #fca5a5;
+  border-radius: 6px;
+  background: #fff;
+  color: #dc2626;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.uv-coupon-remove:hover {
+  background: #fef2f2;
+}
+
+.uv-coupon-message {
+  display: none;
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.uv-coupon-message.is-error {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+}
+
+.uv-coupon-message.is-success {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #86efac;
+}

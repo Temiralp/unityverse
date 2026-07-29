@@ -357,9 +357,10 @@ model Coupon {
   startsAt      DateTime?
   expiresAt     DateTime?
   isActive      Boolean         @default(true)
-  products      CouponProduct[]
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  products       CouponProduct[]
+  registrations  EducationRegistration[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 
   @@index([isActive])
   @@index([expiresAt])
@@ -406,6 +407,10 @@ model EducationRegistration {
   paymentMethod                   RegistrationPaymentMethod?
   bankTransferDiscountRate        Decimal?                             @db.Decimal(5, 2)
   bankTransferAmount              Decimal?                             @db.Decimal(10, 2)
+  couponId                        Int?
+  couponCode                      String?
+  couponDiscount                  Decimal?                             @db.Decimal(10, 2)
+  coupon                          Coupon?                              @relation(fields: [couponId], references: [id], onDelete: SetNull)
   invoiceStatus                   InvoiceStatus                        @default(NOT_ISSUED)
   paymentNote                     String?
   startsAt                        DateTime?
