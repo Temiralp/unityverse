@@ -650,6 +650,7 @@ router.get(['/tum-urunler', '/tum-urunler/'], async (req, res, next) => {
       .filter((product) => shouldIncludeProduct(product, query, categorySlug));
     const html = renderLegacyProductListing(template, visibleProducts);
 
+    res.setHeader('Clear-Site-Data', '"cache"');
     res.setHeader('Cache-Control', 'no-cache');
     res.send(html);
   } catch (error) {
