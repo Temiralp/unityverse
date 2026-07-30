@@ -1,6 +1,5 @@
 require('dotenv').config();
 
-const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const express = require('express');
@@ -185,23 +184,13 @@ if (legacyFrontendMode) {
   app.use(createLegacyRedirectsMiddleware());
   app.use(createLegacyProductVisibility(prisma));
   app.use(injectLegacyWhatsappIntoHtmlResponses);
-  app.use((req, res, next) => {
-    const match = String(req.path || '').match(/^\/urun\/([^/]+)\/?$/);
-    if (!match) return next();
-
-    let slug = match[1];
-    try {
-      slug = decodeURIComponent(match[1]);
-    } catch (err) {}
-
-    const staticFilePath = path.join(rootDir, 'urun', slug, 'index.html');
-
-    if (fs.existsSync(staticFilePath)) {
-      return next();
-    }
-
-    return legacyProductDetailRoutes(req, res, next);
-  });
+  // app.use((req, res, next) => {
+  //   if (/^\/urun\/[^/]+\/?$/.test(req.path)) {
+  //     return legacyProductDetailRoutes(req, res, next);
+  //   }
+  //
+  //   return next();
+  // });
 }
 // In legacy frontend mode, keep the original presentation while rendering
 // public course lists and detail pages from admin-managed DB records.
