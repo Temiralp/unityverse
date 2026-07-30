@@ -67,7 +67,13 @@ function createLegacyRedirectsMiddleware() {
       return next();
     }
 
-    let rawPath = (req.path || '/').toLowerCase();
+    // Set noindex header for utility/login/register pages
+    const lowerPath = (req.path || '/').toLowerCase();
+    if (lowerPath.startsWith('/uye-girisi') || lowerPath.startsWith('/uye-ol') || lowerPath.startsWith('/sifremi-unuttum') || lowerPath.startsWith('/uye')) {
+      res.setHeader('X-Robots-Tag', 'noindex, follow');
+    }
+
+    let rawPath = lowerPath;
     const normalizedKey = rawPath.length > 1 && rawPath.endsWith('/') ? rawPath.slice(0, -1) : rawPath;
     const query = req.url.includes('?') ? '?' + req.url.split('?')[1] : '';
 
