@@ -103,7 +103,7 @@ function createLegacyRedirectsMiddleware() {
       // Safe Fallbacks if target folder doesn't exist on disk
       if (cleanSection === 'blog-detay') {
         return res.redirect(301, `/blog/${query}`);
-      } else if (cleanSection === 'kategori') {
+      } else if (cleanSection === 'urun' || cleanSection === 'kategori') {
         return res.redirect(301, `/tum-urunler/${query}`);
       } else if (cleanSection === 'os') {
         return res.redirect(301, `/${query}`);
@@ -116,11 +116,11 @@ function createLegacyRedirectsMiddleware() {
       // Check if folder exists on disk
       const requestedSubPath = pathParts.slice(1).join('/');
       if (requestedSubPath) {
-        const section = pathParts[0].toLowerCase();
         const fullFolder = path.join(rootDir, pathParts[0], requestedSubPath);
         if (!fs.existsSync(fullFolder)) {
+          const section = pathParts[0].toLowerCase();
           if (section === 'blog-detay') return res.redirect(301, `/blog/${query}`);
-          if (section === 'kategori') return res.redirect(301, `/tum-urunler/${query}`);
+          if (section === 'urun' || section === 'kategori') return res.redirect(301, `/tum-urunler/${query}`);
           if (section === 'os') return res.redirect(301, `/${query}`);
         }
       }
