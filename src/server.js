@@ -34,6 +34,7 @@ const {
 const {
   createLegacyProductVisibility
 } = require('./middleware/legacy-product-visibility');
+const createLegacyRedirectsMiddleware = require('./middleware/legacy-redirects');
 const { redirectLegacyBlogImage } = require('./services/blog-images');
 
 const app = express();
@@ -180,6 +181,7 @@ app.use('/vendor/jodit', express.static(path.join(rootDir, 'node_modules/jodit/e
 app.use('/admin', adminRoutes);
 app.use('/api', apiRoutes);
 if (legacyFrontendMode) {
+  app.use(createLegacyRedirectsMiddleware());
   app.use(createLegacyProductVisibility(prisma));
   app.use(injectLegacyWhatsappIntoHtmlResponses);
   // app.use((req, res, next) => {
