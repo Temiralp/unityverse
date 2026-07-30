@@ -1,0 +1,5 @@
+﻿"Address","Content Type","Status Code","Status","Crawl Depth","Inlinks"
+"https://www.googletagmanager.com/gtag/js?id=AW-10936976921","application/javascript; charset=UTF-8","200","OK","1","0"
+"https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js","text/javascript; charset=UTF-8","200","OK","2","0"
+"https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js","text/javascript; charset=UTF-8","200","OK","2","0"
+"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js","application/javascript; charset=utf-8","200","OK","2","0"
