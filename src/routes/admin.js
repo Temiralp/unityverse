@@ -17,15 +17,18 @@ const {
 } = require('../middleware/rate-limit');
 const { parseIdParam } = require('../middleware/parse-id');
 const { makeSlug } = require('../utils/slug');
+const { hasMatchingImageSignature } = require('../services/image-signatures');
 const {
+  buildProductEditorTabs,
   buildProductFormOutcomes,
-  buildProductFormTabs,
   replaceProductContentStructure
 } = require('../services/product-tabs');
 const {
   ProductVariantValidationError,
   normalizeProductVariantRows,
-  replaceProductVariants
+  productVariantParticipation,
+  setParentProductStatus,
+  syncManagedProductVariants
 } = require('../services/product-variants');
 const { validateBlogContentImages } = require('../services/blog-images');
 const {
@@ -45,6 +48,15 @@ const {
   normalizeBankTransferDiscountRate,
   registrationPayableAmount
 } = require('../services/bank-transfer-pricing');
+const {
+  CORPORATE_REFERENCE_IMAGE_EXTENSIONS,
+  CORPORATE_REFERENCE_IMAGE_MAX_SIZE,
+  corporateReferenceData,
+  deleteCorporateReferenceLogo,
+  normalizeCorporateReferenceOrder,
+  saveCorporateReferenceLogo,
+  validateCorporateReferenceForm
+} = require('../services/corporate-references');
 
 const router = express.Router();
 const ADMIN_LOGIN_SCOPE = 'admin-login';
@@ -94,6 +106,20 @@ const productImageUpload = multer({
     return callback(null, true);
   }
 }).single('productImage');
+const corporateReferenceLogoUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: CORPORATE_REFERENCE_IMAGE_MAX_SIZE,
+    files: 1
+  },
+  fileFilter(req, file, callback) {
+    if (!CORPORATE_REFERENCE_IMAGE_EXTENSIONS[file.mimetype]) {
+      return callback(new multer.MulterError('LIMIT_UNEXPECTED_FILE', file.fieldname));
+    }
+
+    return callback(null, true);
+  }
+}).single('logo');
 
 router.use((req, res, next) => {
   res.set('Cache-Control', 'no-store');
@@ -124,6 +150,8 @@ router.use((req, res, next) => {
       || req.path === '/products'
       || req.path === '/products/image'
       || /^\/products\/\d+$/.test(req.path)
+      || req.path === '/corporate-references'
+      || /^\/corporate-references\/\d+$/.test(req.path)
     );
 
   if (isMultipartAdminForm) {
@@ -161,12 +189,38 @@ function handleBlogImageUpload(req, res, next) {
 
 function handleProductImageUpload(req, res, next) {
   productImageUpload(req, res, (error) => {
-    if (!error) return next();
+    if (!error) {
+      if (req.file && !hasMatchingImageSignature(req.file.buffer, req.file.mimetype)) {
+        req.productUploadError = 'Kurs görselinin dosya içeriği seçilen formatla eşleşmiyor.';
+        req.file = undefined;
+      }
+      return next();
+    }
 
     if (error.code === 'LIMIT_FILE_SIZE') {
       req.productUploadError = 'Kurs görseli en fazla 5 MB olabilir.';
     } else {
       req.productUploadError = 'Kurs görseli JPG, PNG, WebP, GIF veya AVIF formatında olmalıdır.';
+    }
+
+    return next();
+  });
+}
+
+function handleCorporateReferenceLogoUpload(req, res, next) {
+  corporateReferenceLogoUpload(req, res, (error) => {
+    if (!error) {
+      if (req.file && !hasMatchingImageSignature(req.file.buffer, req.file.mimetype)) {
+        req.corporateReferenceUploadError = 'Logo dosyasının içeriği seçilen formatla eşleşmiyor.';
+        req.file = undefined;
+      }
+      return next();
+    }
+
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      req.corporateReferenceUploadError = 'Logo görseli en fazla 2 MB olabilir.';
+    } else {
+      req.corporateReferenceUploadError = 'Logo JPG, PNG, WebP veya AVIF formatında olmalıdır.';
     }
 
     return next();
@@ -718,7 +772,23 @@ function validateProductForm(body) {
     return 'Fiyat, indirim değeri, KDV ve Havale indirimi alanları geçerli sayı olmalıdır.';
   }
 
-  const price = optionalDecimal(body.price);
+  let productVariants;
+  try {
+    productVariants = normalizeProductVariantRows(body.variants, body.defaultVariantIndex, {
+      allowNewProducts: true,
+      requireManagedFields: true
+    });
+  } catch (error) {
+    if (error instanceof ProductVariantValidationError) return error.message;
+    throw error;
+  }
+
+  if (!productVariants.length) {
+    return 'En az bir eğitim süresi eklemelisiniz.';
+  }
+
+  const defaultVariant = productVariants.find((variant) => variant.isDefault) || productVariants[0];
+  const price = optionalDecimal(body.price) || defaultVariant.price;
   const discountType = normalizeDiscountType(body.discountType);
   const discountValue = optionalDecimal(body.discountValue);
 
@@ -738,15 +808,16 @@ function validateProductForm(body) {
     return 'Tutar indirimi normal fiyattan büyük olamaz.';
   }
 
-  if (Number(body.bankTransferDiscountRate) >= 100) {
-    return 'Havale indirimi 100 değerinden küçük olmalıdır.';
+  if (
+    discountType === 'AMOUNT'
+    && discountValue
+    && productVariants.some((variant) => Number(discountValue) > Number(variant.price))
+  ) {
+    return 'Tutar indirimi hiçbir eğitim süresinin fiyatından büyük olamaz.';
   }
 
-  try {
-    normalizeProductVariantRows(body.variants, body.defaultVariantIndex);
-  } catch (error) {
-    if (error instanceof ProductVariantValidationError) return error.message;
-    throw error;
+  if (Number(body.bankTransferDiscountRate) >= 100) {
+    return 'Havale indirimi 100 değerinden küçük olmalıdır.';
   }
 
   return null;
@@ -754,9 +825,18 @@ function validateProductForm(body) {
 
 function productVariantFormRows(body) {
   try {
-    return normalizeProductVariantRows(body.variants, body.defaultVariantIndex);
+    return normalizeProductVariantRows(body.variants, body.defaultVariantIndex, {
+      allowNewProducts: true,
+      requireManagedFields: true
+    });
   } catch (error) {
-    return [];
+    try {
+      return normalizeProductVariantRows(body.variants, body.defaultVariantIndex, {
+        allowNewProducts: true
+      });
+    } catch (nestedError) {
+      return [];
+    }
   }
 }
 
@@ -769,8 +849,9 @@ function productUniqueErrorMessage(error) {
   return 'Bu slug zaten kullanılıyor. Lütfen farklı bir slug girin.';
 }
 
-function buildProductData(body) {
-  const price = optionalDecimal(body.price);
+function buildProductData(body, productVariants = productVariantFormRows(body)) {
+  const defaultVariant = productVariants.find((variant) => variant.isDefault) || productVariants[0];
+  const price = optionalDecimal(body.price) || defaultVariant?.price || null;
   const discountType = normalizeDiscountType(body.discountType);
   const discountValue = optionalDecimal(body.discountValue);
   const code = String(body.code || '').trim().toUpperCase();
@@ -779,7 +860,6 @@ function buildProductData(body) {
     code: code || null,
     title: String(body.title || '').trim(),
     slug: String(body.slug || '').trim() || makeSlug(body.title),
-    summary: nullableText(body.summary),
     image: nullableText(body.image),
     price,
     discountType,
@@ -790,7 +870,7 @@ function buildProductData(body) {
       body.bankTransferDiscountRate,
       DEFAULT_BANK_TRANSFER_DISCOUNT_RATE
     ),
-    duration: nullableText(body.duration),
+    duration: defaultVariant?.label || nullableText(body.duration),
     lessonType: nullableText(body.lessonType),
     certificate: nullableText(body.certificate),
     status: normalizePublishStatus(body.status),
@@ -810,20 +890,33 @@ async function saveUploadedProductImage(req) {
   return req.savedProductImagePath;
 }
 
-async function renderProductForm(res, options) {
+async function renderProductForm(req, res, options) {
   const [categories, variantCandidates] = await Promise.all([
     prisma.category.findMany({ orderBy: { name: 'asc' } }),
     findProductVariantCandidates(prisma, options.product && options.product.id)
   ]);
   const productVariants = options.productVariants
-    || options.product?.productVariants
-    || [];
+      || options.product?.productVariants
+      || [];
+  const hasManagedVariantGroup = Boolean(
+    options.hasManagedVariantGroup
+    || options.product?.managedVariantGroup === '1'
+    || options.product?.productVariants?.length
+    || productVariants.length > 1
+  );
+  const pageOrigin = `${req.protocol}://${req.get('host')}`;
+
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
 
   return res.status(options.statusCode || 200).render('admin/products/form', {
     product: options.product || null,
-    productTabs: buildProductFormTabs(options.productTabs || options.product?.tabs || options.product?.tabsInput),
+    productTabs: buildProductEditorTabs(
+      options.productTabs || options.product?.tabs || options.product?.tabsInput,
+      pageOrigin
+    ),
     learningOutcomes: buildProductFormOutcomes(options.learningOutcomes || options.product?.learningOutcomes || options.product?.learningOutcomesInput),
     productVariants,
+    hasManagedVariantGroup,
     defaultVariantIndex: Math.max(0, productVariants.findIndex((variant) => variant.isDefault)),
     variantCandidates,
     categories,
@@ -1920,6 +2013,234 @@ router.post('/blog/:id/delete', requireAdmin, async (req, res, next) => {
   }
 });
 
+function renderCorporateReferenceForm(res, options) {
+  return res.status(options.statusCode || 200).render('admin/corporate-references/form', {
+    reference: options.reference || null,
+    action: options.action,
+    pageTitle: options.pageTitle,
+    submitLabel: options.submitLabel,
+    error: options.error || null
+  });
+}
+
+router.get('/corporate-references', requireAdmin, async (req, res, next) => {
+  try {
+    const references = await prisma.corporateReference.findMany({
+      orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }]
+    });
+
+    return res.render('admin/corporate-references/index', { references });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+router.get('/corporate-references/new', requireAdmin, (req, res) => (
+  renderCorporateReferenceForm(res, {
+    action: '/admin/corporate-references',
+    pageTitle: 'Yeni Kurumsal Referans',
+    submitLabel: 'Kaydet'
+  })
+));
+
+router.post(
+  '/corporate-references',
+  requireAdmin,
+  handleCorporateReferenceLogoUpload,
+  requireMultipartCsrf,
+  async (req, res, next) => {
+    let savedLogoPath = null;
+
+    try {
+      const formError = req.corporateReferenceUploadError
+        || validateCorporateReferenceForm(req.body, Boolean(req.file));
+
+      if (formError) {
+        return renderCorporateReferenceForm(res, {
+          statusCode: 400,
+          reference: req.body,
+          action: '/admin/corporate-references',
+          pageTitle: 'Yeni Kurumsal Referans',
+          submitLabel: 'Kaydet',
+          error: formError
+        });
+      }
+
+      savedLogoPath = await saveCorporateReferenceLogo(req.file);
+      const maximumOrder = await prisma.corporateReference.aggregate({
+        _max: { sortOrder: true }
+      });
+
+      await prisma.corporateReference.create({
+        data: {
+          ...corporateReferenceData(req.body),
+          logoPath: savedLogoPath,
+          sortOrder: (maximumOrder._max.sortOrder || 0) + 1
+        }
+      });
+
+      return res.redirect('/admin/corporate-references');
+    } catch (error) {
+      if (savedLogoPath) await deleteCorporateReferenceLogo(savedLogoPath);
+      if (error.code === 'P2002') {
+        return renderCorporateReferenceForm(res, {
+          statusCode: 400,
+          reference: req.body,
+          action: '/admin/corporate-references',
+          pageTitle: 'Yeni Kurumsal Referans',
+          submitLabel: 'Kaydet',
+          error: 'Bu kurum adı zaten kullanılıyor.'
+        });
+      }
+      return next(error);
+    }
+  }
+);
+
+router.get('/corporate-references/:id/edit', requireAdmin, async (req, res, next) => {
+  try {
+    const reference = await prisma.corporateReference.findUnique({
+      where: { id: Number(req.params.id) }
+    });
+    if (!reference) return res.status(404).send('Kurumsal referans bulunamadı');
+
+    return renderCorporateReferenceForm(res, {
+      reference,
+      action: `/admin/corporate-references/${reference.id}`,
+      pageTitle: 'Kurumsal Referansı Düzenle',
+      submitLabel: 'Güncelle'
+    });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+router.post(
+  '/corporate-references/:id',
+  requireAdmin,
+  handleCorporateReferenceLogoUpload,
+  requireMultipartCsrf,
+  async (req, res, next) => {
+    let currentReference = null;
+    let savedLogoPath = null;
+
+    try {
+      const referenceId = Number(req.params.id);
+      currentReference = await prisma.corporateReference.findUnique({
+        where: { id: referenceId }
+      });
+      if (!currentReference) return res.status(404).send('Kurumsal referans bulunamadı');
+
+      const formError = req.corporateReferenceUploadError
+        || validateCorporateReferenceForm(req.body, Boolean(req.file || currentReference.logoPath));
+      if (formError) {
+        return renderCorporateReferenceForm(res, {
+          statusCode: 400,
+          reference: {
+            ...currentReference,
+            ...req.body,
+            isActive: Boolean(req.body.isActive)
+          },
+          action: `/admin/corporate-references/${referenceId}`,
+          pageTitle: 'Kurumsal Referansı Düzenle',
+          submitLabel: 'Güncelle',
+          error: formError
+        });
+      }
+
+      savedLogoPath = await saveCorporateReferenceLogo(req.file);
+      await prisma.corporateReference.update({
+        where: { id: referenceId },
+        data: {
+          ...corporateReferenceData(req.body),
+          ...(savedLogoPath ? { logoPath: savedLogoPath } : {})
+        }
+      });
+
+      if (savedLogoPath) await deleteCorporateReferenceLogo(currentReference.logoPath);
+      return res.redirect('/admin/corporate-references');
+    } catch (error) {
+      if (savedLogoPath) await deleteCorporateReferenceLogo(savedLogoPath);
+      if (error.code === 'P2002') {
+        return renderCorporateReferenceForm(res, {
+          statusCode: 400,
+          reference: {
+            ...currentReference,
+            ...req.body,
+            isActive: Boolean(req.body.isActive)
+          },
+          action: `/admin/corporate-references/${req.params.id}`,
+          pageTitle: 'Kurumsal Referansı Düzenle',
+          submitLabel: 'Güncelle',
+          error: 'Bu kurum adı zaten kullanılıyor.'
+        });
+      }
+      return next(error);
+    }
+  }
+);
+
+router.post('/corporate-references/reorder/save', requireAdmin, async (req, res, next) => {
+  try {
+    const orderedIds = normalizeCorporateReferenceOrder(req.body.orderedIds);
+
+    await prisma.$transaction(async (tx) => {
+      const currentReferences = await tx.corporateReference.findMany({
+        select: { id: true },
+        orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }]
+      });
+      const currentIds = currentReferences.map((item) => item.id);
+      const sortedCurrentIds = [...currentIds].sort((a, b) => a - b);
+      const sameIds = orderedIds.length === currentIds.length
+        && [...orderedIds].sort((a, b) => a - b).every((id, index) => (
+          id === sortedCurrentIds[index]
+        ));
+
+      if (!sameIds) {
+        const error = new Error('Sıralama verisi güncel kayıtlarla eşleşmiyor.');
+        error.statusCode = 400;
+        throw error;
+      }
+
+      await Promise.all(orderedIds.map((id, index) => (
+        tx.corporateReference.update({
+          where: { id },
+          data: { sortOrder: index + 1 }
+        })
+      )));
+    });
+
+    return res.redirect('/admin/corporate-references');
+  } catch (error) {
+    if (error.statusCode === 400) return res.status(400).send(error.message);
+    return next(error);
+  }
+});
+
+router.post('/corporate-references/:id/status', requireAdmin, async (req, res, next) => {
+  try {
+    await prisma.corporateReference.update({
+      where: { id: Number(req.params.id) },
+      data: { isActive: req.body.isActive === 'true' }
+    });
+    return res.redirect('/admin/corporate-references');
+  } catch (error) {
+    return next(error);
+  }
+});
+
+router.post('/corporate-references/:id/delete', requireAdmin, async (req, res, next) => {
+  try {
+    const deletedReference = await prisma.corporateReference.delete({
+      where: { id: Number(req.params.id) }
+    });
+    await deleteCorporateReferenceLogo(deletedReference.logoPath);
+    return res.redirect('/admin/corporate-references');
+  } catch (error) {
+    return next(error);
+  }
+});
+
 router.get('/products', requireAdmin, async (req, res, next) => {
   try {
     const q = String(req.query.q || '').trim();
@@ -1939,7 +2260,29 @@ router.get('/products', requireAdmin, async (req, res, next) => {
         { code: { contains: q, mode: 'insensitive' } },
         { slug: { contains: q, mode: 'insensitive' } },
         { summary: { contains: q, mode: 'insensitive' } },
-        { lessonType: { contains: q, mode: 'insensitive' } }
+        { lessonType: { contains: q, mode: 'insensitive' } },
+        {
+          productVariants: {
+            some: {
+              isArchived: false,
+              OR: [
+                { label: { contains: q, mode: 'insensitive' } },
+                {
+                  variantProduct: {
+                    is: {
+                      OR: [
+                        { title: { contains: q, mode: 'insensitive' } },
+                        { code: { contains: q, mode: 'insensitive' } },
+                        { slug: { contains: q, mode: 'insensitive' } },
+                        { duration: { contains: q, mode: 'insensitive' } }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
       ];
     }
 
@@ -1965,16 +2308,41 @@ router.get('/products', requireAdmin, async (req, res, next) => {
     }
 
     if ((priceFrom && Number.isFinite(minPrice)) || (priceTo && Number.isFinite(maxPrice))) {
-      where.price = {};
-      if (priceFrom && Number.isFinite(minPrice)) where.price.gte = minPrice;
-      if (priceTo && Number.isFinite(maxPrice)) where.price.lte = maxPrice;
+      const priceFilter = {};
+      if (priceFrom && Number.isFinite(minPrice)) priceFilter.gte = minPrice;
+      if (priceTo && Number.isFinite(maxPrice)) priceFilter.lte = maxPrice;
+      where.AND = [{
+        OR: [
+          { price: priceFilter },
+          {
+            productVariants: {
+              some: {
+                isArchived: false,
+                variantProduct: { is: { price: priceFilter } }
+              }
+            }
+          }
+        ]
+      }];
     }
+
+    // Duration child Products keep their public URLs and prices, but they are
+    // managed from their parent course instead of appearing as separate admin
+    // courses.
+    where.variantOfProducts = { none: {} };
 
     const totalCount = await prisma.product.count({ where });
     const pagination = createPagination(req, totalCount, paginationRequest(req));
     const products = await prisma.product.findMany({
       where,
-      include: { category: true },
+      include: {
+        category: true,
+        productVariants: {
+          where: { isArchived: false },
+          include: { variantProduct: true },
+          orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }]
+        }
+      },
       orderBy: [{ sortOrder: 'asc' }, { id: 'desc' }],
       skip: pagination.skip,
       take: pagination.take
@@ -2013,7 +2381,7 @@ router.get('/products', requireAdmin, async (req, res, next) => {
 
 router.get('/products/new', requireAdmin, async (req, res, next) => {
   try {
-    await renderProductForm(res, {
+    await renderProductForm(req, res, {
       product: null,
       action: '/admin/products',
       pageTitle: 'Yeni Kurs',
@@ -2036,11 +2404,11 @@ router.get('/products/variant-candidates', requireAdmin, async (req, res, next) 
 router.post('/products', requireAdmin, handleProductImageUpload, requireMultipartCsrf, async (req, res, next) => {
   try {
     const formError = req.productUploadError || validateProductForm(req.body);
-    const data = buildProductData(req.body);
-    const productVariants = normalizeProductVariantRows(req.body.variants, req.body.defaultVariantIndex);
+    const productVariants = productVariantFormRows(req.body);
+    const data = buildProductData(req.body, productVariants);
 
     if (formError) {
-      return renderProductForm(res, {
+      return renderProductForm(req, res, {
         statusCode: 400,
         product: req.body,
         productVariants,
@@ -2057,14 +2425,23 @@ router.post('/products', requireAdmin, handleProductImageUpload, requireMultipar
     await prisma.$transaction(async (tx) => {
       const product = await tx.product.create({ data });
       await replaceProductContentStructure(tx, product.id, req.body.tabs, req.body.learningOutcomes);
-      await replaceProductVariants(tx, product.id, productVariants, productVariants.findIndex((variant) => variant.isDefault));
+      const syncResult = await syncManagedProductVariants(
+        tx,
+        product.id,
+        productVariants,
+        productVariants.findIndex((variant) => variant.isDefault)
+      );
+      for (const childProductId of syncResult.createdProductIds) {
+        await replaceProductContentStructure(tx, childProductId, req.body.tabs, req.body.learningOutcomes);
+      }
     });
     res.redirect('/admin/products');
   } catch (error) {
     if (error.code === 'P2002') {
-      return renderProductForm(res, {
+      return renderProductForm(req, res, {
         statusCode: 400,
         product: { ...req.body, image: req.savedProductImagePath || req.body.image },
+        productVariants: productVariantFormRows(req.body),
         action: '/admin/products',
         pageTitle: 'Yeni Kurs',
         submitLabel: 'Kaydet',
@@ -2073,7 +2450,7 @@ router.post('/products', requireAdmin, handleProductImageUpload, requireMultipar
     }
 
     if (error instanceof ProductVariantValidationError) {
-      return renderProductForm(res, {
+      return renderProductForm(req, res, {
         statusCode: 400,
         product: req.body,
         productVariants: productVariantFormRows(req.body),
@@ -2090,12 +2467,22 @@ router.post('/products', requireAdmin, handleProductImageUpload, requireMultipar
 
 router.get('/products/:id/edit', requireAdmin, async (req, res, next) => {
   try {
+    const requestedProductId = Number(req.params.id);
+    const parentLink = await prisma.productVariant.findUnique({
+      where: { variantProductId: requestedProductId },
+      select: { parentProductId: true }
+    });
+    if (parentLink) {
+      return res.redirect(302, `/admin/products/${parentLink.parentProductId}/edit`);
+    }
+
     const product = await prisma.product.findUnique({
-      where: { id: Number(req.params.id) },
+      where: { id: requestedProductId },
       include: {
         tabs: { orderBy: { sortOrder: 'asc' } },
         learningOutcomes: { orderBy: { sortOrder: 'asc' } },
         productVariants: {
+          where: { isArchived: false },
           include: { variantProduct: true },
           orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }]
         }
@@ -2106,7 +2493,7 @@ router.get('/products/:id/edit', requireAdmin, async (req, res, next) => {
       return res.status(404).send('Kurs bulunamadı');
     }
 
-    return renderProductForm(res, {
+    return renderProductForm(req, res, {
       product,
       action: `/admin/products/${product.id}`,
       pageTitle: 'Kursu Düzenle',
@@ -2122,6 +2509,14 @@ router.post('/products/:id', requireAdmin, handleProductImageUpload, requireMult
 
   try {
     const productId = Number(req.params.id);
+    const parentLink = await prisma.productVariant.findUnique({
+      where: { variantProductId: productId },
+      select: { parentProductId: true }
+    });
+    if (parentLink) {
+      return res.redirect(303, `/admin/products/${parentLink.parentProductId}/edit`);
+    }
+
     currentProduct = await prisma.product.findUnique({ where: { id: productId } });
 
     if (!currentProduct) {
@@ -2129,11 +2524,11 @@ router.post('/products/:id', requireAdmin, handleProductImageUpload, requireMult
     }
 
     const formError = req.productUploadError || validateProductForm(req.body);
-    const data = buildProductData(req.body);
-    const productVariants = normalizeProductVariantRows(req.body.variants, req.body.defaultVariantIndex);
+    const productVariants = productVariantFormRows(req.body);
+    const data = buildProductData(req.body, productVariants);
 
     if (formError) {
-      return renderProductForm(res, {
+      return renderProductForm(req, res, {
         statusCode: 400,
         product: { ...req.body, id: productId, image: currentProduct.image },
         productVariants,
@@ -2153,15 +2548,27 @@ router.post('/products/:id', requireAdmin, handleProductImageUpload, requireMult
         data
       });
       await replaceProductContentStructure(tx, productId, req.body.tabs, req.body.learningOutcomes);
-      await replaceProductVariants(tx, productId, productVariants, productVariants.findIndex((variant) => variant.isDefault));
+      const syncResult = await syncManagedProductVariants(
+        tx,
+        productId,
+        productVariants,
+        productVariants.findIndex((variant) => variant.isDefault)
+      );
+      for (const childProductId of syncResult.createdProductIds) {
+        await replaceProductContentStructure(tx, childProductId, req.body.tabs, req.body.learningOutcomes);
+      }
+      await setParentProductStatus(tx, productId, data.status, {
+        cascadeDraft: currentProduct.status === 'PUBLISHED' && data.status === 'DRAFT'
+      });
     });
 
     res.redirect('/admin/products');
   } catch (error) {
     if (error.code === 'P2002') {
-      return renderProductForm(res, {
+      return renderProductForm(req, res, {
         statusCode: 400,
         product: { ...req.body, id: Number(req.params.id), image: req.savedProductImagePath || currentProduct?.image || req.body.image },
+        productVariants: productVariantFormRows(req.body),
         action: `/admin/products/${req.params.id}`,
         pageTitle: 'Kursu Düzenle',
         submitLabel: 'Güncelle',
@@ -2170,7 +2577,7 @@ router.post('/products/:id', requireAdmin, handleProductImageUpload, requireMult
     }
 
     if (error instanceof ProductVariantValidationError) {
-      return renderProductForm(res, {
+      return renderProductForm(req, res, {
         statusCode: 400,
         product: {
           ...req.body,
@@ -2192,9 +2599,11 @@ router.post('/products/:id', requireAdmin, handleProductImageUpload, requireMult
 router.post('/products/:id/status', requireAdmin, async (req, res, next) => {
   try {
     const productId = Number(req.params.id);
-    await prisma.product.update({
-      where: { id: productId },
-      data: { status: normalizePublishStatus(req.body.status) }
+    await prisma.$transaction(async (tx) => {
+      const status = normalizePublishStatus(req.body.status);
+      await setParentProductStatus(tx, productId, status, {
+        cascadeDraft: status === 'DRAFT'
+      });
     });
 
     res.redirect('/admin/products');
@@ -2205,7 +2614,21 @@ router.post('/products/:id/status', requireAdmin, async (req, res, next) => {
 
 router.post('/products/:id/delete', requireAdmin, async (req, res, next) => {
   try {
-    await prisma.product.delete({ where: { id: Number(req.params.id) } });
+    const productId = Number(req.params.id);
+    const deleted = await prisma.$transaction(async (tx) => {
+      const variantLink = await productVariantParticipation(tx, productId);
+      if (variantLink) return false;
+
+      await tx.product.delete({ where: { id: productId } });
+      return true;
+    });
+
+    if (!deleted) {
+      return res.status(409).send(
+        'Bu kurs bir eğitim süresi grubuna bağlı olduğu için silinemez. '
+        + 'Süreyi ana kursun düzenleme ekranından kaldırın veya taslak yapın.'
+      );
+    }
     res.redirect('/admin/products');
   } catch (error) {
     if (error.code === 'P2003') {
@@ -3381,4 +3804,5 @@ router.use((error,req,res,next) => {
 })
 
 module.exports = router;
+module.exports.buildProductData = buildProductData;
 module.exports.findProductVariantCandidates = findProductVariantCandidates;

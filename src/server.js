@@ -35,6 +35,9 @@ const {
 const {
   createLegacyProductVisibility
 } = require('./middleware/legacy-product-visibility');
+const {
+  createLegacyCorporateReferences
+} = require('./middleware/legacy-corporate-references');
 const createLegacyRedirectsMiddleware = require('./middleware/legacy-redirects');
 const { redirectLegacyBlogImage } = require('./services/blog-images');
 
@@ -184,6 +187,7 @@ app.use('/api', apiRoutes);
 if (legacyFrontendMode) {
   app.use(createLegacyRedirectsMiddleware());
   app.use(createLegacyProductVisibility(prisma));
+  app.use(createLegacyCorporateReferences(prisma));
   app.use(injectLegacyWhatsappIntoHtmlResponses);
   app.use((req, res, next) => {
     const match = String(req.path || '').match(/^\/urun\/([^/]+)\/?$/);

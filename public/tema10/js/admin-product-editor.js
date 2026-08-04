@@ -3,7 +3,16 @@
 
   function normalizeInitialContent(value) {
     var content = String(value || '').trim();
-    if (!content || /<\/?[a-z][\s\S]*>/i.test(content)) return content;
+    if (!content) return content;
+
+    content = content.replace(/(<img\b[^>]*\bsrc\s*=\s*)(["'])([^"']*)\2/gi, function (_, prefix, quote, source) {
+      var normalizedSource = source
+        .replace(/\\/g, '/')
+        .replace(/^(?:(?:\.\.?\/)+|\/)?(?=uploads\/)/i, '/');
+      return prefix + quote + normalizedSource + quote;
+    });
+
+    if (/<\/?[a-z][\s\S]*>/i.test(content)) return content;
 
     return content
       .split(/\n{2,}/)
@@ -20,7 +29,7 @@
     input.value = normalizeInitialContent(input.value);
     input.dataset.editorReady = 'true';
 
-    window.Jodit.make(input, {
+    input.uvProductEditor = window.Jodit.make(input, {
       language: 'tr',
       height: 420,
       minHeight: 320,
@@ -80,26 +89,46 @@
         .setAttribute('name', 'learningOutcomes[' + index + '][text]');
     });
 
-    var variantRows = Array.prototype.slice.call(form.querySelectorAll('[data-variant-row]'));
-    variantRows.forEach(function (row, index) {
-      row.querySelector('[data-field="variantProductId"]')
-        .setAttribute('name', 'variants[' + index + '][variantProductId]');
-      row.querySelector('[data-field="label"]')
-        .setAttribute('name', 'variants[' + index + '][label]');
-      row.querySelector('[data-field="sortOrder"]')
-        .setAttribute('name', 'variants[' + index + '][sortOrder]');
-      row.querySelector('[data-field="isActivePresent"]')
-        .setAttribute('name', 'variants[' + index + '][isActivePresent]');
-      row.querySelector('[data-field="isActive"]')
-        .setAttribute('name', 'variants[' + index + '][isActive]');
+    var durationRows = Array.prototype.slice.call(form.querySelectorAll('[data-duration-row]'));
+    var parentStatus = form.querySelector('[data-parent-product-status]');
+    var hasManagedVariantGroup = form.dataset.managedVariantGroup === 'true'
+      || durationRows.length > 1;
+
+    if (!hasManagedVariantGroup && durationRows.length === 1 && parentStatus) {
+      durationRows[0].querySelector('[data-field="status"]').value = parentStatus.value;
+      durationRows[0].querySelector('[data-field="isActive"]').value =
+        parentStatus.value === 'PUBLISHED' ? '1' : '0';
+    }
+    durationRows.forEach(function (row, index) {
+      ['id', 'variantProductId', 'label', 'price', 'status', 'sortOrder', 'isActivePresent', 'isActive']
+        .forEach(function (fieldName) {
+          row.querySelector('[data-field="' + fieldName + '"]')
+            .setAttribute('name', 'variants[' + index + '][' + fieldName + ']');
+        });
       row.querySelector('[data-field="isDefault"]').value = String(index);
+      row.querySelector('[data-field="isDefault"]').disabled =
+        row.querySelector('[data-field="status"]').value !== 'PUBLISHED';
+      row.setAttribute('aria-label', 'Eğitim süresi ' + (index + 1));
     });
 
-    if (variantRows.length && !variantRows.some(function (row) {
+    var checkedDefaultRow = durationRows.find(function (row) {
       return row.querySelector('[data-field="isDefault"]').checked;
-    })) {
-      variantRows[0].querySelector('[data-field="isDefault"]').checked = true;
+    });
+    if (checkedDefaultRow
+      && checkedDefaultRow.querySelector('[data-field="status"]').value !== 'PUBLISHED') {
+      checkedDefaultRow.querySelector('[data-field="isDefault"]').checked = false;
+      checkedDefaultRow = null;
     }
+    if (durationRows.length && !checkedDefaultRow) {
+      var firstPublishedRow = durationRows.find(function (row) {
+        return row.querySelector('[data-field="status"]').value === 'PUBLISHED';
+      });
+      if (firstPublishedRow) firstPublishedRow.querySelector('[data-field="isDefault"]').checked = true;
+    }
+
+    durationRows.forEach(function (row) {
+      row.querySelector('[data-remove-duration]').hidden = durationRows.length <= 1;
+    });
   }
 
   function moveCustomTab(form, tab, direction) {
@@ -122,15 +151,23 @@
   function initForm(form) {
     var tabList = form.querySelector('[data-tab-list]');
     var outcomeList = form.querySelector('[data-outcome-list]');
-    var variantList = form.querySelector('[data-variant-list]');
-    var variantSection = form.querySelector('[data-product-variants]');
+    var durationList = form.querySelector('[data-duration-list]');
+    var durationStatusMessage = form.querySelector('[data-duration-status-message]');
     var tabTemplate = document.getElementById('product-tab-template');
     var outcomeTemplate = document.getElementById('product-outcome-template');
-    var variantTemplate = document.getElementById('product-variant-template');
-    var variantCandidates = [];
+    var durationTemplate = document.getElementById('product-duration-template');
 
     form.querySelectorAll('[data-product-editor]').forEach(initEditor);
     refreshNames(form);
+
+    form.addEventListener('submit', function () {
+      form.querySelectorAll('[data-product-editor]').forEach(function (input) {
+        if (input.uvProductEditor && typeof input.uvProductEditor.synchronizeValues === 'function') {
+          input.uvProductEditor.synchronizeValues();
+        }
+      });
+      refreshNames(form);
+    });
 
     form.querySelector('[data-add-tab]').addEventListener('click', function () {
       var fragment = tabTemplate.content.cloneNode(true);
@@ -147,106 +184,43 @@
       outcomeList.lastElementChild.querySelector('[data-field="text"]').focus();
     });
 
-    function candidateMatchesSearch(candidate, searchTerm) {
-      var normalizedSearch = String(searchTerm || '').trim().toLocaleLowerCase('tr-TR');
-      if (!normalizedSearch) return true;
+    form.querySelector('[data-add-duration]').addEventListener('click', function () {
+      durationList.appendChild(durationTemplate.content.cloneNode(true));
+      var row = durationList.lastElementChild;
+      row.querySelector('[data-field="sortOrder"]').value = String(durationList.children.length - 1);
+      refreshNames(form);
+      durationStatusMessage.textContent = 'Yeni eğitim süresi eklendi.';
+      row.querySelector('[data-field="label"]').focus();
+    });
 
-      return [
-        candidate.id,
-        candidate.title,
-        candidate.duration,
-        candidate.status
-      ].some(function (value) {
-        return String(value || '').toLocaleLowerCase('tr-TR').indexOf(normalizedSearch) >= 0;
-      });
-    }
+    form.addEventListener('change', function (event) {
+      var parentStatus = form.querySelector('[data-parent-product-status]');
+      var durationRows = form.querySelectorAll('[data-duration-row]');
+      var hasManagedVariantGroup = form.dataset.managedVariantGroup === 'true'
+        || durationRows.length > 1;
 
-    function updateVariantSelect(select, searchTerm) {
-      var selectedValue = select.value;
-      while (select.options.length > 1) select.remove(1);
-
-      variantCandidates.forEach(function (candidate) {
-        var isSelected = String(candidate.id) === String(selectedValue);
-        if (!isSelected && !candidateMatchesSearch(candidate, searchTerm)) return;
-
-        var option = document.createElement('option');
-        option.value = String(candidate.id);
-        option.textContent = candidate.title
-          + (candidate.duration ? ' — ' + candidate.duration : '')
-          + ' [' + candidate.status + ']';
-        option.selected = isSelected;
-        select.appendChild(option);
-      });
-    }
-
-    function refreshVariantCandidates() {
-      if (!variantSection || !variantSection.dataset.variantCandidatesUrl) {
-        return Promise.resolve();
-      }
-
-      var query = variantSection.dataset.productId
-        ? '?excludeId=' + encodeURIComponent(variantSection.dataset.productId)
-        : '';
-
-      return fetch(variantSection.dataset.variantCandidatesUrl + query, {
-        credentials: 'same-origin',
-        headers: { 'X-Requested-With': 'XMLHttpRequest' }
-      })
-        .then(function (response) {
-          if (!response.ok) throw new Error('Kurs seçenekleri alınamadı.');
-          return response.json();
-        })
-        .then(function (payload) {
-          if (payload.status !== 'success' || !Array.isArray(payload.products)) {
-            throw new Error('Kurs seçenekleri alınamadı.');
-          }
-
-          variantCandidates = payload.products;
-          form.querySelectorAll('[data-variant-row]').forEach(function (row) {
-            updateVariantSelect(
-              row.querySelector('[data-field="variantProductId"]'),
-              row.querySelector('[data-variant-search]').value
-            );
-          });
-        })
-        .catch(function () {
-          // Server-rendered options remain available if a live refresh fails.
-        });
-    }
-
-    form.querySelector('[data-add-variant]').addEventListener('click', function () {
-      var appendVariant = function () {
-        var fragment = variantTemplate.content.cloneNode(true);
-        variantList.appendChild(fragment);
-        var row = variantList.lastElementChild;
-        var select = row.querySelector('[data-field="variantProductId"]');
-        if (variantCandidates.length) updateVariantSelect(select, '');
+      if (event.target.matches('[data-parent-product-status]')) {
+        if (!hasManagedVariantGroup && durationRows.length === 1) {
+          durationRows[0].querySelector('[data-field="status"]').value = event.target.value;
+          durationRows[0].querySelector('[data-field="isActive"]').value =
+            event.target.value === 'PUBLISHED' ? '1' : '0';
+        }
         refreshNames(form);
-        row.querySelector('[data-variant-search]').focus();
-      };
-
-      if (variantCandidates.length) appendVariant();
-      else refreshVariantCandidates().then(appendVariant);
-    });
-
-    form.addEventListener('focusin', function (event) {
-      if (event.target.matches('[data-field="variantProductId"]')) {
-        refreshVariantCandidates();
+        return;
       }
+
+      if (!event.target.matches('[data-duration-row] [data-field="status"]')) return;
+
+      var row = event.target.closest('[data-duration-row]');
+      var isPublished = event.target.value === 'PUBLISHED';
+      row.querySelector('[data-field="isActive"]').value = isPublished ? '1' : '0';
+      if (!hasManagedVariantGroup && parentStatus) parentStatus.value = event.target.value;
+
+      if (!isPublished && row.querySelector('[data-field="isDefault"]').checked) {
+        row.querySelector('[data-field="isDefault"]').checked = false;
+      }
+      refreshNames(form);
     });
-
-    form.addEventListener('input', function (event) {
-      if (!event.target.matches('[data-variant-search]')) return;
-      if (!variantCandidates.length) return;
-
-      var row = event.target.closest('[data-variant-row]');
-      updateVariantSelect(
-        row.querySelector('[data-field="variantProductId"]'),
-        event.target.value
-      );
-    });
-
-    refreshVariantCandidates();
 
     form.addEventListener('click', function (event) {
       var removeTab = event.target.closest('[data-remove-tab]');
@@ -269,10 +243,11 @@
         return;
       }
 
-      var removeVariant = event.target.closest('[data-remove-variant]');
-      if (removeVariant) {
-        removeVariant.closest('[data-variant-row]').remove();
+      var removeDuration = event.target.closest('[data-remove-duration]');
+      if (removeDuration && form.querySelectorAll('[data-duration-row]').length > 1) {
+        removeDuration.closest('[data-duration-row]').remove();
         refreshNames(form);
+        durationStatusMessage.textContent = 'Eğitim süresi kaldırıldı.';
       }
     });
   }

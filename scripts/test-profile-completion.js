@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 const {
+  LEGACY_BANK_TRANSFER_CSS_VERSION,
   LEGACY_HOME_CSS_VERSION,
   LEGACY_SCRIPTS_VERSION,
   ensureLegacyAssetVersions
@@ -144,9 +145,17 @@ function frontendContractTests() {
 function assetVersionTests() {
   const html = '<link href="../../public/tema10/css/home2.css?v=5.4.96"><script src="../../public/tema10/js/scripts.js?v=5.4.105"></script>';
   const updated = ensureLegacyAssetVersions(html);
+  const productHtml = `<html><head>${html}</head><body><div id="product_details_content"></div></body></html>`;
+  const updatedProductHtml = ensureLegacyAssetVersions(productHtml);
 
   assert.match(updated, new RegExp(`home2\\.css\\?v=${LEGACY_HOME_CSS_VERSION.replace(/\./g, '\\.')}`));
   assert.match(updated, new RegExp(`scripts\\.js\\?v=${LEGACY_SCRIPTS_VERSION.replace(/\./g, '\\.')}`));
+  assert.doesNotMatch(updated, /bank-transfer-discount\.css/);
+  assert.match(
+    updatedProductHtml,
+    new RegExp(`bank-transfer-discount\\.css\\?v=${LEGACY_BANK_TRANSFER_CSS_VERSION}`)
+  );
+  assert.equal(ensureLegacyAssetVersions(updatedProductHtml), updatedProductHtml);
   assert.equal(ensureLegacyAssetVersions(updated), updated);
   assert.equal(ensureLegacyAssetVersions(null), null);
 }

@@ -10,8 +10,18 @@
     <p class="alert" role="alert"><%= error %></p>
   <% } %>
 
-  <form method="post" action="<%= action %>" class="form grid-form" enctype="multipart/form-data" data-product-form>
+  <%
+    const courseStatus = product && product.status === 'PUBLISHED' ? 'PUBLISHED' : 'DRAFT';
+    const hasPublishedDuration = Array.isArray(productVariants) && productVariants.some((duration) => (
+      duration.status === 'PUBLISHED'
+      || duration.isActive !== false
+        && duration.variantProduct
+        && duration.variantProduct.status === 'PUBLISHED'
+    ));
+  %>
+  <form method="post" action="<%= action %>" class="form grid-form" enctype="multipart/form-data" data-product-form data-managed-variant-group="<%= hasManagedVariantGroup ? 'true' : 'false' %>">
     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <input type="hidden" name="managedVariantGroup" value="<%= hasManagedVariantGroup ? '1' : '0' %>">
     <label class="wide">
       Başlık
       <input name="title" value="<%= product ? product.title || '' : '' %>" required>
@@ -34,16 +44,16 @@
       </select>
     </label>
     <label>
-      Status
-      <select name="status">
-        <option value="DRAFT" <%= !product || product.status === 'DRAFT' ? 'selected' : '' %>>Draft</option>
-        <option value="PUBLISHED" <%= product && product.status === 'PUBLISHED' ? 'selected' : '' %>>Published</option>
+      Kurs Durumu
+      <select name="status" data-parent-product-status required>
+        <option value="PUBLISHED" <%= courseStatus === 'PUBLISHED' ? 'selected' : '' %>>Yayında</option>
+        <option value="DRAFT" <%= courseStatus === 'DRAFT' ? 'selected' : '' %>>Taslak</option>
       </select>
     </label>
-    <label>
-      Fiyat
-      <input name="price" type="number" step="0.01" value="<%= product && product.price != null ? product.price : '' %>">
-    </label>
+    <p class="field-help wide">Ana kurs taslaksa hiçbir eğitim süresi katalogda görünmez. Ana kursu taslağa aldığınızda mevcut sürelerin tamamı da taslağa alınır; ana kursu yayınlamak sürelerin durumunu değiştirmez.</p>
+    <% if (hasManagedVariantGroup && courseStatus === 'PUBLISHED' && !hasPublishedDuration) { %>
+      <p class="alert wide" role="status">Kurs yayında, fakat yayında eğitim süresi olmadığı için katalogda görünmüyor.</p>
+    <% } %>
     <label>
       İndirim Tipi
       <select name="discountType">
@@ -64,54 +74,77 @@
       Havale İndirimi (%)
       <input name="bankTransferDiscountRate" type="number" step="0.01" min="0" max="99.99" value="<%= product && product.bankTransferDiscountRate != null ? product.bankTransferDiscountRate : '10' %>" required>
     </label>
-    <label>
-      Süre
-      <input name="duration" value="<%= product ? product.duration || '' : '' %>" placeholder="3 ay, 120 saat vb.">
-    </label>
-    <section class="wide product-variants" data-product-variants data-variant-candidates-url="/admin/products/variant-candidates" data-product-id="<%= product && product.id ? product.id : '' %>">
+    <%
+      const durationRows = Array.isArray(productVariants) && productVariants.length
+        ? productVariants
+        : [{
+          id: '',
+          label: product ? product.duration || '' : '',
+          price: product && product.price != null ? product.price : '',
+          status: courseStatus,
+          sortOrder: 0,
+          isDefault: true
+        }];
+      const selectedDefaultDurationIndex = Math.max(
+        0,
+        durationRows.findIndex((duration) => duration.isDefault)
+      );
+    %>
+    <section class="wide product-durations" data-product-durations>
       <div class="product-content-builder__head">
         <div>
-          <h2>Eğitim Seçenekleri</h2>
-          <p>Birden fazla süre varsa önce her süreyi ayrı kurs olarak oluşturun, sonra bu ana kursa bağlayın. Seçenek eklenmezse yukarıdaki tek “Süre” değeri kullanılır.</p>
+          <h2>Eğitim Süreleri</h2>
+          <p id="product-duration-help">Her süre için fiyat ve yayın durumunu belirleyin. Yalnızca yayında olan süreler kurs sayfasında gösterilir.</p>
         </div>
-        <button type="button" class="button button-secondary" data-add-variant>Seçenek Ekle</button>
+        <button type="button" class="button button-secondary" data-add-duration>Süre Ekle</button>
       </div>
-      <div class="product-variant-list" data-variant-list>
-        <% productVariants.forEach((variant, index) => { %>
-          <div class="product-variant-row" data-variant-row>
-            <label class="product-variant-course">
-              Bağlı Kurs
-              <input type="search" data-variant-search placeholder="Kurs adı veya ID ile ara" autocomplete="off">
-              <select name="variants[<%= index %>][variantProductId]" data-field="variantProductId" required>
-                <option value="">Kurs seçin</option>
-                <% variantCandidates.forEach((candidate) => { %>
-                  <option value="<%= candidate.id %>" <%= Number(variant.variantProductId) === Number(candidate.id) ? 'selected' : '' %>>
-                    <%= candidate.title %><%= candidate.duration ? ` — ${candidate.duration}` : '' %> [<%= candidate.status %>]
-                  </option>
-                <% }) %>
+      <div class="product-duration-list" data-duration-list aria-describedby="product-duration-help">
+        <% durationRows.forEach((duration, index) => { %>
+          <div class="product-duration-row" data-duration-row role="group" aria-label="Eğitim süresi <%= index + 1 %>">
+            <%
+              const durationPrice = duration.price != null
+                ? duration.price
+                : duration.variantProduct && duration.variantProduct.price != null
+                  ? duration.variantProduct.price
+                  : '';
+              const durationStatus = duration.status === 'DRAFT'
+                || duration.isActive === false
+                || duration.variantProduct && duration.variantProduct.status === 'DRAFT'
+                ? 'DRAFT'
+                : 'PUBLISHED';
+            %>
+            <input type="hidden" name="variants[<%= index %>][id]" value="<%= duration.id || '' %>" data-field="id">
+            <input type="hidden" name="variants[<%= index %>][variantProductId]" value="<%= duration.variantProductId || '' %>" data-field="variantProductId">
+            <input type="hidden" name="variants[<%= index %>][isActivePresent]" value="1" data-field="isActivePresent">
+            <input type="hidden" name="variants[<%= index %>][isActive]" value="<%= durationStatus === 'PUBLISHED' ? '1' : '0' %>" data-field="isActive">
+            <label>
+              Süre
+              <input name="variants[<%= index %>][label]" data-field="label" value="<%= duration.label || '' %>" placeholder="30 saat, 4 ay vb." maxlength="80" required>
+            </label>
+            <label>
+              Fiyat (TL)
+              <input name="variants[<%= index %>][price]" data-field="price" type="number" inputmode="decimal" min="0.01" step="0.01" value="<%= durationPrice %>" required>
+            </label>
+            <label>
+              Durum
+              <select name="variants[<%= index %>][status]" data-field="status" required>
+                <option value="PUBLISHED" <%= durationStatus === 'PUBLISHED' ? 'selected' : '' %>>Yayında</option>
+                <option value="DRAFT" <%= durationStatus === 'DRAFT' ? 'selected' : '' %>>Taslak</option>
               </select>
             </label>
             <label>
-              Görünen Süre
-              <input name="variants[<%= index %>][label]" data-field="label" value="<%= variant.label || '' %>" placeholder="Boş bırakılırsa bağlı kursun Süre değeri">
-            </label>
-            <label>
               Sıralama
-              <input name="variants[<%= index %>][sortOrder]" data-field="sortOrder" type="number" value="<%= variant.sortOrder || 0 %>">
+              <input name="variants[<%= index %>][sortOrder]" data-field="sortOrder" type="number" min="0" step="1" value="<%= duration.sortOrder || 0 %>">
             </label>
-            <label class="check product-variant-default">
-              <input type="radio" name="defaultVariantIndex" value="<%= index %>" <%= index === defaultVariantIndex ? 'checked' : '' %> data-field="isDefault">
+            <label class="check product-duration-default">
+              <input type="radio" name="defaultVariantIndex" value="<%= index %>" <%= index === selectedDefaultDurationIndex ? 'checked' : '' %> data-field="isDefault">
               Varsayılan
             </label>
-            <label class="check product-variant-active">
-              <input type="hidden" name="variants[<%= index %>][isActivePresent]" value="1" data-field="isActivePresent">
-              <input type="checkbox" name="variants[<%= index %>][isActive]" value="1" <%= variant.isActive !== false ? 'checked' : '' %> data-field="isActive">
-              Aktif
-            </label>
-            <button type="button" class="button button-danger" data-remove-variant>Sil</button>
+            <button type="button" class="button button-danger" data-remove-duration aria-label="Bu eğitim süresini kaldır" <%= durationRows.length <= 1 ? 'hidden' : '' %>>Kaldır</button>
           </div>
         <% }) %>
       </div>
+      <p class="admin-sr-only" role="status" aria-live="polite" data-duration-status-message></p>
     </section>
     <label>
       Eğitim Tipi
@@ -141,11 +174,6 @@
         <small>Yeni dosya seçmezseniz mevcut görsel korunur.</small>
       </div>
     <% } %>
-    <label class="wide">
-      Kısa Metin
-      <textarea name="summary" rows="3"><%= product ? product.summary || '' : '' %></textarea>
-    </label>
-
     <section class="wide product-content-builder" data-product-tabs>
       <div class="product-content-builder__head">
         <div>
@@ -238,39 +266,39 @@
   </div>
 </template>
 
-<template id="product-variant-template">
-  <div class="product-variant-row" data-variant-row>
-    <label class="product-variant-course">
-      Bağlı Kurs
-      <input type="search" data-variant-search placeholder="Kurs adı veya ID ile ara" autocomplete="off">
-      <select data-field="variantProductId" required>
-        <option value="">Kurs seçin</option>
-        <% variantCandidates.forEach((candidate) => { %>
-          <option value="<%= candidate.id %>"><%= candidate.title %><%= candidate.duration ? ` — ${candidate.duration}` : '' %> [<%= candidate.status %>]</option>
-        <% }) %>
+<template id="product-duration-template">
+  <div class="product-duration-row" data-duration-row role="group">
+    <input type="hidden" data-field="id" value="">
+    <input type="hidden" data-field="variantProductId" value="">
+    <input type="hidden" data-field="isActivePresent" value="1">
+    <input type="hidden" data-field="isActive" value="1">
+    <label>
+      Süre
+      <input data-field="label" placeholder="30 saat, 4 ay vb." maxlength="80" required>
+    </label>
+    <label>
+      Fiyat (TL)
+      <input data-field="price" type="number" inputmode="decimal" min="0.01" step="0.01" required>
+    </label>
+    <label>
+      Durum
+      <select data-field="status" required>
+        <option value="PUBLISHED">Yayında</option>
+        <option value="DRAFT">Taslak</option>
       </select>
     </label>
     <label>
-              Görünen Süre
-              <input data-field="label" placeholder="Boş bırakılırsa bağlı kursun Süre değeri">
-    </label>
-    <label>
       Sıralama
-      <input data-field="sortOrder" type="number" value="0">
+      <input data-field="sortOrder" type="number" min="0" step="1" value="0">
     </label>
-    <label class="check product-variant-default">
+    <label class="check product-duration-default">
       <input type="radio" name="defaultVariantIndex" data-field="isDefault">
       Varsayılan
     </label>
-    <label class="check product-variant-active">
-      <input type="hidden" value="1" data-field="isActivePresent">
-      <input type="checkbox" value="1" checked data-field="isActive">
-      Aktif
-    </label>
-    <button type="button" class="button button-danger" data-remove-variant>Sil</button>
+    <button type="button" class="button button-danger" data-remove-duration aria-label="Bu eğitim süresini kaldır">Kaldır</button>
   </div>
 </template>
 
 <script src="/vendor/jodit/jodit.min.js"></script>
-<script src="/public/tema10/js/admin-product-editor.js?v=20260720-3"></script>
+<script src="/public/tema10/js/admin-product-editor.js?v=20260804-2"></script>
 <%- include('../partials/footer') %>

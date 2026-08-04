@@ -3,8 +3,13 @@ const path = require('path');
 const express = require('express');
 const prisma = require('../db');
 const { bankTransferQuote } = require('../services/bank-transfer-pricing');
-const { productVariantLabel } = require('../services/product-variants');
+const { resolveLegacyProductTabs } = require('../services/legacy-product-tabs');
+const {
+  productVariantLabel,
+  publicProductVariants
+} = require('../services/product-variants');
 const { prepareLegacyTabContent } = require('../services/youtube-embeds');
+const { LEGACY_BANK_TRANSFER_CSS_VERSION } = require('../services/legacy-assets');
 
 const router = express.Router();
 const rootDir = path.resolve(__dirname, '../..');
@@ -48,12 +53,6 @@ function formatMoney(value) {
   }).format(toNumber(value));
 }
 
-function formatRate(value) {
-  return Number(value).toLocaleString('tr-TR', {
-    maximumFractionDigits: 2
-  });
-}
-
 function normalizeLegacyAssetPath(value) {
   const assetPath = String(value || '').trim();
   if (!assetPath) return '../../uploads/fm/placeholder-social.png';
@@ -76,59 +75,11 @@ function categoryUrl(product) {
   return `../../tum-urunler/?kategori=${encodeURIComponent(product.category.slug)}`;
 }
 
-function findTab(product, systemKey, fallbackIndex) {
-  const tab = product.tabs.find((item) => item.systemKey === systemKey) || product.tabs[fallbackIndex];
-  return tab && String(tab.content || '').trim() ? tab.content : '';
-}
-
-function renderFallbackOverview(product) {
-  const content = product.content || product.summary || `${product.title} eğitimi hakkında detaylı bilgi.`;
-  return `<h2 style="text-align: center;"><span style="font-size: 24px; color: #000080;"><strong>${escapeHtml(product.title)}</strong></span></h2>
-<p><span style="font-size: 16px; color: #333333;">${escapeHtml(content)}</span></p>`;
-}
-
-function renderFallbackCurriculum(product) {
-  if (!product.learningOutcomes.length) {
-    return '<p><span style="font-size: 16px; color: #333333;">Ders içerikleri eğitim danışmanı tarafından kayıt sürecinde paylaşılır.</span></p>';
-  }
-
-  return `<ul>
-${product.learningOutcomes.map((outcome) => `<li><span style="font-size: 16px; color: #333333;">${escapeHtml(outcome.text)}</span></li>`).join('\n')}
-</ul>`;
-}
-
-function renderFallbackWhy(product) {
-  return `<p><span style="font-size: 16px; color: #333333;">${escapeHtml(product.title)} eğitim programı uygulamalı öğrenme, mentorluk ve kariyer odaklı gelişim için hazırlanmıştır.</span></p>
-<ul>
-  <li><span style="font-size: 16px; color: #333333;">Sektör ihtiyaçlarına uygun güncel içerik.</span></li>
-  <li><span style="font-size: 16px; color: #333333;">Unityverse Academy eğitmen kadrosu ile destekli eğitim süreci.</span></li>
-  <li><span style="font-size: 16px; color: #333333;">Eğitim sonunda kariyer hedeflerine uygun proje ve portföy desteği.</span></li>
-</ul>`;
-}
-
-function renderTabContent(product, systemKey, fallbackIndex, fallbackRenderer) {
-  return findTab(product, systemKey, fallbackIndex) || fallbackRenderer(product);
-}
-
 function renderBreadcrumb(product) {
   return `<ul class="breadcrumb">
 			<li><a href="../../"><i class="fa fa-home"></i></a></li>
 			<li><a href="${categoryUrl(product)}">${escapeHtml(categoryName(product))}</a></li>
 		</ul>`;
-}
-
-function publicProductVariants(variants) {
-  return (Array.isArray(variants) ? variants : [])
-    .filter((variant) => (
-      variant
-      && variant.isActive !== false
-      && variant.variantProduct
-      && variant.variantProduct.status === 'PUBLISHED'
-    ))
-    .sort((left, right) => (
-      Number(left.sortOrder || 0) - Number(right.sortOrder || 0)
-      || Number(left.id || 0) - Number(right.id || 0)
-    ));
 }
 
 function renderProductVariantOptions(product, variants) {
@@ -149,9 +100,8 @@ function renderProductVariantOptions(product, variants) {
     const variantProduct = variant.variantProduct;
     const label = escapeHtml(productVariantLabel(variant));
     const optionUrl = escapeHtml(`../../urun/${variantProduct.slug}`);
-    const isActive = Number(variantProduct.id) === Number(product.id);
 
-    return `<li data-product-id="${variantProduct.id}" producturl="${optionUrl}" value="${variantProduct.id}" class="${isActive ? 'active ' : ''}" data-bs-toggle="tooltip" data-bs-title="${label}"><a href="${optionUrl}">${label}</a></li>`;
+    return `<li data-product-id="${variantProduct.id}" producturl="${optionUrl}" value="${variantProduct.id}" class="" data-uv-managed-variant="true" data-bs-toggle="tooltip" data-bs-title="${label}"><a href="${optionUrl}" aria-disabled="true" tabindex="-1">${label}</a></li>`;
   }).join('\n');
 }
 
@@ -163,7 +113,7 @@ function renderEducationOptions(product, variants) {
 				<div class="w-100">
 					<div class="attr-detail attr-size ">
 						<strong class="mr-10">Eğitim Saatleri: </strong>
-						<ul class="list-filter size-filter font-small " name="poptions1_${product.id}" id="poptions1_${product.id}">
+						<ul class="list-filter size-filter font-small " name="poptions1_${product.id}" id="poptions1_${product.id}" data-uv-managed-variants="true">
 							${options}
 						</ul>
 					</div>
@@ -186,7 +136,14 @@ async function loadProductVariantContext(prismaClient, slug) {
       },
       variantOfProducts: {
         where: { isActive: true },
-        select: { parentProductId: true },
+        select: {
+          parentProductId: true,
+          parentProduct: {
+            select: {
+              tabs: { orderBy: { sortOrder: 'asc' } }
+            }
+          }
+        },
         orderBy: { id: 'asc' },
         take: 1
       }
@@ -194,6 +151,10 @@ async function loadProductVariantContext(prismaClient, slug) {
   });
 
   if (!product) return null;
+
+  if (product.variantOfProducts.length) {
+    product.tabs = product.variantOfProducts[0].parentProduct?.tabs || product.tabs;
+  }
 
   let variants = product.productVariants;
   if (!variants.length && product.variantOfProducts.length) {
@@ -212,7 +173,6 @@ async function loadProductVariantContext(prismaClient, slug) {
 
 function renderLegacyProductDetails(product, pageOrigin, variants = []) {
   const title = escapeHtml(product.title);
-  const summary = escapeHtml(product.summary || '');
   const image = normalizeLegacyAssetPath(product.image);
   const safeImage = escapeHtml(image);
   const code = escapeHtml(productCode(product));
@@ -222,24 +182,27 @@ function renderLegacyProductDetails(product, pageOrigin, variants = []) {
   const price = effectivePrice(product);
   const formattedPrice = price > 0 ? `${formatMoney(price)} TL` : 'Fiyatı görmek için giriş yapın';
   const transferQuote = bankTransferQuote(product);
-  const transferDiscount = price > 0 && transferQuote.hasDiscount
-    ? `<small class="uv-bank-transfer-discount">Havale ile %${escapeHtml(formatRate(transferQuote.discountRate))} indirim: <strong>${escapeHtml(formatMoney(transferQuote.amount))} TL</strong></small>`
+  const transferDiscount = price > 0
+    && transferQuote.hasDiscount
+    && toNumber(transferQuote.amount) < price
+    ? `<small class="uv-bank-transfer-discount">Havale İndirimi ile: <strong>${escapeHtml(formatMoney(transferQuote.amount))} TL</strong></small>`
     : '';
   const productHref = `../../urun/${encodeURIComponent(product.slug)}/`;
+  const [overviewTab, curriculumTab, whyTab] = resolveLegacyProductTabs(product.tabs);
   const overview = prepareLegacyTabContent(
-    renderTabContent(product, 'OVERVIEW', 0, renderFallbackOverview),
+    overviewTab.content,
     product.content,
     'tab-info',
     pageOrigin
   );
   const curriculum = prepareLegacyTabContent(
-    renderTabContent(product, 'CURRICULUM', 1, renderFallbackCurriculum),
+    curriculumTab.content,
     product.content,
     'tab-additional-content2',
     pageOrigin
   );
   const why = prepareLegacyTabContent(
-    renderTabContent(product, 'WHY', 2, renderFallbackWhy),
+    whyTab.content,
     product.content,
     'tab-additional-content3',
     pageOrigin
@@ -268,8 +231,8 @@ function renderLegacyProductDetails(product, pageOrigin, variants = []) {
 		</div>
 		<div class="content-product-right col-sm-7 col-xs-12">
 			<div class="title-product"><h1>${title}</h1></div>
-			<div class="pbl-stock-code"><span>Eğitim Kodu :</span><a href="javascript:void(0)" onclick="return copyToClipboard('${code}')"> ${code}</a></div>
 			<div class="product-label form-group"><div class="uv-product-price-row"><div class="product_page_price price"><span class="price-new">${formattedPrice}</span></div>${transferDiscount}</div></div>
+			<div class="pbl-stock-code"><span>Eğitim Kodu :</span><a href="javascript:void(0)" onclick="return copyToClipboard('${code}')"> ${code}</a></div>
 			<div class="d-flex flex-row" style="gap:10px">
 				<button onclick="return alarmWhenPriceDrop(${product.id})" class="pbl-notifyme-price-drops"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 15 15"><path fill="currentColor" fill-rule="evenodd" d="m6.448.436l-1.13 1.129a.5.5 0 0 1-.344.143H3.196c-.822 0-1.488.666-1.488 1.488v1.778a.5.5 0 0 1-.143.345L.435 6.448a1.49 1.49 0 0 0 0 2.104l1.13 1.13a.5.5 0 0 1 .143.344v1.778c0 .822.666 1.488 1.488 1.488h1.778a.5.5 0 0 1 .345.143l1.129 1.13a1.49 1.49 0 0 0 2.104 0l1.13-1.13a.5.5 0 0 1 .344-.143h1.778c.822 0 1.488-.666 1.488-1.488v-1.778a.5.5 0 0 1 .143-.345l1.13-1.129a1.49 1.49 0 0 0 0-2.104l-1.13-1.13a.5.5 0 0 1-.143-.344V3.196c0-.822-.666-1.488-1.488-1.488h-1.778a.5.5 0 0 1-.345-.143L8.552.435a1.49 1.49 0 0 0-2.104 0m-1.802 9.21l5-5l.708.708l-5 5zM5 5v1h1V5zm4 5h1V9H9z" clip-rule="evenodd" /></svg> Fiyatı Düşünce Haber Ver</button>
 				<button onclick="return openRecommendProduct(${product.id})" class="pbl-notifyme-price-drops"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="currentColor"><path d="M22 7.535V17a3 3 0 0 1-2.824 2.995L19 20H5a3 3 0 0 1-2.995-2.824L2 17V7.535l9.445 6.297l.116.066a1 1 0 0 0 .878 0l.116-.066z"/><path d="M19 4c1.08 0 2.027.57 2.555 1.427L12 11.797l-9.555-6.37a3 3 0 0 1 2.354-1.42L5 4z"/></g></svg> Ürünü Tavsiye Et</button>
@@ -311,21 +274,15 @@ function renderLegacyProductDetails(product, pageOrigin, variants = []) {
 	<div class="tabsslider col-xs-12" style="display: block;">
 		<div class="pbl-all-features-tab-close-button"></div>
 		<ul class="nav nav-tabs">
-			<li class="active in" data-tab="tab-info"><a data-toggle="tab" href="#tab-info">Eğitime İlk Bakış</a></li>
-			<li data-tab="tab-additional-content2"><a data-toggle="tab" href="#tab-additional-content2">Ders İçerikleri</a></li>
-			<li data-tab="tab-additional-content3"><a data-toggle="tab" href="#tab-additional-content3">Neden Bu Eğitimi Almalısınız?</a></li>
+				<li class="active in" data-tab="tab-info"><a data-toggle="tab" href="#tab-info">${escapeHtml(overviewTab.title)}</a></li>
+				<li data-tab="tab-additional-content2"><a data-toggle="tab" href="#tab-additional-content2">${escapeHtml(curriculumTab.title)}</a></li>
+				<li data-tab="tab-additional-content3"><a data-toggle="tab" href="#tab-additional-content3">${escapeHtml(whyTab.title)}</a></li>
 		</ul>
 		<div class="tab-content col-xs-12">
 			<div id="tab-info" class="tab-pane fade active in" data-course-overview data-course-category="${categorySlug}">${overview}</div>
 			<div id="tab-additional-content2" class="tab-pane fade">${curriculum}</div>
 			<div id="tab-additional-content3" class="tab-pane fade">${why}</div>
 		</div>
-	</div>
-</div>
-<div class="related titleLine products-list grid module col-md-12">
-	<h3 class="modtitle"><span>Benzer Eğitimler</span></h3>
-	<div class="releate-products">
-		<div class="text-muted">${summary}</div>
 	</div>
 </div>
 <script type="text/javascript">
@@ -398,7 +355,7 @@ function renderPage(template, footer, product, pageOrigin, variants = []) {
     .replace(/<meta\s+property=["']og:url["']\s+content=["'][^"']*["']\s*\/?>/i, `<meta property="og:url" content="${canonicalUrl}" />`)
     .replace(/<meta\s+property=["']og:title["']\s+content=["'][^"']*["']\s*\/?>/i, `<meta property="og:title" content="${title}" />`)
     .replace(/<meta\s+name=["']description["']\s+content=["'][^"']*["']\s*\/?>/i, `<meta name="description" content="${description}" />`)
-    .replace('</head>', '<link rel="stylesheet" href="../../public/tema10/css/bank-transfer-discount.css?v=20260725-1"></head>')
+    .replace('</head>', `<link rel="stylesheet" href="../../public/tema10/css/bank-transfer-discount.css?v=${LEGACY_BANK_TRANSFER_CSS_VERSION}"></head>`)
     .replace(breadcrumbPattern, renderBreadcrumb(product))
     .replace(productDetailsPattern, renderLegacyProductDetails(product, pageOrigin, variants));
 

@@ -157,12 +157,14 @@ model ProductVariant {
   sortOrder        Int      @default(0)
   isDefault        Boolean  @default(false)
   isActive         Boolean  @default(true)
+  isArchived       Boolean  @default(false)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
   @@unique([parentProductId, variantProductId])
   @@unique([variantProductId])
   @@index([parentProductId, sortOrder])
+  @@index([parentProductId, isArchived, sortOrder])
 }
 
 model ProductTab {
@@ -429,6 +431,7 @@ model EducationRegistration {
   @@index([startsAt])
   @@index([memberId])
   @@index([productId])
+  @@index([couponId])
   @@index([createdAt])
 }
 
@@ -491,4 +494,16 @@ model EducationRegistrationNote {
 
   @@index([registrationId])
   @@index([createdAt])
+}
+
+model CorporateReference {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  logoPath  String
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
 }

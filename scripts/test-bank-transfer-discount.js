@@ -14,6 +14,11 @@ const { processPaytrCallback } = require('../src/services/paytr-callback');
 const { syncPendingRegistrationAmount } = require('../src/services/registration-pricing');
 const { renderLegacyProductDetails } = require('../src/routes/legacy-product-detail');
 const { lockBankTransferRegistration } = require('../src/routes/payments');
+const {
+  LEGACY_BANK_TRANSFER_CSS_VERSION,
+  LEGACY_SCRIPTS_VERSION,
+  ensureLegacyAssetVersions
+} = require('../src/services/legacy-assets');
 
 const root = path.resolve(__dirname, '..');
 
@@ -234,8 +239,19 @@ async function bankTransferLockTests() {
 
 function viewIntegrationTests() {
   const legacyHtml = renderLegacyProductDetails(product(), 'http://localhost:8000');
-  assert.match(legacyHtml, /Havale ile %10 indirim: <strong>44\.100,00 TL<\/strong>/);
+  const priceRowPosition = legacyHtml.indexOf('uv-product-price-row');
+  const stockCodePosition = legacyHtml.indexOf('pbl-stock-code');
+
+  assert.match(legacyHtml, /Havale İndirimi ile: <strong>44\.100,00 TL<\/strong>/);
+  assert.doesNotMatch(legacyHtml, /Havale ile %10 indirim/);
   assert.match(legacyHtml, /uv-product-price-row/);
+  assert(priceRowPosition >= 0 && priceRowPosition < stockCodePosition);
+
+  const zeroDiscountHtml = renderLegacyProductDetails(
+    product({ bankTransferDiscountRate: '0.00' }),
+    'http://localhost:8000'
+  );
+  assert.doesNotMatch(zeroDiscountHtml, /uv-bank-transfer-discount/);
 
   const adminForm = fs.readFileSync(
     path.join(root, 'src/views/admin/products/form.ejs'),
@@ -253,6 +269,19 @@ function viewIntegrationTests() {
     path.join(root, 'prisma/migrations/20260725100000_add_bank_transfer_discount/migration.sql'),
     'utf8'
   );
+  const legacyScripts = fs.readFileSync(
+    path.join(root, 'public/tema10/js/scripts.js'),
+    'utf8'
+  );
+  const bankTransferCss = fs.readFileSync(
+    path.join(root, 'public/tema10/css/bank-transfer-discount.css'),
+    'utf8'
+  );
+  const staticProductSource = fs.readFileSync(
+    path.join(root, 'urun/python-yuz-yuze-ozel-ders-1107/index.html'),
+    'utf8'
+  );
+  const enhancedStaticProduct = ensureLegacyAssetVersions(staticProductSource);
 
   assert.match(adminForm, /name="bankTransferDiscountRate"/);
   assert.match(adminForm, /Havale İndirimi \(%\)/);
@@ -262,6 +291,28 @@ function viewIntegrationTests() {
   assert.match(productView, /product\.displayPrice\.bankTransfer\.amount/);
   assert.match(migration, /DEFAULT 10\.00/);
   assert.match(migration, /"bankTransferAmount" DECIMAL\(10,2\)/);
+
+  assert.match(legacyScripts, /function productBankTransferHtml\(product\)/);
+  assert.match(legacyScripts, /product\.bankTransferAmount/);
+  assert.match(legacyScripts, /product\.bankTransferDiscountRate/);
+  assert.match(legacyScripts, /bankTransferAmount >= effective/);
+  assert.match(legacyScripts, /Havale İndirimi ile: <strong>/);
+  assert.match(legacyScripts, /\$target\.before\(detailPriceHtml\)/);
+  assert.doesNotMatch(legacyScripts, /calculateBankTransferAmount/);
+
+  assert.match(bankTransferCss, /flex-direction: column/);
+  assert.match(bankTransferCss, /body:not\(\.member-logged-in\)[\s\S]*\.uv-bank-transfer-discount/);
+  assert.match(bankTransferCss, /color: var\(--renk1, #13005a\)/);
+
+  assert.match(
+    enhancedStaticProduct,
+    new RegExp(`bank-transfer-discount\\.css\\?v=${LEGACY_BANK_TRANSFER_CSS_VERSION}`)
+  );
+  assert.match(
+    enhancedStaticProduct,
+    new RegExp(`scripts\\.js\\?v=${LEGACY_SCRIPTS_VERSION.replace(/\./g, '\\.')}`)
+  );
+  assert.equal(ensureLegacyAssetVersions(enhancedStaticProduct), enhancedStaticProduct);
 }
 
 async function main() {

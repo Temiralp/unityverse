@@ -131,19 +131,23 @@ function publicRenderingTests() {
   const eightMonth = product(2, { duration: '8 ay' });
   const draft = product(3, { status: 'DRAFT' });
   const disabled = product(4);
+  const archived = product(7);
   const rows = [
     variant(20, eightMonth, { isDefault: true }),
     variant(30, draft),
-    variant(40, disabled, { isActive: false })
+    variant(40, disabled, { isActive: false }),
+    variant(50, archived, { isArchived: true })
   ];
 
   assert.deepEqual(publicProductVariants(rows).map((row) => row.variantProductId), [2]);
 
   const html = renderProductVariantOptions(eightMonth, rows);
   assert.match(html, /data-product-id="2"/);
-  assert.match(html, /class="active "/);
+  assert.doesNotMatch(html, /class="active/);
+  assert.match(html, /data-uv-managed-variant="true"/);
   assert.match(html, /href="\.\.\/\.\.\/urun\/course-2"/);
-  assert.doesNotMatch(html, /course-3|course-4/);
+  assert.match(html, /aria-disabled="true" tabindex="-1"/);
+  assert.doesNotMatch(html, /course-3|course-4|course-7/);
 
   const noDuration = product(5, { duration: null });
   assert.equal(productVariantLabel({ label: null, variantProduct: noDuration }), '');
@@ -153,6 +157,7 @@ function publicRenderingTests() {
 
   const ownDurationHtml = renderEducationOptions(product(6, { duration: '4 ay' }), []);
   assert.match(ownDurationHtml, /Eğitim Saatleri/);
+  assert.match(ownDurationHtml, /data-uv-managed-variants="true"/);
   assert.match(ownDurationHtml, />4 ay</);
 }
 

@@ -1,0 +1,99 @@
+<%- include('../partials/header') %>
+
+<div class="page-head">
+  <div>
+    <h1>Kurumsal Referanslar</h1>
+    <p class="page-subtitle">Ana sayfadaki logo sliderını yönetin.</p>
+  </div>
+  <a class="button" href="/admin/corporate-references/new">Yeni Referans</a>
+</div>
+
+<section class="panel list-panel corporate-reference-admin" data-corporate-reference-list>
+  <div class="corporate-reference-admin__toolbar">
+    <p>Sıraları sürükleyerek veya Yukarı/Aşağı düğmeleriyle değiştirin.</p>
+    <form method="post" action="/admin/corporate-references/reorder/save" data-corporate-reference-order-form>
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <input type="hidden" name="orderedIds" value="<%= references.map((reference) => reference.id).join(',') %>" data-corporate-reference-order>
+      <button type="submit" <%= references.length < 2 ? 'disabled' : '' %>>Sıralamayı Kaydet</button>
+    </form>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Sıra</th>
+        <th>Logo</th>
+        <th>Kurum</th>
+        <th>Durum</th>
+        <th>İşlem</th>
+      </tr>
+    </thead>
+    <tbody data-corporate-reference-rows>
+      <% references.forEach((reference, index) => { %>
+        <tr draggable="true" data-reference-id="<%= reference.id %>">
+          <td>
+            <div class="corporate-reference-admin__order-controls">
+              <span class="corporate-reference-admin__drag" title="Sürükleyerek sırala" aria-hidden="true">⋮⋮</span>
+              <span data-order-number><%= index + 1 %></span>
+              <button type="button" class="button-secondary" data-move="up" aria-label="<%= reference.name %> referansını yukarı taşı">Yukarı</button>
+              <button type="button" class="button-secondary" data-move="down" aria-label="<%= reference.name %> referansını aşağı taşı">Aşağı</button>
+            </div>
+          </td>
+          <td>
+            <button
+              type="button"
+              class="corporate-reference-admin__preview-button"
+              data-logo-preview
+              data-logo-src="<%= reference.logoPath %>"
+              data-logo-name="<%= reference.name %>"
+              aria-haspopup="dialog"
+              aria-label="<%= reference.name %> logosunu büyük görüntüle"
+            >
+              <span class="corporate-reference-admin__logo">
+                <img src="<%= reference.logoPath %>" alt="" loading="lazy" decoding="async">
+              </span>
+            </button>
+          </td>
+          <td><strong><%= reference.name %></strong></td>
+          <td>
+            <span class="status-pill <%= reference.isActive ? 'is-active' : 'is-passive' %>">
+              <%= reference.isActive ? 'Aktif' : 'Pasif' %>
+            </span>
+          </td>
+          <td>
+            <div class="row-actions">
+              <a class="table-action" href="/admin/corporate-references/<%= reference.id %>/edit">Düzenle</a>
+              <form method="post" action="/admin/corporate-references/<%= reference.id %>/status" class="inline-form">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <input type="hidden" name="isActive" value="<%= reference.isActive ? 'false' : 'true' %>">
+                <button type="submit" class="button-secondary"><%= reference.isActive ? 'Pasife Al' : 'Aktifleştir' %></button>
+              </form>
+              <form method="post" action="/admin/corporate-references/<%= reference.id %>/delete" class="inline-form" data-confirm-delete>
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <button type="submit" class="button-danger">Sil</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+      <% }) %>
+      <% if (!references.length) { %>
+        <tr><td colspan="5">Henüz kurumsal referans yok.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+</section>
+
+<dialog class="corporate-reference-modal" data-logo-preview-dialog role="dialog" aria-modal="true" aria-labelledby="corporate-reference-modal-title">
+  <div class="corporate-reference-modal__content">
+    <div class="corporate-reference-modal__header">
+      <h2 id="corporate-reference-modal-title" data-logo-preview-title>Logo Önizleme</h2>
+      <button type="button" class="corporate-reference-modal__close" data-logo-preview-close aria-label="Önizlemeyi kapat">×</button>
+    </div>
+    <div class="corporate-reference-modal__image-frame">
+      <img data-logo-preview-image alt="">
+    </div>
+  </div>
+</dialog>
+
+<script src="/public/tema10/js/admin-corporate-references.js" defer></script>
+<%- include('../partials/footer') %>

@@ -1,3 +1,9 @@
+const {
+  normalizeCurriculumAccordionContent,
+  sanitizeProductTabContent
+} = require('./product-content');
+const { normalizeYoutubeEmbedsForEditor } = require('./youtube-embeds');
+
 const DEFAULT_PRODUCT_TABS = [
   { systemKey: 'OVERVIEW', title: 'Eğitime İlk Bakış', sortOrder: 10 },
   { systemKey: 'CURRICULUM', title: 'Ders İçerikleri', sortOrder: 20 },
@@ -14,6 +20,12 @@ function array(value) {
   return [];
 }
 
+function sanitizeTabContent(systemKey, content) {
+  return systemKey === 'CURRICULUM'
+    ? normalizeCurriculumAccordionContent(content)
+    : sanitizeProductTabContent(content);
+}
+
 function buildProductFormTabs(tabs) {
   const entries = array(tabs);
   const systemTabs = new Map(entries.filter((tab) => tab && tab.systemKey).map((tab) => [tab.systemKey, tab]));
@@ -22,7 +34,7 @@ function buildProductFormTabs(tabs) {
     .map((tab, index) => ({
       systemKey: null,
       title: text(tab.title),
-      content: String(tab.content || ''),
+      content: sanitizeProductTabContent(tab.content),
       sortOrder: Number(tab.sortOrder) || (40 + index * 10)
     }));
 
@@ -30,7 +42,7 @@ function buildProductFormTabs(tabs) {
     ...DEFAULT_PRODUCT_TABS.map((tab) => ({
       ...tab,
       title: text(systemTabs.get(tab.systemKey)?.title) || tab.title,
-      content: String(systemTabs.get(tab.systemKey)?.content || '')
+      content: sanitizeTabContent(tab.systemKey, systemTabs.get(tab.systemKey)?.content)
     })),
     ...customTabs
   ];
@@ -43,6 +55,13 @@ function buildProductFormOutcomes(outcomes) {
       sortOrder: Number(outcome?.sortOrder) || ((index + 1) * 10)
     }))
     .filter((outcome) => outcome.text);
+}
+
+function buildProductEditorTabs(tabs, origin) {
+  return buildProductFormTabs(tabs).map((tab) => ({
+    ...tab,
+    content: normalizeYoutubeEmbedsForEditor(tab.content, origin)
+  }));
 }
 
 function normalizeProductTabSubmission(tabs) {
@@ -92,6 +111,7 @@ async function replaceProductContentStructure(tx, productId, tabs, outcomes) {
 
 module.exports = {
   DEFAULT_PRODUCT_TABS,
+  buildProductEditorTabs,
   buildProductFormOutcomes,
   buildProductFormTabs,
   normalizeProductTabSubmission,

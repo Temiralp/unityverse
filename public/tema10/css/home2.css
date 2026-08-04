@@ -2394,6 +2394,7 @@ body.overlay:before{background-color:rgb(0 0 0 / 70%);}
 }
 
 .producttab .uv-legacy-youtube-embed {
+  display: block;
   position: relative;
   width: 100%;
   max-width: 900px;
@@ -2949,4 +2950,49 @@ body.uv-legacy-profile-completion-open {
     .uv-legacy-profile-completion__submit {
         grid-column: auto;
     }
+}
+
+/* Admin-managed course durations are display-only. Existing href values stay in
+   the markup for URL continuity, while every user interaction remains inert. */
+.size-filter.list-filter[data-uv-managed-variants="true"],
+.size-filter.list-filter li[data-uv-managed-variant="true"],
+.size-filter.list-filter li[data-uv-managed-variant="true"] a,
+.size-filter.list-filter[id^="poptions1_"],
+.size-filter.list-filter[id^="poptions1_"] li,
+.size-filter.list-filter[id^="poptions1_"] li a {
+    cursor: default;
+}
+
+.size-filter.list-filter li[data-uv-managed-variant="true"],
+.size-filter.list-filter[id^="poptions1_"] li {
+    pointer-events: none;
+    touch-action: none;
+    user-select: none;
+}
+
+.size-filter.list-filter li[data-uv-managed-variant="true"] a,
+.size-filter.list-filter li[data-uv-managed-variant="true"].deactive a,
+.size-filter.list-filter li[data-uv-managed-variant="true"] a:hover,
+.size-filter.list-filter li[data-uv-managed-variant="true"] a:focus,
+.size-filter.list-filter[id^="poptions1_"] li a,
+.size-filter.list-filter[id^="poptions1_"] li.deactive a,
+.size-filter.list-filter[id^="poptions1_"] li a:hover,
+.size-filter.list-filter[id^="poptions1_"] li a:focus {
+    color: #fff;
+    opacity: 1;
+    pointer-events: none;
+}
+
+.size-filter.list-filter li[data-uv-managed-variant="true"] a::before,
+.size-filter.list-filter[id^="poptions1_"] li a::before {
+    background-color: var(--renk1);
+    border-color: var(--renk1);
+    z-index: -1;
+}
+
+.size-filter.list-filter li[data-uv-managed-variant="true"] a::after,
+.size-filter.list-filter li[data-uv-managed-variant="true"].deactive a::after,
+.size-filter.list-filter[id^="poptions1_"] li a::after,
+.size-filter.list-filter[id^="poptions1_"] li.deactive a::after {
+    display: none;
 }

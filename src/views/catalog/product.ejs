@@ -52,7 +52,7 @@
             </div>
             <div id="panel-curriculum" class="uv-tabs__panel" role="tabpanel" aria-labelledby="tab-curriculum" hidden>
               <h2>Ders İçerikleri</h2>
-              <p>Modüller uygulamalı ilerler; her bölümde kısa konu listesi ve proje çıktısı bulunur.</p>
+              <div class="uv-admin-curriculum"><%- productTabs.find((tab) => tab.systemKey === 'CURRICULUM').content %></div>
             </div>
             <div id="panel-why" class="uv-tabs__panel" role="tabpanel" aria-labelledby="tab-why" hidden>
               <h2>Neden Bu Eğitim</h2>
@@ -75,34 +75,6 @@
               <li><span aria-hidden="true">✓</span><%= item %></li>
             <% }) %>
           </ul>
-        </section>
-
-        <section class="uv-product-section" aria-labelledby="curriculum-title">
-          <div class="section-title">
-            <p class="section-title__eyebrow">Program Akışı</p>
-            <h2 id="curriculum-title" class="section-title__heading">Müfredat</h2>
-          </div>
-          <div class="uv-accordion" data-accordion>
-            <% detail.curriculum.forEach((module, index) => { %>
-              <section class="uv-accordion__item">
-                <button class="uv-accordion__trigger" type="button" aria-expanded="<%= index === 0 ? 'true' : 'false' %>" aria-controls="module-<%= index %>">
-                  <span><%= module.title %></span>
-                  <i aria-hidden="true"></i>
-                </button>
-                <div class="uv-accordion__panel" id="module-<%= index %>" <%= index === 0 ? '' : 'hidden' %>>
-                  <ul>
-                    <% module.topics.forEach((topic) => { %>
-                      <li><%= topic %></li>
-                    <% }) %>
-                  </ul>
-                  <div class="uv-project-callout">
-                    <strong>Proje</strong>
-                    <p><%= module.project %></p>
-                  </div>
-                </div>
-              </section>
-            <% }) %>
-          </div>
         </section>
 
         <section class="uv-product-section" aria-labelledby="certificates-title">

@@ -1,0 +1,39 @@
+<%- include('../partials/header') %>
+
+<div class="page-head">
+  <h1><%= pageTitle %></h1>
+  <a class="button button-secondary" href="/admin/corporate-references">Geri Dön</a>
+</div>
+
+<section class="panel">
+  <% if (error) { %>
+    <p class="alert" role="alert"><%= error %></p>
+  <% } %>
+
+  <form method="post" action="<%= action %>" enctype="multipart/form-data" class="form grid-form">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <label>
+      Kurum Adı
+      <input name="name" value="<%= reference ? reference.name || '' : '' %>" maxlength="120" required>
+    </label>
+    <label>
+      Logo
+      <input name="logo" type="file" accept="image/png,image/jpeg,image/webp,image/avif" <%= reference && reference.logoPath ? '' : 'required' %>>
+      <small>PNG, JPG, WebP veya AVIF; en fazla 2 MB. Şeffaf arka planlı yatay logo önerilir.</small>
+    </label>
+    <% if (reference && reference.logoPath) { %>
+      <div class="corporate-reference-form__preview">
+        <span>Mevcut Logo</span>
+        <img src="<%= reference.logoPath %>" alt="<%= reference.name || 'Kurumsal referans' %> logosu">
+        <small>Yeni dosya seçmezseniz mevcut logo korunur.</small>
+      </div>
+    <% } %>
+    <label class="check">
+      <input type="checkbox" name="isActive" <%= !reference || reference.isActive || reference.isActive === 'on' ? 'checked' : '' %>>
+      Ana sayfada göster
+    </label>
+    <button type="submit"><%= submitLabel %></button>
+  </form>
+</section>
+
+<%- include('../partials/footer') %>

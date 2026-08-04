@@ -64,6 +64,47 @@
     });
   }
 
+  function initManagedCurriculumAccordions(root) {
+    Array.prototype.forEach.call(root.querySelectorAll('.uv-admin-curriculum .panel-group'), function(accordion) {
+      accordion.addEventListener('click', function(event) {
+        var trigger = event.target.closest('a[data-toggle="collapse"][href^="#uv-curriculum-"]');
+        if (!trigger || !accordion.contains(trigger)) return;
+
+        event.preventDefault();
+        if (window.jQuery && window.jQuery.fn && typeof window.jQuery.fn.collapse === 'function') {
+          return;
+        }
+
+        var targetId = trigger.getAttribute('href').slice(1);
+        var panel = document.getElementById(targetId);
+        if (!panel || !accordion.contains(panel)) return;
+        var isOpen = panel.classList.contains('in');
+
+        Array.prototype.forEach.call(accordion.querySelectorAll('.panel-collapse.in'), function(openPanel) {
+          openPanel.classList.remove('in');
+          var openTrigger = accordion.querySelector('a[aria-controls="' + openPanel.id + '"]');
+          if (openTrigger) {
+            openTrigger.setAttribute('aria-expanded', 'false');
+            openTrigger.classList.add('collapsed');
+          }
+        });
+
+        if (!isOpen) {
+          panel.classList.add('in');
+          trigger.setAttribute('aria-expanded', 'true');
+          trigger.classList.remove('collapsed');
+        }
+      });
+
+      accordion.addEventListener('keydown', function(event) {
+        var trigger = event.target.closest('a[data-toggle="collapse"][href^="#uv-curriculum-"]');
+        if (!trigger || event.key !== ' ') return;
+        event.preventDefault();
+        trigger.click();
+      });
+    });
+  }
+
   function initLightbox(root) {
     var gallery = root.querySelector('[data-lightbox]');
     if (!gallery) return;
@@ -595,6 +636,7 @@
     try {
       initTabs(root);
       initAccordions(root);
+      initManagedCurriculumAccordions(root);
       initLightbox(root);
       initRelatedSlider(root);
       initEnrollment(root);

@@ -123,16 +123,10 @@ function legacyCategoryCandidateSlugs(value) {
 
 function productSearchText(product) {
   return normalizeSearchText([
-    product.title,
-    product.summary,
-    product.content,
-    product.duration,
-    product.lessonType,
-    product.certificate,
-    product.category ? product.category.name : '',
-    product.category ? product.category.slug : '',
-    product.slug
-  ].join(' '));
+    product && product.title,
+    product && product.code,
+    product && product.slug
+  ].filter(Boolean).join(' '));
 }
 
 function shouldIncludeProduct(product, query, categorySlug) {
@@ -140,8 +134,9 @@ function shouldIncludeProduct(product, query, categorySlug) {
     return false;
   }
 
-  if (!query) return true;
-  return productSearchText(product).includes(normalizeSearchText(query));
+  const normalizedQuery = normalizeSearchText(String(query || '').trim().slice(0, 100));
+  if (!normalizedQuery) return true;
+  return productSearchText(product).includes(normalizedQuery);
 }
 
 function renderLegacyProductCard(product, index) {
@@ -149,6 +144,8 @@ function renderLegacyProductCard(product, index) {
   const url = productUrl(product);
   const image = escapeHtml(productImage(product));
   const metadata = escapeHtml([
+    product.code,
+    product.slug,
     product.summary,
     product.duration,
     product.lessonType,
@@ -191,7 +188,20 @@ async function loadLegacyBlogDetailTemplate() {
 async function publishedProducts() {
   return prisma.product.findMany({
     where: publicCatalogProductWhere(),
-    include: { category: true },
+    select: {
+      id: true,
+      code: true,
+      slug: true,
+      title: true,
+      image: true,
+      summary: true,
+      duration: true,
+      lessonType: true,
+      certificate: true,
+      category: {
+        select: { name: true, slug: true }
+      }
+    },
     orderBy: [{ sortOrder: 'asc' }, { id: 'desc' }]
   });
 }
@@ -662,3 +672,4 @@ module.exports.legacyCategoryCandidateSlugs = legacyCategoryCandidateSlugs;
 module.exports.publishedProductsForLegacyCategory = publishedProductsForLegacyCategory;
 module.exports.renderLegacyProductCard = renderLegacyProductCard;
 module.exports.renderLegacyProductListing = renderLegacyProductListing;
+module.exports.shouldIncludeProduct = shouldIncludeProduct;

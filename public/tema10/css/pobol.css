@@ -2590,6 +2590,15 @@ html.pbl-tum-urunler .course-search-control button:focus {
     background: var(--renk2, #202020);
 }
 
+html.pbl-tum-urunler .pbl-product-card-area-4 .pbl-product-card-item[hidden] {
+    display: none !important;
+}
+
+html.pbl-tum-urunler .uv-course-search-empty {
+    margin: 20px 0;
+    text-align: center;
+}
+
 @media (max-width: 767.98px) {
     html.pbl-tum-urunler .category-page-title--with-search {
         grid-template-columns: minmax(0, 1fr);

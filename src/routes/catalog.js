@@ -2,6 +2,9 @@ const express = require('express');
 
 const prisma = require('../db');
 const { bankTransferQuote } = require('../services/bank-transfer-pricing');
+const { publicCatalogProductWhere } = require('../services/public-catalog');
+const { publicProductRouteDecision } = require('../services/public-product-detail');
+const { resolveLegacyProductTabs } = require('../services/legacy-product-tabs');
 
 const router = express.Router();
 const BLOG_PAGE_SIZE = 9;
@@ -468,24 +471,49 @@ function buildProductDetail(product, relatedCourses) {
 router.get(['/urun/:slug', '/urun/:slug/'], async (req, res, next) => {
   try {
     const slug = String(req.params.slug || '').trim();
-    const product = await prisma.product.findFirst({
-      where: {
-        slug,
-        status: 'PUBLISHED'
-      },
-      include: { category: true }
+    const product = await prisma.product.findUnique({
+      where: { slug },
+      include: {
+        category: true,
+        tabs: { orderBy: { sortOrder: 'asc' } },
+        productVariants: {
+          include: { variantProduct: true },
+          orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }]
+        },
+        variantOfProducts: {
+          include: {
+            parentProduct: {
+              include: {
+                tabs: { orderBy: { sortOrder: 'asc' } },
+                productVariants: {
+                  include: { variantProduct: true },
+                  orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }]
+                }
+              }
+            }
+          },
+          orderBy: { id: 'asc' },
+          take: 1
+        }
+      }
     });
+    const routeDecision = publicProductRouteDecision(product);
 
-    if (!product) {
+    if (routeDecision.action === 'not-found') {
       return res.status(404).send('404 File Not Found');
     }
+    if (routeDecision.action === 'redirect') {
+      return res.redirect(302, routeDecision.location);
+    }
+
+    const contentOwner = routeDecision.group?.parent || product;
+    const productTabs = resolveLegacyProductTabs(contentOwner.tabs);
 
     const relatedCourses = await prisma.product.findMany({
-      where: {
-        status: 'PUBLISHED',
+      where: publicCatalogProductWhere({
         id: { not: product.id },
         categoryId: product.categoryId || undefined
-      },
+      }),
       include: { category: true },
       orderBy: [{ sortOrder: 'asc' }, { id: 'desc' }],
       take: 8
@@ -494,13 +522,14 @@ router.get(['/urun/:slug', '/urun/:slug/'], async (req, res, next) => {
     res.render('catalog/product', {
       activeNav: activeNavForProduct(product),
       pageTitle: `${product.title} | Unityverse Academy`,
-      extraStyles: ['/public/tema10/css/product-detail.css?v=20260722-1'],
-      extraScripts: ['/public/tema10/js/courses.js', '/public/tema10/js/product-detail.js?v=20260722-1'],
+      extraStyles: ['/public/tema10/css/product-detail.css?v=20260804-1'],
+      extraScripts: ['/public/tema10/js/courses.js', '/public/tema10/js/product-detail.js?v=20260804-1'],
       product: {
         ...product,
         displayPrice: productPrice(product)
       },
       detail: buildProductDetail(product, relatedCourses),
+      productTabs,
       relatedCoursesJson: relatedCourses.map((course) => plainCourse(course)),
       sharePath: `/urun/${product.slug}/`
     });
@@ -514,7 +543,7 @@ router.get(['/tum-urunler', '/tum-urunler/'], async (req, res, next) => {
     const categorySlug = String(req.query.kategori || req.query.category || '').trim();
     const q = String(req.query.q || '').trim();
     const currentPage = Math.max(1, Number.parseInt(req.query.page || '1', 10) || 1);
-    const where = { status: 'PUBLISHED' };
+    const where = publicCatalogProductWhere();
 
     if (categorySlug) {
       where.category = { slug: categorySlug };
@@ -539,6 +568,8 @@ router.get(['/tum-urunler', '/tum-urunler/'], async (req, res, next) => {
       ? allProducts.filter((product) => {
         const haystack = [
           product.title,
+          product.code,
+          product.slug,
           product.summary,
           product.content,
           product.lessonType,

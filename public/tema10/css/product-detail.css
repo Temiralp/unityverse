@@ -838,3 +838,39 @@
     width: 100%;
   }
 }
+.uv-admin-curriculum .panel-group {
+  display: grid;
+  gap: 8px;
+}
+
+.uv-admin-curriculum .panel {
+  overflow: hidden;
+  border: 1px solid #e2e5ec;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.uv-admin-curriculum .panel-heading {
+  background: #f7f8fb;
+}
+
+.uv-admin-curriculum .panel-title {
+  margin: 0;
+  font-size: 16px;
+}
+
+.uv-admin-curriculum .panel-title a {
+  display: block;
+  padding: 14px 16px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.uv-admin-curriculum .panel-collapse:not(.in) {
+  display: none;
+}
+
+.uv-admin-curriculum .panel-body {
+  padding: 16px;
+  border-top: 1px solid #e2e5ec;
+}

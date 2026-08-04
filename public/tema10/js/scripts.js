@@ -1753,6 +1753,77 @@ function filterPhoneCountries(searchTerm) {
     });
 }
 
+function managedCourseDurationOption(target)
+{
+	var element = target && target.nodeType === 3 ? target.parentElement : target;
+
+	while(element && element !== document)
+	{
+		if(element.nodeType === 1 && element.matches(
+			'li[data-uv-managed-variant="true"], ul[id^="poptions1_"] li'
+		))
+			return element;
+		element = element.parentElement;
+	}
+
+	return null;
+}
+
+function preventManagedCourseDurationInteraction(event)
+{
+	if(!managedCourseDurationOption(event.target))
+		return;
+
+	event.preventDefault();
+	event.stopPropagation();
+	if(typeof event.stopImmediatePropagation === 'function')
+		event.stopImmediatePropagation();
+}
+
+['click', 'auxclick', 'contextmenu', 'dragstart'].forEach(function(eventName) {
+	document.addEventListener(eventName, preventManagedCourseDurationInteraction, true);
+});
+
+document.addEventListener('keydown', function(event) {
+	if(event.key === 'Enter' || event.key === ' ')
+		preventManagedCourseDurationInteraction(event);
+}, true);
+
+$(document).ready(function() {
+	$('li[data-uv-managed-variant="true"], ul[id^="poptions1_"] li')
+		.removeAttr('onclick')
+		.off('click')
+		.find('a')
+		.attr('aria-disabled', 'true')
+		.attr('tabindex', '-1');
+});
+
+function curriculumAccordionTrigger(target)
+{
+	var element = target && target.nodeType === 3 ? target.parentElement : target;
+	if(!element || typeof element.closest !== 'function')
+		return null;
+
+	var trigger = element.closest('#tab-additional-content2 a[data-toggle="collapse"][href^="#uv-curriculum-"]');
+	return trigger && /^#uv-curriculum-accordion-\d+-panel-\d+$/.test(trigger.getAttribute('href') || '')
+		? trigger
+		: null;
+}
+
+document.addEventListener('click', function(event) {
+	if(curriculumAccordionTrigger(event.target))
+		event.preventDefault();
+}, true);
+
+document.addEventListener('keydown', function(event) {
+	var trigger = curriculumAccordionTrigger(event.target);
+	if(!trigger || event.key !== ' ')
+		return;
+
+	event.preventDefault();
+	trigger.click();
+}, true);
+
 function legacyVariantProductUrl(productId)
 {
 	var normalizedId = String(productId || '');
@@ -2114,6 +2185,33 @@ $( document ).ready(function() {
 		return oldPrice + '<span class="new-price price-new">' + escapeHtml(effectiveText) + '</span>';
 	}
 
+	function productBankTransferHtml(product) {
+		if (!product) return '';
+
+		var base = Number(product.price || 0);
+		var effective = product.discountPrice == null ? base : Number(product.discountPrice || 0);
+		var discountRate = Number(product.bankTransferDiscountRate || 0);
+		var bankTransferAmount = Number(product.bankTransferAmount || 0);
+		var bankTransferText = formatMemberPrice(bankTransferAmount);
+
+		if (
+			!Number.isFinite(effective)
+			|| !Number.isFinite(discountRate)
+			|| !Number.isFinite(bankTransferAmount)
+			|| effective <= 0
+			|| discountRate <= 0
+			|| bankTransferAmount <= 0
+			|| bankTransferAmount >= effective
+			|| !bankTransferText
+		) {
+			return '';
+		}
+
+		return '<small class="uv-bank-transfer-discount">Havale İndirimi ile: <strong>' +
+			escapeHtml(bankTransferText) +
+		'</strong></small>';
+	}
+
 	function productSlugFromHref(href) {
 		var match = String(href || '').match(/\/urun\/([^/?#]+)\/?/);
 		return match ? decodeURIComponent(match[1]) : '';
@@ -2154,10 +2252,28 @@ $( document ).ready(function() {
 		var linkedProductId = Number(window.legacy_detail_price_product_id);
 		var hasLinkedProduct = Number.isInteger(linkedProductId) && linkedProductId > 0;
 		var product = hasLinkedProduct ? productsById[linkedProductId] : (slug && productsBySlug[slug]);
-		var html = productPriceHtml(product);
+		var priceHtml = productPriceHtml(product);
+		var bankTransferHtml = productBankTransferHtml(product);
+		var $existingPrice = $('.content-product-right .product_page_price').first();
+		var $priceRow;
 		var $target;
 
-		if (!html || $('.product_page_price .price-new').length) return;
+		if (!priceHtml) return;
+
+		if ($existingPrice.length) {
+			$existingPrice.html(priceHtml);
+			$priceRow = $existingPrice.closest('.uv-product-price-row');
+			if (!$priceRow.length) {
+				$existingPrice.wrap('<div class="uv-product-price-row"></div>');
+				$priceRow = $existingPrice.parent();
+			}
+
+			$priceRow.find('.uv-bank-transfer-discount').remove();
+			if (bankTransferHtml) {
+				$priceRow.append(bankTransferHtml);
+			}
+			return;
+		}
 
 		$target = $('.content-product-right .pbl-stock-code').first();
 		if (!$target.length) {
@@ -2165,11 +2281,19 @@ $( document ).ready(function() {
 		}
 		if (!$target.length) return;
 
-		$target.after(
+		var detailPriceHtml =
 			'<div class="product-label form-group uv-member-detail-price">' +
-				'<div class="price product_page_price">' + html + '</div>' +
-			'</div>'
-		);
+				'<div class="uv-product-price-row">' +
+					'<div class="price product_page_price">' + priceHtml + '</div>' +
+					bankTransferHtml +
+				'</div>' +
+			'</div>';
+
+		if ($target.hasClass('pbl-stock-code')) {
+			$target.before(detailPriceHtml);
+		} else {
+			$target.after(detailPriceHtml);
+		}
 	}
 
 	function renderMemberPrices() {

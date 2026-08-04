@@ -1,21 +1,48 @@
-const LEGACY_HOME_CSS_VERSION = '5.4.100';
-const LEGACY_POBOL_CSS_VERSION = '5.4.104';
-const LEGACY_SCRIPTS_VERSION = '5.4.110';
+const LEGACY_HOME_CSS_VERSION = '5.4.104';
+const LEGACY_POBOL_CSS_VERSION = '5.4.106';
+const LEGACY_SCRIPTS_VERSION = '5.4.115';
+const LEGACY_BANK_TRANSFER_CSS_VERSION = '20260731-2';
+const LEGACY_CATALOG_JS_VERSION = '20260804-1';
+const LEGACY_FILTERS_VERSION = '5.4.98';
 
 const homeCssPattern = /((?:href)=["'][^"']*public\/tema10\/css\/home2\.css\?v=)[^"'&]+/gi;
 const pobolCssPattern = /((?:href)=["'][^"']*public\/tema10\/css\/pobol\.css\?v=)[^"'&]+/gi;
 const scriptsPattern = /((?:src)=["'][^"']*public\/tema10\/js\/scripts\.js\?v=)[^"'&]+/gi;
+const bankTransferCssPattern = /((?:href)=["'][^"']*public\/tema10\/css\/bank-transfer-discount\.css\?v=)[^"'&]+/gi;
+const catalogScriptsPattern = /((?:src)=["'][^"']*public\/tema10\/js\/legacy-course-catalog\.js\?v=)[^"'&]+/gi;
+const filtersPattern = /((?:src)=["'][^"']*public\/tema10\/js\/filters\.js\?v=)[^"'&]+/gi;
+const productDetailsPattern = /id=["']product_details_content["']/i;
+const bankTransferCssLinkPattern = /<link\b[^>]*href=["'][^"']*public\/tema10\/css\/bank-transfer-discount\.css(?:\?[^"']*)?["'][^>]*>/i;
 
 function ensureLegacyAssetVersions(html) {
   if (typeof html !== 'string') return html;
 
-  return html
+  let updated = html
     .replace(homeCssPattern, `$1${LEGACY_HOME_CSS_VERSION}`)
     .replace(pobolCssPattern, `$1${LEGACY_POBOL_CSS_VERSION}`)
-    .replace(scriptsPattern, `$1${LEGACY_SCRIPTS_VERSION}`);
+    .replace(scriptsPattern, `$1${LEGACY_SCRIPTS_VERSION}`)
+    .replace(bankTransferCssPattern, `$1${LEGACY_BANK_TRANSFER_CSS_VERSION}`)
+    .replace(catalogScriptsPattern, `$1${LEGACY_CATALOG_JS_VERSION}`)
+    .replace(filtersPattern, `$1${LEGACY_FILTERS_VERSION}`);
+
+  if (
+    productDetailsPattern.test(updated)
+    && !bankTransferCssLinkPattern.test(updated)
+    && /<\/head>/i.test(updated)
+  ) {
+    updated = updated.replace(
+      /<\/head>/i,
+      `<link rel="stylesheet" href="../../public/tema10/css/bank-transfer-discount.css?v=${LEGACY_BANK_TRANSFER_CSS_VERSION}"></head>`
+    );
+  }
+
+  return updated;
 }
 
 module.exports = {
+  LEGACY_BANK_TRANSFER_CSS_VERSION,
+  LEGACY_CATALOG_JS_VERSION,
+  LEGACY_FILTERS_VERSION,
   LEGACY_HOME_CSS_VERSION,
   LEGACY_POBOL_CSS_VERSION,
   LEGACY_SCRIPTS_VERSION,

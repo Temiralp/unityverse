@@ -9,6 +9,14 @@ const { ensureLegacyAssetVersions } = require('../services/legacy-assets');
 const { ensureLegacyHeaderLayout } = require('../services/legacy-header-layout');
 const { ensureLegacyHomepageLocalAssets } = require('../services/legacy-homepage');
 const { ensureLegacyWhatsappButton } = require('../services/legacy-whatsapp');
+const { synchronizeLegacyProductTabs } = require('../services/legacy-product-tabs');
+const { removeLegacyRelatedProducts } = require('../services/legacy-related-products');
+const {
+  synchronizeLegacyProductVariantOptions
+} = require('../services/legacy-product-variant-options');
+const {
+  synchronizeLegacyCorporateReferences
+} = require('../services/legacy-corporate-references');
 
 const excludedPublicPrefixes = [
   '/admin',
@@ -27,7 +35,16 @@ function isPublicPageRequest(req) {
   ));
 }
 
-function enhanceLegacyHtml(html, draftProducts = [], productTitles = [], productDetailTitle = null) {
+function enhanceLegacyHtml(
+  html,
+  draftProducts = [],
+  productTitles = [],
+  productDetailTitle = null,
+  productTabs = null,
+  productPageOrigin = null,
+  corporateReferences = [],
+  productVariantContext = null
+) {
   const withVisibleProducts = filterLegacyDraftProductCards(html, draftProducts);
   const withCurrentProductTitles = synchronizeLegacyProductCardTitles(
     withVisibleProducts,
@@ -37,7 +54,21 @@ function enhanceLegacyHtml(html, draftProducts = [], productTitles = [], product
     withCurrentProductTitles,
     productDetailTitle
   );
-  const withCurrentAssets = ensureLegacyAssetVersions(withCurrentDetailTitle);
+  const withCurrentProductTabs = synchronizeLegacyProductTabs(
+    withCurrentDetailTitle,
+    productTabs,
+    productPageOrigin
+  );
+  const withCurrentVariantOptions = synchronizeLegacyProductVariantOptions(
+    withCurrentProductTabs,
+    productVariantContext
+  );
+  const withoutRelatedProducts = removeLegacyRelatedProducts(withCurrentVariantOptions);
+  const withCorporateReferences = synchronizeLegacyCorporateReferences(
+    withoutRelatedProducts,
+    corporateReferences
+  );
+  const withCurrentAssets = ensureLegacyAssetVersions(withCorporateReferences);
   const withLocalHomepageAssets = ensureLegacyHomepageLocalAssets(withCurrentAssets);
   return ensureLegacyWhatsappButton(ensureLegacyHeaderLayout(withLocalHomepageAssets));
 }
@@ -52,7 +83,11 @@ function injectLegacyWhatsappIntoHtmlResponses(req, res, next) {
         body,
         res.locals.legacyDraftProducts,
         res.locals.legacyProductTitles,
-        res.locals.legacyProductDetailTitle
+        res.locals.legacyProductDetailTitle,
+        res.locals.legacyProductTabs,
+        res.locals.legacyProductPageOrigin,
+        res.locals.legacyCorporateReferences,
+        res.locals.legacyProductVariantContext
       ));
     }
 
@@ -62,7 +97,11 @@ function injectLegacyWhatsappIntoHtmlResponses(req, res, next) {
         source,
         res.locals.legacyDraftProducts,
         res.locals.legacyProductTitles,
-        res.locals.legacyProductDetailTitle
+        res.locals.legacyProductDetailTitle,
+        res.locals.legacyProductTabs,
+        res.locals.legacyProductPageOrigin,
+        res.locals.legacyCorporateReferences,
+        res.locals.legacyProductVariantContext
       );
       return send(transformed === source ? body : Buffer.from(transformed));
     }
@@ -131,7 +170,11 @@ function serveLegacyHtmlWithWhatsapp(staticRoot, setHeaders) {
         html,
         res.locals.legacyDraftProducts,
         res.locals.legacyProductTitles,
-        res.locals.legacyProductDetailTitle
+        res.locals.legacyProductDetailTitle,
+        res.locals.legacyProductTabs,
+        res.locals.legacyProductPageOrigin,
+        res.locals.legacyCorporateReferences,
+        res.locals.legacyProductVariantContext
       ));
     } catch (error) {
       return next(error);
@@ -147,7 +190,11 @@ async function sendLegacyHtmlFile(res, filePath, setHeaders) {
     html,
     res.locals.legacyDraftProducts,
     res.locals.legacyProductTitles,
-    res.locals.legacyProductDetailTitle
+    res.locals.legacyProductDetailTitle,
+    res.locals.legacyProductTabs,
+    res.locals.legacyProductPageOrigin,
+    res.locals.legacyCorporateReferences,
+    res.locals.legacyProductVariantContext
   ));
 }
 

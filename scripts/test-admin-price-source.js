@@ -132,6 +132,8 @@ function frontendFallbackTests() {
   assert.doesNotMatch(source, /legacyPriceHtmlFromSource/);
   assert.doesNotMatch(source, /renderLegacyListingFallbackPrices/);
   assert.doesNotMatch(source, /typeof window\.base_price/);
+  assert.match(source, /\$existingPrice\.html\(priceHtml\)/);
+  assert.match(source, /\$priceRow\.find\('\.uv-bank-transfer-discount'\)\.remove\(\)/);
 }
 
 Promise.resolve()

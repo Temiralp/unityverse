@@ -115,6 +115,9 @@ function renderStaticFilterFallback(payload) {
     });
 
     $('#search_result').html(payload.total_product_count + ' ürün bulundu');
+    if (window.legacyCourseCatalog) {
+        window.legacyCourseCatalog.refreshFromUrl();
+    }
     $(".filterchanged").off('change.staticFilterFallback').on('change.staticFilterFallback', function () {
         getresults(0);
     });
@@ -250,6 +253,9 @@ function bindFilter() {
                 }
                 $('#search_result').html(res.total_product_count + ' ürün bulundu');
                 renderStaticFilterFallback(res);
+                if (window.legacyCourseCatalog) {
+                    window.legacyCourseCatalog.refreshFromUrl();
+                }
                 if(res.total_product_count > 12)
                 {
                     $('.pagesize-div').show();

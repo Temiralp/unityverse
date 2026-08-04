@@ -1,4 +1,8 @@
 const path = require('path');
+const {
+  PUBLIC_VARIANT_SELECT,
+  publicProductRouteDecision
+} = require('../services/public-product-detail');
 
 const PRODUCT_ROUTE_PATTERN = /^\/urun\/([^/]+)\/?$/;
 const PRODUCT_CARD_SECTION_PATTERN = /<section\b[^>]*class=["'][^"']*\bpbl-product-card-area-4\b[^"']*["'][^>]*>[\s\S]*?<\/section>/gi;
@@ -138,6 +142,35 @@ function filterLegacyDraftProductCards(html, draftProducts) {
   );
 }
 
+function legacyProductVariantContext(product, routeDecision) {
+  if (!product || !routeDecision || routeDecision.action !== 'show') return null;
+
+  if (routeDecision.group) {
+    return {
+      productId: product.id,
+      variants: routeDecision.group.variants
+    };
+  }
+
+  const duration = String(product.duration || '').trim();
+  if (!duration) return null;
+
+  return {
+    productId: product.id,
+    variants: [{
+      id: product.id,
+      parentProductId: product.id,
+      variantProductId: product.id,
+      label: duration,
+      sortOrder: 0,
+      isDefault: true,
+      isActive: true,
+      isArchived: false,
+      variantProduct: product
+    }]
+  };
+}
+
 function createLegacyProductVisibility(prisma) {
   if (!prisma || !prisma.product) {
     throw new TypeError('Prisma product client is required.');
@@ -152,31 +185,72 @@ function createLegacyProductVisibility(prisma) {
         const product = await prisma.product.findUnique({
           where: { slug: productSlug },
           select: {
+            id: true,
+            slug: true,
+            duration: true,
             status: true,
             title: true,
+            tabs: {
+              select: {
+                systemKey: true,
+                title: true,
+                content: true,
+                sortOrder: true
+              },
+              orderBy: { sortOrder: 'asc' }
+            },
             category: {
               select: { slug: true }
             },
             productVariants: {
-              select: { id: true },
-              take: 1
+              select: PUBLIC_VARIANT_SELECT,
+              orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }]
             },
             variantOfProducts: {
-              where: { isActive: true },
-              select: { id: true },
+              select: {
+                isActive: true,
+                parentProduct: {
+                  select: {
+                    id: true,
+                    slug: true,
+                    status: true,
+                    tabs: {
+                      select: {
+                        systemKey: true,
+                        title: true,
+                        content: true,
+                        sortOrder: true
+                      },
+                      orderBy: { sortOrder: 'asc' }
+                    },
+                    productVariants: {
+                      select: PUBLIC_VARIANT_SELECT,
+                      orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }]
+                    }
+                  }
+                }
+              },
+              orderBy: { id: 'asc' },
               take: 1
             }
           }
         });
 
-        if (product && product.status !== 'PUBLISHED') {
+        const routeDecision = publicProductRouteDecision(product);
+        if (product && routeDecision.action === 'not-found') {
           return res.status(404).send('404 File Not Found');
         }
+        if (routeDecision.action === 'redirect') {
+          return res.redirect(302, routeDecision.location);
+        }
 
-        res.locals.legacyProductHasVariants = Boolean(
-          product
-          && (product.productVariants.length || product.variantOfProducts.length)
+        res.locals.legacyProductHasVariants = Boolean(routeDecision.group);
+        res.locals.legacyProductVariantContext = legacyProductVariantContext(
+          product,
+          routeDecision
         );
+        res.locals.legacyProductTabs = routeDecision.group?.parent?.tabs || product?.tabs || null;
+        res.locals.legacyProductPageOrigin = `${req.protocol}://${req.get('host')}`;
         res.locals.legacyProductDetailTitle = product
           && product.category
           && TITLE_SYNC_DETAIL_CATEGORY_SLUGS.has(product.category.slug)
@@ -218,6 +292,7 @@ module.exports = {
   decodedProductSlug,
   filterLegacyDraftProductCards,
   isLegacyCardPageRequest,
+  legacyProductVariantContext,
   synchronizeLegacyProductCardTitles,
   synchronizeLegacyProductDetailTitle,
   titleSyncCategorySlugsForRequest

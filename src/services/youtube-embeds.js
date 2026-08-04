@@ -135,6 +135,32 @@ function normalizeYoutubeEmbeds(html, origin) {
   return changed ? rootHtml($) : content;
 }
 
+function normalizeYoutubeEmbedsForEditor(html, origin) {
+  const content = String(html || '');
+  if (!/<iframe\b/i.test(content)) return content;
+
+  const $ = loadFragment(content);
+  let changed = false;
+
+  $('iframe').each((_, iframe) => {
+    const element = $(iframe);
+    const video = youtubeVideo(element.attr('src'));
+    if (!video) return;
+
+    changed = true;
+    element.attr({
+      src: embedUrlWithOrigin(video.embedUrl, origin),
+      title: element.attr('title') || 'YouTube video player',
+      loading: element.attr('loading') || 'lazy',
+      referrerpolicy: 'strict-origin-when-cross-origin',
+      allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share',
+      allowfullscreen: ''
+    });
+  });
+
+  return changed ? rootHtml($) : content;
+}
+
 function youtubeEmbeds(html, origin) {
   const $ = loadFragment(normalizeYoutubeEmbeds(html, origin));
   const embeds = [];
@@ -179,6 +205,7 @@ function prepareLegacyTabContent(tabHtml, aggregateContent, sourceTabId, origin)
 
 module.exports = {
   normalizeYoutubeEmbeds,
+  normalizeYoutubeEmbedsForEditor,
   prepareLegacyTabContent,
   youtubeVideo
 };

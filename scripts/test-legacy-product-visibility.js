@@ -152,7 +152,15 @@ async function invoke(middleware, req) {
     }
   };
 
-  await middleware(req, res, (error) => {
+  const normalizedRequest = {
+    protocol: 'http',
+    get(name) {
+      return name === 'host' ? 'localhost:8000' : undefined;
+    },
+    ...req
+  };
+
+  await middleware(normalizedRequest, res, (error) => {
     result.nextCalled = true;
     result.nextError = error || null;
   });
@@ -161,8 +169,65 @@ async function invoke(middleware, req) {
 }
 
 async function middlewareTests() {
+  const visibleVariant = {
+    id: 1,
+    parentProductId: 10,
+    variantProductId: 11,
+    label: '8 ay',
+    sortOrder: 0,
+    isDefault: true,
+    isActive: true,
+    variantProduct: {
+      id: 11,
+      slug: 'visible-variant-course',
+      duration: '8 ay',
+      status: 'PUBLISHED'
+    }
+  };
+  const draftVariant = {
+    ...visibleVariant,
+    id: 2,
+    variantProductId: 12,
+    label: '4 ay',
+    isDefault: false,
+    variantProduct: {
+      id: 12,
+      slug: 'draft-variant-course',
+      duration: '4 ay',
+      status: 'DRAFT'
+    }
+  };
+  const archivedVariant = {
+    ...draftVariant,
+    id: 4,
+    variantProductId: 13,
+    label: '12 ay',
+    isArchived: true,
+    variantProduct: {
+      id: 13,
+      slug: 'archived-variant-course',
+      duration: '12 ay',
+      status: 'DRAFT'
+    }
+  };
+  const variantParent = {
+    id: 10,
+    slug: 'variant-course',
+    duration: null,
+    status: 'PUBLISHED',
+    title: 'Current game detail title',
+    category: { slug: 'oyun-gelistirme' },
+    tabs: [
+      { systemKey: 'CURRICULUM', title: 'Parent curriculum', content: '<p>Shared parent content</p>', sortOrder: 20 }
+    ],
+    productVariants: [visibleVariant, draftVariant, archivedVariant],
+    variantOfProducts: []
+  };
   const products = new Map([
     ['draft-course', {
+      id: 1,
+      slug: 'draft-course',
+      duration: null,
       status: 'DRAFT',
       title: 'Draft title',
       category: { slug: 'oyun-gelistirme' },
@@ -170,20 +235,60 @@ async function middlewareTests() {
       variantOfProducts: []
     }],
     ['published-course', {
+      id: 2,
+      slug: 'published-course',
+      duration: '4 ay',
       status: 'PUBLISHED',
       title: 'Published title',
+      tabs: [
+        { systemKey: 'OVERVIEW', title: 'DB overview', content: '<p>Overview</p>', sortOrder: 10 },
+        { systemKey: 'CURRICULUM', title: 'DB curriculum', content: '<p>Curriculum</p>', sortOrder: 20 },
+        { systemKey: 'WHY', title: 'Neden Bu Eğitim', content: '<p>Why</p>', sortOrder: 30 }
+      ],
       category: { slug: 'other-category' },
       productVariants: [],
       variantOfProducts: []
     }],
-    ['variant-course', {
-      status: 'PUBLISHED',
-      title: 'Current game detail title',
+    ['variant-course', variantParent],
+    ['visible-variant-course', {
+      ...visibleVariant.variantProduct,
+      title: 'Visible variant',
       category: { slug: 'oyun-gelistirme' },
-      productVariants: [{ id: 1 }],
+      tabs: [],
+      productVariants: [],
+      variantOfProducts: [{ isActive: true, parentProduct: variantParent }]
+    }],
+    ['draft-variant-course', {
+      ...draftVariant.variantProduct,
+      title: 'Draft variant',
+      category: { slug: 'oyun-gelistirme' },
+      tabs: [],
+      productVariants: [],
+      variantOfProducts: [{ isActive: true, parentProduct: variantParent }]
+    }],
+    ['archived-variant-course', {
+      ...archivedVariant.variantProduct,
+      title: 'Archived variant',
+      category: { slug: 'oyun-gelistirme' },
+      tabs: [],
+      productVariants: [],
+      variantOfProducts: [{ isActive: false, parentProduct: variantParent }]
+    }],
+    ['empty-variant-parent', {
+      id: 20,
+      slug: 'empty-variant-parent',
+      duration: null,
+      status: 'PUBLISHED',
+      title: 'Unavailable parent',
+      category: { slug: 'oyun-gelistirme' },
+      tabs: [],
+      productVariants: [{ ...draftVariant, id: 3, parentProductId: 20 }],
       variantOfProducts: []
     }],
     ['software-course', {
+      id: 3,
+      slug: 'software-course',
+      duration: null,
       status: 'PUBLISHED',
       title: 'Current software detail title',
       category: { slug: 'yazilim' },
@@ -191,6 +296,9 @@ async function middlewareTests() {
       variantOfProducts: []
     }],
     ['internship-course', {
+      id: 4,
+      slug: 'internship-course',
+      duration: null,
       status: 'PUBLISHED',
       title: 'Current internship detail title',
       category: { slug: 'staj-garantili' },
@@ -198,6 +306,9 @@ async function middlewareTests() {
       variantOfProducts: []
     }],
     ['graphic-course', {
+      id: 5,
+      slug: 'graphic-course',
+      duration: null,
       status: 'PUBLISHED',
       title: 'Current graphic design detail title',
       category: { slug: 'grafik-tasarim' },
@@ -205,6 +316,9 @@ async function middlewareTests() {
       variantOfProducts: []
     }],
     ['modeling-course', {
+      id: 6,
+      slug: 'modeling-course',
+      duration: null,
       status: 'PUBLISHED',
       title: 'Current 3D modeling detail title',
       category: { slug: '3d-modelleme' },
@@ -217,22 +331,21 @@ async function middlewareTests() {
     product: {
       async findUnique({ where, select }) {
         calls.findUnique += 1;
-        assert.deepEqual(select, {
-          status: true,
-          title: true,
-          category: {
-            select: { slug: true }
-          },
-          productVariants: {
-            select: { id: true },
-            take: 1
-          },
-          variantOfProducts: {
-            where: { isActive: true },
-            select: { id: true },
-            take: 1
-          }
-        });
+        assert.equal(select.id, true);
+        assert.equal(select.slug, true);
+        assert.equal(select.status, true);
+        assert.equal(select.productVariants.select.isActive, true);
+        assert.equal(select.productVariants.select.isArchived, true);
+        assert.equal(select.productVariants.select.variantProduct.select.status, true);
+        assert.equal(select.variantOfProducts.select.parentProduct.select.status, true);
+        assert.equal(
+          select.variantOfProducts.select.parentProduct.select.productVariants.select.isActive,
+          true
+        );
+        assert.equal(
+          select.variantOfProducts.select.parentProduct.select.productVariants.select.isArchived,
+          true
+        );
         return products.get(where.slug) || null;
       },
       async findMany({ where, select }) {
@@ -278,12 +391,62 @@ async function middlewareTests() {
   assert.equal(published.nextCalled, true);
   assert.equal(published.nextError, null);
   assert.equal(published.locals.legacyProductHasVariants, false);
+  assert.equal(published.locals.legacyProductVariantContext.productId, 2);
+  assert.equal(published.locals.legacyProductVariantContext.variants.length, 1);
+  assert.equal(published.locals.legacyProductVariantContext.variants[0].label, '4 ay');
+  assert.equal(
+    published.locals.legacyProductVariantContext.variants[0].variantProduct.slug,
+    'published-course'
+  );
   assert.equal(published.locals.legacyProductDetailTitle, null);
+  assert.deepEqual(published.locals.legacyProductTabs, products.get('published-course').tabs);
+  assert.equal(published.locals.legacyProductPageOrigin, 'http://localhost:8000');
 
   const variant = await invoke(middleware, { method: 'GET', path: '/urun/variant-course/' });
   assert.equal(variant.nextCalled, true);
   assert.equal(variant.locals.legacyProductHasVariants, true);
   assert.equal(variant.locals.legacyProductDetailTitle, 'Current game detail title');
+  assert.equal(variant.locals.legacyProductVariantContext.productId, 10);
+  assert.equal(variant.locals.legacyProductVariantContext.variants.length, 3);
+
+  const visibleChild = await invoke(middleware, {
+    method: 'GET',
+    path: '/urun/visible-variant-course/'
+  });
+  assert.equal(visibleChild.nextCalled, true);
+  assert.equal(visibleChild.redirect, null);
+  assert.equal(visibleChild.locals.legacyProductVariantContext.productId, 11);
+  assert.deepEqual(visibleChild.locals.legacyProductTabs, variantParent.tabs);
+
+  const draftChild = await invoke(middleware, {
+    method: 'GET',
+    path: '/urun/draft-variant-course/'
+  });
+  assert.deepEqual(draftChild.redirect, {
+    status: 302,
+    location: '/urun/variant-course/'
+  });
+  assert.equal(draftChild.nextCalled, false);
+
+  const archivedChild = await invoke(middleware, {
+    method: 'GET',
+    path: '/urun/archived-variant-course/'
+  });
+  assert.deepEqual(archivedChild.redirect, {
+    status: 302,
+    location: '/urun/variant-course/'
+  });
+  assert.equal(archivedChild.nextCalled, false);
+
+  const unavailableParent = await invoke(middleware, {
+    method: 'GET',
+    path: '/urun/empty-variant-parent/'
+  });
+  assert.deepEqual(unavailableParent.redirect, {
+    status: 302,
+    location: '/tum-urunler/?pg=1'
+  });
+  assert.equal(unavailableParent.nextCalled, false);
 
   const software = await invoke(middleware, { method: 'GET', path: '/urun/software-course/' });
   assert.equal(software.nextCalled, true);
@@ -359,7 +522,7 @@ async function middlewareTests() {
     ['grafik-tasarim'],
     ['3d-modelleme']
   ]);
-  assert.equal(calls.findUnique, 7);
+  assert.equal(calls.findUnique, 11);
 }
 
 async function run() {

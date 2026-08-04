@@ -1981,7 +1981,7 @@ Yeni Üyelik</a></li>
 											<label class="sr-only" for="course-search-input">Eğitim ara</label>
 											<div class="course-search-control">
 												<i class="fa fa-search" aria-hidden="true"></i>
-												<input id="course-search-input" type="search" placeholder="Eğitim ara..." autocomplete="off">
+												<input id="course-search-input" type="search" placeholder="Eğitim ara..." autocomplete="off" maxlength="100" aria-describedby="search_result">
 												<button type="submit" aria-label="Eğitim ara">Ara</button>
 											</div>
 										</form>
@@ -6132,124 +6132,6 @@ function rfilter(type, v) {
     return getresults(0, '');
 }
 
-$(function () {
-    var $courseSearch = $('#course-search-input');
-    if (!$courseSearch.length) return;
-
-    var activeQuery = getUrlParameter('q');
-    if (activeQuery) {
-        $courseSearch.val(activeQuery.replace(/\+/g, ' '));
-    }
-
-    $courseSearch.closest('form').on('submit', function (event) {
-        event.preventDefault();
-        getresults(0);
-    });
-});
-
-function normalizeCourseFilterText(value) {
-    return String(value || '')
-        .toLocaleLowerCase('tr-TR')
-        .replace(/ı/g, 'i')
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9]+/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
-}
-
-function filterParamList(paramName) {
-    var value = getUrlParameter(paramName);
-    if (!value || value === true) return [];
-
-    return String(value)
-        .split(',')
-        .map(function (item) { return $.trim(item); })
-        .filter(Boolean);
-}
-
-function selectedFeatureMatchers() {
-    var featureTerms = {
-        '1': ['3 ay', '3 aylik'],
-        '2': ['baslangic', 'sifirdan', 'temel'],
-        '3': ['senior', 'ileri'],
-        '4': ['canli online', 'online'],
-        '5': ['yuz yuze', 'sinif egitimi'],
-        '6': ['sertifika', 'certified'],
-        '7': ['guncel', '2024', '2025', '2026'],
-        '8': ['e devlet', 'edevlet', 'sertifika']
-    };
-
-    return filterParamList('f').map(function (featureId) {
-        return (featureTerms[featureId] || []).map(normalizeCourseFilterText);
-    }).filter(function (terms) {
-        return terms.length > 0;
-    });
-}
-
-function syncLegacyFilterState() {
-    filterParamList('f').forEach(function (featureId) {
-        $('#feature_' + featureId).prop('checked', true);
-    });
-
-    filterParamList('b').forEach(function (brandId) {
-        $('#brand_' + brandId).prop('checked', true);
-    });
-
-    filterParamList('p').forEach(function (priceRange) {
-        $('input[id^="price_"][value="' + priceRange + '"]').prop('checked', true);
-    });
-
-    if (getUrlParameter('sn') == '1') $('#special_new').prop('checked', true);
-    if (getUrlParameter('sb') == '1') $('#special_bestseller').prop('checked', true);
-}
-
-function applyLegacyCourseFilters() {
-    var query = normalizeCourseFilterText(getUrlParameter('q') || '');
-    var featureGroups = selectedFeatureMatchers();
-    var $cards = $('.pbl-product-card-area-4 .pbl-product-card-item');
-    var visibleCount = 0;
-    var hasActiveCourseFilter = Boolean(query) || featureGroups.length > 0;
-
-    if (!$cards.length || !hasActiveCourseFilter) return;
-
-    $cards.each(function () {
-        var $card = $(this);
-        var searchableText = normalizeCourseFilterText([
-            $card.find('.pbl-product-card-item-name').text(),
-            $card.find('.pbl-product-card-item-brand').text(),
-            $card.find('img').attr('alt'),
-            $card.find('a[href*="../urun/"]').attr('href')
-        ].join(' '));
-        var matchesQuery = !query || searchableText.indexOf(query) !== -1;
-        var matchesFeatures = featureGroups.every(function (terms) {
-            return terms.some(function (term) {
-                return searchableText.indexOf(term) !== -1;
-            });
-        });
-        var isVisible = matchesQuery && matchesFeatures;
-
-        $card.toggle(isVisible);
-        if (isVisible) visibleCount += 1;
-    });
-
-    $('#search_result').html(visibleCount + ' ürün bulundu');
-}
-
-function refreshLegacyCourseFilters() {
-    syncLegacyFilterState();
-    applyLegacyCourseFilters();
-}
-
-$(function () {
-    refreshLegacyCourseFilters();
-});
-
-window.addEventListener('load', function () {
-    refreshLegacyCourseFilters();
-    setTimeout(refreshLegacyCourseFilters, 1300);
-    setTimeout(refreshLegacyCourseFilters, 2800);
-});
 $(".onlystock").on('click',function(){
 	$('.onlystock_label').trigger('click');
 });
@@ -6313,7 +6195,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 <script type="text/javascript" src="../public/tema10/js/vue-bundle.js?v=5.4.94"></script>
-<script type="text/javascript" src="../public/tema10/js/filters.js?v=5.4.97"></script>
+<script type="text/javascript" src="../public/tema10/js/filters.js?v=5.4.98"></script>
 
 <!-- CLIENT-SIDE PAGINATION SCRIPT -->
 <style>
@@ -6321,97 +6203,9 @@ document.addEventListener('DOMContentLoaded', function() {
 .pagination li a { padding: 8px 12px; margin: 0 4px; border: 1px solid #ddd; border-radius: 4px; color: #333; text-decoration: none; display: inline-block;}
 .pagination li a:hover { background-color: #f5f5f5; }
 .pagination { display: flex; list-style: none; padding: 0; justify-content: center; margin-top: 20px;}
+.pagination li.disabled span { padding: 8px 12px; margin: 0 4px; display: inline-block; }
 </style>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Tüm ürünleri bul (pbl-product-card-item veya pbl-product-card)
-    // Önceki denemelerden kaynaklı <div class="pbl-product-card-item"> elemanlarını seçiyoruz
-    const products = Array.from(document.querySelectorAll('.pbl-product-card-item'));
-    if (products.length === 0) return;
-
-    const itemsPerPage = 12;
-    const totalPages = Math.ceil(products.length / itemsPerPage);
-    
-    // Pagination container'ını bul
-    let paginationContainer = document.querySelector('.pagination');
-    if (!paginationContainer) {
-        // Eğer pagination yoksa, yeni bir tane oluştur ve products-list in sonuna ekle
-        const listContainer = document.querySelector('.products-list');
-        if (listContainer) {
-            const wrap = document.createElement('div');
-            wrap.className = 'box-pagination col-md-12 text-center';
-            wrap.innerHTML = '<ul class="pagination"></ul>';
-            listContainer.parentElement.appendChild(wrap);
-            paginationContainer = wrap.querySelector('.pagination');
-        }
-    }
-
-    function renderPaginationUI(currentPage) {
-        if (!paginationContainer) return;
-        let html = '';
-        
-        if (currentPage > 1) {
-            html += '<li style="cursor:pointer"><a onclick="window.changePage(' + (currentPage - 1) + ')">&laquo;</a></li>';
-        }
-        
-        for (let i = 1; i <= totalPages; i++) {
-            if (totalPages <= 10 || (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2))) {
-                if (i === currentPage) {
-                    html += '<li class="active"><a style="cursor:pointer">' + i + '</a></li>';
-                } else {
-                    html += '<li style="cursor:pointer"><a onclick="window.changePage(' + i + ')">' + i + '</a></li>';
-                }
-            } else if (i === currentPage - 3 || i === currentPage + 3) {
-                html += '<li><a style="cursor:default">...</a></li>';
-            }
-        }
-        
-        if (currentPage < totalPages) {
-            html += '<li style="cursor:pointer"><a onclick="window.changePage(' + (currentPage + 1) + ')">&raquo;</a></li>';
-        }
-        
-        paginationContainer.innerHTML = html;
-    }
-
-    function showPage(page) {
-        if (page < 1) page = 1;
-        if (page > totalPages) page = totalPages;
-        
-        // Hepsini gizle
-        products.forEach(p => { p.style.display = 'none'; });
-        
-        // Sadece bu sayfanınkileri göster
-        const start = (page - 1) * itemsPerPage;
-        const end = start + itemsPerPage;
-        for (let i = start; i < end && i < products.length; i++) {
-            products[i].style.display = 'block';
-        }
-        
-        renderPaginationUI(page);
-        
-        // URL'yi güncelle (sayfa yenilemeden)
-        const url = new URL(window.location);
-        url.searchParams.set('pg', page);
-        window.history.pushState({}, '', url);
-        
-        // Sadece kullanıcı tıklamasıyla çağrıldığında yukarı kaydır
-        if (typeof event !== 'undefined' && event && event.type === 'click') {
-            const container = document.querySelector('.products-list');
-            if (container) {
-                window.scrollTo({ top: container.offsetTop - 100, behavior: 'smooth' });
-            }
-        }
-    }
-    
-    // Global scope'a ekle ki onclick'ten çağrılabilsin
-    window.changePage = showPage;
-    
-    // Sayfa yüklendiğinde URL'den pg parametresini oku
-    const urlParams = new URLSearchParams(window.location.search);
-    let initialPage = parseInt(urlParams.get('pg')) || 1;
-    showPage(initialPage);
-});
-</script>
+<script type="text/javascript" src="../public/tema10/js/legacy-course-catalog.js?v=20260804-1"></script>
 
 </body>
 </html>

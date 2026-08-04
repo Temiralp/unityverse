@@ -5,14 +5,29 @@ const path = require('path');
 const {
   legacyCategoryCandidateSlugs,
   publishedProductsForLegacyCategory,
-  renderLegacyProductListing
+  renderLegacyProductListing,
+  shouldIncludeProduct
 } = require('../src/routes/legacy-catalog');
 const { buildFilterPayload } = require('../src/routes/legacy-filters');
 const { publicCatalogProductWhere } = require('../src/services/public-catalog');
+const {
+  LEGACY_CATALOG_JS_VERSION,
+  LEGACY_FILTERS_VERSION,
+  ensureLegacyAssetVersions
+} = require('../src/services/legacy-assets');
+const {
+  MAX_QUERY_LENGTH,
+  SEARCH_DEBOUNCE_MS,
+  filterTitles,
+  normalizeQuery,
+  normalizeSearchText,
+  paginationPages
+} = require('../public/tema10/js/legacy-course-catalog');
 
 function product(overrides = {}) {
   return {
     id: 101,
+    code: 'PUB101',
     slug: 'published-course',
     title: 'Published Course',
     image: '/uploads/published.jpg',
@@ -45,17 +60,70 @@ function categoryAliasTests() {
 function publicCatalogVisibilityTests() {
   assert.deepEqual(publicCatalogProductWhere(), {
     status: 'PUBLISHED',
-    variantOfProducts: {
-      none: { isActive: true }
-    }
+    variantOfProducts: { none: {} },
+    OR: [
+      { productVariants: { none: {} } },
+      {
+        productVariants: {
+          some: {
+            isActive: true,
+            isArchived: false,
+            variantProduct: { is: { status: 'PUBLISHED' } }
+          }
+        }
+      }
+    ]
   });
   assert.deepEqual(publicCatalogProductWhere({ categoryId: 12 }), {
     status: 'PUBLISHED',
-    variantOfProducts: {
-      none: { isActive: true }
-    },
+    variantOfProducts: { none: {} },
+    OR: [
+      { productVariants: { none: {} } },
+      {
+        productVariants: {
+          some: {
+            isActive: true,
+            isArchived: false,
+            variantProduct: { is: { status: 'PUBLISHED' } }
+          }
+        }
+      }
+    ],
     categoryId: 12
   });
+}
+
+function catalogSearchTests() {
+  const unityCourse = product({
+    title: 'Unity ile Oyun Geliştirme Eğitimi',
+    summary: 'Oyun geliştirmeyi öğrenin'
+  });
+  const brandOnlyMatch = product({
+    title: 'ZBrush ile Takı Tasarımı',
+    summary: 'Unityverse Academy eğitimi',
+    slug: 'zbrush-course'
+  });
+
+  assert.equal(shouldIncludeProduct(unityCourse, 'unity', ''), true);
+  assert.equal(shouldIncludeProduct(unityCourse, 'UNITY', ''), true);
+  assert.equal(shouldIncludeProduct(brandOnlyMatch, 'unity', ''), false);
+  assert.equal(shouldIncludeProduct(unityCourse, 'PUB101', ''), true);
+  assert.equal(shouldIncludeProduct(unityCourse, 'published-course', ''), true);
+  assert.equal(shouldIncludeProduct(unityCourse, 'unity', 'oyun-gelistirme'), false);
+  assert.equal(normalizeSearchText('İLERİ Düzey'), 'ileri duzey');
+  assert.equal(SEARCH_DEBOUNCE_MS, 200);
+  assert.equal(MAX_QUERY_LENGTH, 100);
+  assert.equal(normalizeQuery(`unity${'x'.repeat(200)}`).length, 100);
+  assert.deepEqual(
+    filterTitles([
+      'Unity ile Oyun Geliştirme',
+      'ZBrush Eğitimi',
+      'Çocuklar İçin UNITY Kursu'
+    ], 'unity'),
+    ['Unity ile Oyun Geliştirme', 'Çocuklar İçin UNITY Kursu']
+  );
+  assert.deepEqual(paginationPages(1, 3), [1, 2, 3]);
+  assert.deepEqual(paginationPages(6, 12), [1, 'ellipsis', 4, 5, 6, 7, 8, 'ellipsis', 12]);
 }
 
 async function publishedCategoryQueryTest() {
@@ -66,9 +134,19 @@ async function publishedCategoryQueryTest() {
         assert.deepEqual(query, {
           where: {
             status: 'PUBLISHED',
-            variantOfProducts: {
-              none: { isActive: true }
-            },
+            variantOfProducts: { none: {} },
+            OR: [
+              { productVariants: { none: {} } },
+              {
+                productVariants: {
+                  some: {
+                    isActive: true,
+                    isArchived: false,
+                    variantProduct: { is: { status: 'PUBLISHED' } }
+                  }
+                }
+              }
+            ],
             category: {
               is: {
                 slug: { in: ['yazilim', 'staj-garantili'] }
@@ -127,6 +205,7 @@ function listingRenderTests() {
   assert.match(html, /1 ürün bulundu/);
   assert.match(html, /href="\/urun\/published-course\/"/);
   assert.match(html, />Published Course<\/a>/);
+  assert.match(html, /PUB101 published-course/);
   assert.doesNotMatch(html, /draft-course|Draft Course/);
   assert.throws(
     () => renderLegacyProductListing('<html>No product grid</html>', []),
@@ -171,22 +250,69 @@ function listingRenderTests() {
 
 function serverRoutingContractTest() {
   const source = fs.readFileSync(path.join(__dirname, '../src/server.js'), 'utf8');
+  const modernCatalogSource = fs.readFileSync(
+    path.join(__dirname, '../src/routes/catalog.js'),
+    'utf8'
+  );
 
-  assert.ok(source.includes("if (/^\\/urun\\/[^/]+\\/?$/.test(req.path)) {"));
+  assert.ok(source.includes("const match = String(req.path || '').match(/^\\/urun\\/([^/]+)\\/?$/);"));
   assert.ok(source.includes('return legacyProductDetailRoutes(req, res, next);'));
   assert.doesNotMatch(
     source,
     /legacyProductHasVariants\s*&&\s*\/\^\\\/urun/
   );
+  assert.match(modernCatalogSource, /const where = publicCatalogProductWhere\(\);/);
+  assert.match(modernCatalogSource, /publicProductRouteDecision\(product\)/);
+  assert.match(modernCatalogSource, /res\.redirect\(302, routeDecision\.location\)/);
+}
+
+function frontendSearchContractTest() {
+  const root = path.resolve(__dirname, '..');
+  const template = fs.readFileSync(path.join(root, 'tum-urunler/index.html'), 'utf8');
+  const controller = fs.readFileSync(
+    path.join(root, 'public/tema10/js/legacy-course-catalog.js'),
+    'utf8'
+  );
+  const filters = fs.readFileSync(path.join(root, 'public/tema10/js/filters.js'), 'utf8');
+  const css = fs.readFileSync(path.join(root, 'public/tema10/css/pobol.css'), 'utf8');
+  const versionedTemplate = ensureLegacyAssetVersions(template);
+
+  assert.match(template, /id="course-search-input"[^>]*maxlength="100"/);
+  assert.match(template, /legacy-course-catalog\.js\?v=20260804-1/);
+  assert.doesNotMatch(template, /function applyLegacyCourseFilters/);
+  assert.doesNotMatch(template, /setTimeout\(refreshLegacyCourseFilters/);
+
+  assert.match(controller, /SEARCH_DEBOUNCE_MS = 200/);
+  assert.match(controller, /\.pbl-product-card-item-name/);
+  assert.match(controller, /entry\.searchText\.indexOf\(normalizedQuery\)/);
+  assert.doesNotMatch(controller, /pbl-product-card-item-brand/);
+  assert.match(controller, /windowObject\.clearTimeout\(state\.timer\)/);
+  assert.match(controller, /windowObject\.history\[mode \+ 'State'\]/);
+  assert.match(controller, /state\.result\.textContent/);
+  assert.doesNotMatch(controller, /state\.result\.innerHTML/);
+
+  assert.match(filters, /legacyCourseCatalog\.refreshFromUrl\(\)/);
+  assert.match(css, /\.pbl-product-card-item\[hidden\][\s\S]*display: none !important/);
+  assert.match(
+    versionedTemplate,
+    new RegExp(`legacy-course-catalog\\.js\\?v=${LEGACY_CATALOG_JS_VERSION}`)
+  );
+  assert.match(
+    versionedTemplate,
+    new RegExp(`filters\\.js\\?v=${LEGACY_FILTERS_VERSION.replace(/\./g, '\\.')}`)
+  );
+  assert.equal(ensureLegacyAssetVersions(versionedTemplate), versionedTemplate);
 }
 
 async function run() {
   categoryAliasTests();
   publicCatalogVisibilityTests();
+  catalogSearchTests();
   await publishedCategoryQueryTest();
   await filterPayloadVisibilityTest();
   listingRenderTests();
   serverRoutingContractTest();
+  frontendSearchContractTest();
   console.log('Legacy public catalog publication tests passed.');
 }
 

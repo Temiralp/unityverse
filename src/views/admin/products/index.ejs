@@ -65,6 +65,12 @@
     </thead>
     <tbody>
       <% products.forEach((product) => { %>
+        <%
+          const hasDurationVariants = Array.isArray(product.productVariants) && product.productVariants.length > 0;
+          const hasPublishedDuration = hasDurationVariants && product.productVariants.some((variant) => (
+            variant.isActive && variant.variantProduct.status === 'PUBLISHED'
+          ));
+        %>
         <tr>
           <td>
             <strong><%= product.title %></strong>
@@ -73,14 +79,43 @@
           </td>
           <td><%= product.category ? product.category.name : '-' %></td>
           <td><%= product.lessonType || '-' %></td>
-          <td><%= product.duration || 'Belirtilmedi' %></td>
+          <td>
+            <% if (hasDurationVariants) { %>
+              <ul class="admin-duration-summary">
+                <% product.productVariants.forEach((variant) => { %>
+                  <li>
+                    <span><%= variant.label || variant.variantProduct.duration || 'Belirtilmedi' %></span>
+                    <span class="status-pill <%= variant.isActive && variant.variantProduct.status === 'PUBLISHED' ? 'is-active' : 'is-passive' %>">
+                      <%= variant.isActive && variant.variantProduct.status === 'PUBLISHED' ? 'Yayında' : 'Taslak' %>
+                    </span>
+                  </li>
+                <% }) %>
+              </ul>
+            <% } else { %>
+              <%= product.duration || 'Belirtilmedi' %>
+            <% } %>
+          </td>
           <td>
             <span class="status-pill <%= product.status === 'PUBLISHED' ? 'is-active' : 'is-passive' %>">
               <%= product.status === 'PUBLISHED' ? 'Yayında' : 'Taslak' %>
             </span>
+            <% if (hasDurationVariants && product.status === 'PUBLISHED' && !hasPublishedDuration) { %>
+              <small class="table-muted">Yayında süre olmadığı için katalogda görünmüyor.</small>
+            <% } else if (hasDurationVariants && product.status === 'DRAFT' && hasPublishedDuration) { %>
+              <small class="table-muted">Ana kurs taslak; yayınlanan süreler katalogda görünmüyor.</small>
+            <% } %>
           </td>
           <td>
-            <% if (product.pricing) { %>
+            <% if (hasDurationVariants) { %>
+              <ul class="admin-duration-summary admin-duration-summary--prices">
+                <% product.productVariants.forEach((variant) => { %>
+                  <li>
+                    <span><%= variant.label || variant.variantProduct.duration || 'Süre' %></span>
+                    <strong><%= variant.variantProduct.price %> TL</strong>
+                  </li>
+                <% }) %>
+              </ul>
+            <% } else if (product.pricing) { %>
               <strong><%= product.pricing.basePrice %> TL</strong>
               <% if (product.discountPrice) { %>
                 <small class="table-muted">
@@ -100,7 +135,7 @@
           </td>
           <td>
             <div class="row-actions">
-              <a class="table-action" href="/admin/products/<%= product.id %>/edit">Düzenle</a>
+              <a class="table-action" href="/admin/products/<%= product.id %>/edit"><%= hasDurationVariants ? 'Süreleri Yönet' : 'Düzenle' %></a>
               <form method="post" action="/admin/products/<%= product.id %>/status" class="inline-form">
                 <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 <input type="hidden" name="status" value="<%= product.status === 'PUBLISHED' ? 'DRAFT' : 'PUBLISHED' %>">
@@ -108,10 +143,12 @@
                   <%= product.status === 'PUBLISHED' ? 'Yayından Al' : 'Yayınla' %>
                 </button>
               </form>
-              <form method="post" action="/admin/products/<%= product.id %>/delete" class="inline-form" onsubmit="return confirm('Bu kursu silmek istediğinize emin misiniz?');">
-                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                <button type="submit" class="button-danger">Sil</button>
-              </form>
+              <% if (!hasDurationVariants) { %>
+                <form method="post" action="/admin/products/<%= product.id %>/delete" class="inline-form" onsubmit="return confirm('Bu kursu silmek istediğinize emin misiniz?');">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <button type="submit" class="button-danger">Sil</button>
+                </form>
+              <% } %>
             </div>
           </td>
         </tr>
