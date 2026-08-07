@@ -1,9 +1,9 @@
-const LEGACY_HOME_CSS_VERSION = '5.4.104';
-const LEGACY_UNITYVERSE_CSS_VERSION = '5.4.106';
-const LEGACY_SCRIPTS_VERSION = '5.4.115';
-const LEGACY_BANK_TRANSFER_CSS_VERSION = '20260731-2';
-const LEGACY_CATALOG_JS_VERSION = '20260804-1';
-const LEGACY_FILTERS_VERSION = '5.4.98';
+const LEGACY_HOME_CSS_VERSION = '5.4.105';
+const LEGACY_UNITYVERSE_CSS_VERSION = '5.4.107';
+const LEGACY_SCRIPTS_VERSION = '5.4.116';
+const LEGACY_BANK_TRANSFER_CSS_VERSION = '20260807-1';
+const LEGACY_CATALOG_JS_VERSION = '20260807-1';
+const LEGACY_FILTERS_VERSION = '5.4.99';
 
 const homeCssPattern = /((?:href)=["'][^"']*public\/tema10\/css\/home2\.css\?v=)[^"'&]+/gi;
 const unityverseCssPattern = /((?:href)=["'][^"']*public\/tema10\/css\/unityverse\.css\?v=)[^"'&]+/gi;
