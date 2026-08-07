@@ -215,7 +215,7 @@ function compare()
 		_error ("", "En az 2 ürün seçmelisiniz.");		
 	}
 	else
-		window.location.href = site_url + 'pbl/karsilastir?return_url='+document.URL;
+		window.location.href = site_url + 'uv/karsilastir?return_url='+document.URL;
 	return false;
 }
 
@@ -441,7 +441,7 @@ function ___addToBasket(pid, pcount, poptions, additionalentry, getit, extra_pri
 					setTimeout(function(){ window.location.href= result.param.purl; }, 2000);
 			} else if (result.param.sonuc == "4") {
 				_error("", result.message);	
-				setTimeout(function(){ window.location.href= site_url + 'pbl/uye-girisi'; }, 2000);
+				setTimeout(function(){ window.location.href= site_url + 'uv/uye-girisi'; }, 2000);
 			} else if (result.param.sonuc == "5") {
 				_error("", result.message);	
 				setTimeout(function(){ window.location.href= site_url + 'uye/sepet'; }, 3000);

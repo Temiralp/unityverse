@@ -225,9 +225,9 @@ const server = http.createServer((req, res) => {
                 }
             });
             return;
-        } else if (pathname.startsWith('/ajax/') || pathname.startsWith('/pbl/')) {
-            // For other POST requests (e.g. file uploads, megamenu items, etc.), proxy to live site
-            console.log(`Forwarding POST request to live server: ${pathname}`);
+        } else if (pathname.startsWith('/ajax/') || pathname.startsWith('/pbl/') || pathname.startsWith('/uv/')) {
+            // Proxy to live site (AJAX, legacy /pbl/ routes, and new /uv/ routes)
+            console.log(`Forwarding ${req.method} request to live server: ${pathname}`);
 
             const headers = { ...req.headers };
             headers['host'] = 'unityverseacademy.com';
@@ -238,11 +238,18 @@ const server = http.createServer((req, res) => {
                 headers['referer'] = 'https://unityverseacademy.com' + pathname;
             }
 
+            // GÖRÜNMEZ KÖPRÜ: /uv/ isteklerini canlı sunucuya /pbl/ olarak ilet
+            let proxyPath = req.url;
+            if (proxyPath.startsWith('/uv/')) {
+                proxyPath = '/pbl/' + proxyPath.slice(4);
+                console.log(`[PROXY BRIDGE] /uv/ -> ${proxyPath}`);
+            }
+
             const options = {
                 hostname: 'unityverseacademy.com',
                 port: 443,
-                path: req.url,
-                method: 'POST',
+                path: proxyPath,
+                method: req.method,
                 headers: headers
             };
 
