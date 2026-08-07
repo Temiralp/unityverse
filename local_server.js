@@ -276,12 +276,12 @@ const server = http.createServer((req, res) => {
 
     // Handle GET requests (Static file server with live-site fallback)
     if (req.method === 'GET') {
-        // Proxy certain paths directly to live site (they don't exist locally)
-        if (pathname.startsWith('/api/') || pathname.startsWith('/uploads/')) {
+        // Proxy /api/ to live site directly
+        if (pathname.startsWith('/api/')) {
             console.log(`[PROXY GET] ${pathname} -> live server`);
             const proxyHeaders = { ...req.headers };
             proxyHeaders['host'] = 'unityverseacademy.com';
-            delete proxyHeaders['accept-encoding']; // avoid compressed responses
+            delete proxyHeaders['accept-encoding'];
 
             const proxyOpts = {
                 hostname: 'unityverseacademy.com',
@@ -321,6 +321,30 @@ const server = http.createServer((req, res) => {
         // Check if file exists and read it
         fs.readFile(filePath, (err, data) => {
             if (err) {
+                // If file not found locally and it's an uploads path, proxy to live server
+                if (pathname.startsWith('/uploads/')) {
+                    console.log(`[PROXY FALLBACK] ${pathname} -> live server`);
+                    const proxyHeaders = { ...req.headers };
+                    proxyHeaders['host'] = 'unityverseacademy.com';
+                    delete proxyHeaders['accept-encoding'];
+                    const proxyOpts = {
+                        hostname: 'unityverseacademy.com',
+                        port: 443,
+                        path: req.url,
+                        method: 'GET',
+                        headers: proxyHeaders
+                    };
+                    const proxyReq = https.request(proxyOpts, (proxyRes) => {
+                        res.writeHead(proxyRes.statusCode, proxyRes.headers);
+                        proxyRes.pipe(res);
+                    });
+                    proxyReq.on('error', (pErr) => {
+                        res.writeHead(502, { 'Content-Type': 'text/plain' });
+                        res.end('Proxy error');
+                    });
+                    proxyReq.end();
+                    return;
+                }
                 console.log(`File not found: ${filePath}`);
                 res.writeHead(404, { 'Content-Type': 'text/plain' });
                 res.end('404 File Not Found');
