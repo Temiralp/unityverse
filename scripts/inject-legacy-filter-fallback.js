@@ -163,7 +163,7 @@ for (const root of roots) {
 
     html = html.replace(markerPattern, '\n');
     html = html.replace(/(<aside class="col-sm-4 col-md-3 category-filter" id="column-left">)/, `$1${fallback}`);
-    html = html.replace(/pobol\.css\?v=5\.4\.(99|100|101|102|103)/g, 'pobol.css?v=5.4.104');
+    html = html.replace(/unityverse\.css\?v=5\.4\.(99|100|101|102|103)/g, 'unityverse.css?v=5.4.104');
 
     if (html !== before) {
       fs.writeFileSync(filePath, html);

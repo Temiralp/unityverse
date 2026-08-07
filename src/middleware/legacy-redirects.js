@@ -3,7 +3,7 @@ const path = require('path');
 
 const rootDir = path.resolve(__dirname, '../..');
 
-// Explicit 1-to-1 mapping for old Pobol URLs to active live course / category URLs
+// Explicit 1-to-1 mapping for old Unityverse URLs to active live course / category URLs
 const legacyExplicitRedirects = new Map([
   // Old Category URLs -> Direct Active Course URLs
   ['/kategori/film-ve-animasyon-icin-storyboard-yuz-yuze-egitimi/115', '/urun/film-ve-animasyon-icin-storyboard-yuz-yuze-egitimi-599/'],
@@ -85,7 +85,7 @@ function createLegacyRedirectsMiddleware() {
       return res.redirect(301, `${legacyExplicitRedirects.get(rawPath)}${query}`);
     }
 
-    // 2. Old Pobol format with slash ID: /blog-detay/slug/123 -> /blog-detay/slug-123/
+    // 2. Old Unityverse format with slash ID: /blog-detay/slug/123 -> /blog-detay/slug-123/
     //                                  /urun/slug/123 -> /urun/slug-123/
     //                                  /kategori/slug/123 -> /kategori/slug-123/
     //                                  /os/slug/123 -> /os/slug-123/

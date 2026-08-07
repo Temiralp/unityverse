@@ -1112,7 +1112,7 @@ function subscribe_newsletter()
 	}
 }
 
-/******POBOL******/
+
 $("#show-filter").click(function () {
 		if($('#column-left').hasClass('filtre_acik')){
 			//$('.vertical-wrapper').removeClass('so-vertical-active');

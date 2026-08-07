@@ -274,7 +274,7 @@ function frontendSearchContractTest() {
     'utf8'
   );
   const filters = fs.readFileSync(path.join(root, 'public/tema10/js/filters.js'), 'utf8');
-  const css = fs.readFileSync(path.join(root, 'public/tema10/css/pobol.css'), 'utf8');
+  const css = fs.readFileSync(path.join(root, 'public/tema10/css/unityverse.css'), 'utf8');
   const versionedTemplate = ensureLegacyAssetVersions(template);
 
   assert.match(template, /id="course-search-input"[^>]*maxlength="100"/);
