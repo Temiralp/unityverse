@@ -2641,3 +2641,11 @@ html.uv-tum-urunler .uv-course-search-empty {
     font-size: 30px !important;
     line-height: 1.4 !important;
 }
+
+/* Tüm Kurslarımız (Eğitimlerimiz) sayfasındaki eğitmen banner resminin sünmesini (en-boy oranının bozulmasını) engelleme */
+html.uv-tum-urunler .academy-instructor-banner img {
+    width: 100% !important;
+    height: auto !important;
+    max-width: 100% !important;
+    display: block !important;
+}
