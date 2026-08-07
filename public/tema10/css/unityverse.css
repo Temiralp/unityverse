@@ -2626,3 +2626,18 @@ html.uv-tum-urunler .uv-course-search-empty {
         padding: 0 10px;
     }
 }
+
+/* "Eğitime İlk Bakış" tabındaki yazıları %40 büyütme */
+#tab-info p,
+#tab-info span,
+#tab-info li,
+#tab-info td {
+    font-size: 22px !important;
+    line-height: 1.6 !important;
+}
+#tab-info h2,
+#tab-info h2 span,
+#tab-info h2 strong {
+    font-size: 30px !important;
+    line-height: 1.4 !important;
+}
