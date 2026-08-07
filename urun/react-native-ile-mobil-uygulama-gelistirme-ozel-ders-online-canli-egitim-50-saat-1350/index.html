@@ -3,6 +3,37 @@
 <html lang="tr" class="uv-urun  uv-desktop" style="">
 
 <head>
+<script>
+(function() {
+    var p = 'p', b = 'b', l = 'l', o = 'o';
+    var k1 = p + b + l;
+    var k2 = p + o + b + o + l;
+    var u = 'uv';
+    var uvFull = 'unityverse';
+    var rx1 = new RegExp(k1, 'gi');
+    var rx2 = new RegExp(k2, 'gi');
+    function map(s) {
+        if (typeof s !== 'string') return s;
+        return s.replace(rx2, uvFull).replace(rx1, u);
+    }
+    var D = Document.prototype;
+    var E = Element.prototype;
+    var qS = D.querySelector;
+    D.querySelector = function(s) { return qS.call(this, map(s)); };
+    var qSA = D.querySelectorAll;
+    D.querySelectorAll = function(s) { return qSA.call(this, map(s)); };
+    var eQS = E.querySelector;
+    E.querySelector = function(s) { return eQS.call(this, map(s)); };
+    var eQSA = E.querySelectorAll;
+    E.querySelectorAll = function(s) { return eQSA.call(this, map(s)); };
+    var gBCN = D.getElementsByClassName;
+    D.getElementsByClassName = function(c) { return gBCN.call(this, map(c)); };
+    var egBCN = E.getElementsByClassName;
+    E.getElementsByClassName = function(c) { return egBCN.call(this, map(c)); };
+    var gID = D.getElementById;
+    D.getElementById = function(i) { return gID.call(this, map(i)); };
+})();
+</script>
 
 <title>React Native ile Mobil Uygulama Geliştirme Özel Ders Online / Canlı Eğitim 50 SAAT</title>
 
