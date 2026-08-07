@@ -13,13 +13,13 @@ const {
 } = require('../src/middleware/legacy-product-visibility');
 
 function productCard(slug, title) {
-  return `<div class="pbl-product-card-item"><a href="../../urun/${slug}/">${title}</a></div>`;
+  return `<div class="uv-product-card-item"><a href="../../urun/${slug}/">${title}</a></div>`;
 }
 
 function filterTests() {
   const html = [
     '<html><body>',
-    '<section class="pbl-product-card-area-4 pbl-product-card-area-mobile-2" style="--gap:10px">',
+    '<section class="uv-product-card-area-4 uv-product-card-area-mobile-2" style="--gap:10px">',
     productCard('published-course-1', 'Published'),
     productCard('draft-course-2', 'Draft'),
     productCard('draft-course-3', 'Last draft'),
@@ -56,14 +56,14 @@ function filterTests() {
 
 function titleSynchronizationTests() {
   const html = [
-    '<section class="pbl-product-card-area-4 pbl-product-card-area-mobile-2">',
-    '<div class="pbl-product-card-item">',
-    '<div class="pbl-product-card-item-image ratio-1"><a href="../../urun/game-course/"><img src="game.jpg" alt="Old game title"></a></div>',
-    '<div class="pbl-product-card-item-name"><a href="../../urun/game-course/">Old game title</a></div>',
+    '<section class="uv-product-card-area-4 uv-product-card-area-mobile-2">',
+    '<div class="uv-product-card-item">',
+    '<div class="uv-product-card-item-image ratio-1"><a href="../../urun/game-course/"><img src="game.jpg" alt="Old game title"></a></div>',
+    '<div class="uv-product-card-item-name"><a href="../../urun/game-course/">Old game title</a></div>',
     '</div>',
-    '<div class="pbl-product-card-item">',
-    '<div class="pbl-product-card-item-image ratio-1"><a href="../../urun/other-course/"><img src="other.jpg" alt="Other title"></a></div>',
-    '<div class="pbl-product-card-item-name"><a href="../../urun/other-course/">Other title</a></div>',
+    '<div class="uv-product-card-item">',
+    '<div class="uv-product-card-item-image ratio-1"><a href="../../urun/other-course/"><img src="other.jpg" alt="Other title"></a></div>',
+    '<div class="uv-product-card-item-name"><a href="../../urun/other-course/">Other title</a></div>',
     '</div>',
     '</section>'
   ].join('');

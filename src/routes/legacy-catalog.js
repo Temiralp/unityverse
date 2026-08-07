@@ -11,7 +11,7 @@ const rootDir = path.resolve(__dirname, '../..');
 const allProductsTemplatePath = path.join(rootDir, 'tum-urunler/index.html');
 const legacyCategoryRoot = path.join(rootDir, 'kategori');
 const legacyBlogDetailTemplatePath = path.join(rootDir, 'blog-detay', 'unreal-engine-egitimi-295', 'index.html');
-const productGridPattern = /<section class="pbl-product-card-area-4 pbl-product-card-area-mobile-2" style="--gap:10px">[\s\S]*?<\/section>/i;
+const productGridPattern = /<section class="uv-product-card-area-4 uv-product-card-area-mobile-2" style="--gap:10px">[\s\S]*?<\/section>/i;
 const productCountPattern = /<span\s+id=["']search_result["'][^>]*>[\s\S]*?<\/span>/i;
 const blogPaginationPattern = /<div class="box-pagination col-md-6 col-sm-6 text-right"><ul class="pagination">[\s\S]*?<\/ul><\/div>/i;
 const blogGridPattern = /(<div class="products-list row grid ana_urunler">)([\s\S]*?)(\s*<\/div>\s*<div class="product-filter product-filter-bottom filters-panel")/i;
@@ -153,16 +153,16 @@ function renderLegacyProductCard(product, index) {
     product.category ? product.category.name : ''
   ].filter(Boolean).join(' '));
 
-  return `<div class="pbl-product-card-item"><div class="pbl-private-info"><span class="sr-only">${metadata}</span></div><div class="pbl-product-card-item-image ratio-1"><a href="${url}"><img class="lazy" src="${image}" alt="${title}"></a>
+  return `<div class="uv-product-card-item"><div class="uv-private-info"><span class="sr-only">${metadata}</span></div><div class="uv-product-card-item-image ratio-1"><a href="${url}"><img class="lazy" src="${image}" alt="${title}"></a>
 				<div class="product-action">
-		            <button onclick="return toggleFavorite(${product.id})" class="pbl-product-detail-buy-box-buttons-add-favorites favorite-${product.id}" data-toggle="tooltip" data-original-title="Favorilerine Ekle"
+		            <button onclick="return toggleFavorite(${product.id})" class="uv-product-detail-buy-box-buttons-add-favorites favorite-${product.id}" data-toggle="tooltip" data-original-title="Favorilerine Ekle"
 								title="Favorilerine Ekle" data-placement="right"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M19.66 3.99c-2.64-1.8-5.9-.96-7.66 1.1c-1.76-2.06-5.02-2.91-7.66-1.1c-1.4.96-2.28 2.58-2.34 4.29c-.14 3.88 3.3 6.99 8.55 11.76l.1.09c.76.69 1.93.69 2.69-.01l.11-.1c5.25-4.76 8.68-7.87 8.55-11.75c-.06-1.7-.94-3.32-2.34-4.28zM12.1 18.55l-.1.1l-.1-.1C7.14 14.24 4 11.39 4 8.5C4 6.5 5.5 5 7.5 5c1.54 0 3.04.99 3.57 2.36h1.87C13.46 5.99 14.96 5 16.5 5c2 0 3.5 1.5 3.5 3.5c0 2.89-3.14 5.74-7.9 10.05z"></path></svg></button>
 		            <button onclick="openProductDetailsModal(${product.id})"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M12 9a3 3 0 0 1 3 3a3 3 0 0 1-3 3a3 3 0 0 1-3-3a3 3 0 0 1 3-3m0-4.5c5 0 9.27 3.11 11 7.5c-1.73 4.39-6 7.5-11 7.5S2.73 16.39 1 12c1.73-4.39 6-7.5 11-7.5M3.18 12a9.821 9.821 0 0 0 17.64 0a9.821 9.821 0 0 0-17.64 0"/></svg> Hızlı Bakış</button>
-		        </div></div><div class="pbl-product-card-item-name">
+		        </div></div><div class="uv-product-card-item-name">
     <a href="${url}">${title}</a>
-</div><div class="pbl-product-card-item-brand">
+</div><div class="uv-product-card-item-brand">
         <a href="/marka/unityverse-academy-1/">Unityverse Academy</a>
-    </div><div class="pbl-product-card-item-price-add-chart"><div class="add-cart">
+    </div><div class="uv-product-card-item-price-add-chart"><div class="add-cart">
 		<button class="add" onclick="return addToBasket(${product.id},1, false, 0, 0, ${index})">
                     Eğitime Kaydol
          </button>
@@ -224,7 +224,7 @@ function renderLegacyProductGrid(products) {
     .map((product, index) => renderLegacyProductCard(product, index))
     .join('\n');
 
-  return `<section class="pbl-product-card-area-4 pbl-product-card-area-mobile-2" style="--gap:10px">\n${cards}\n</section>`;
+  return `<section class="uv-product-card-area-4 uv-product-card-area-mobile-2" style="--gap:10px">\n${cards}\n</section>`;
 }
 
 function renderLegacyProductListing(template, products) {
@@ -339,7 +339,7 @@ function renderAdminBlogCard(post) {
 										<div class="right-block">
 											<div class="caption">
 												<h2><a href="${href}">${title}</a></h2>
-												<h4 class="pbl-blog-small-text">${excerpt}</h4>
+												<h4 class="uv-blog-small-text">${excerpt}</h4>
 											</div>
 											<div class="button-group">
 												<a class="addToCart w100" href="${href}"><span class="">Devamı</span></a>

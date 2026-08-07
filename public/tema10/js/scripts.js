@@ -3,17 +3,17 @@
         var isMobile = window.innerWidth < 1200;
         var htmlEl = document.documentElement;
         if (isMobile) {
-            if (htmlEl.classList.contains('pbl-desktop')) {
-                htmlEl.classList.remove('pbl-desktop');
-                htmlEl.classList.add('pbl-mobile');
+            if (htmlEl.classList.contains('uv-desktop')) {
+                htmlEl.classList.remove('uv-desktop');
+                htmlEl.classList.add('uv-mobile');
             }
             if (window.js_configurations) {
                 window.js_configurations.is_mobile = true;
             }
         } else {
-            if (htmlEl.classList.contains('pbl-mobile')) {
-                htmlEl.classList.remove('pbl-mobile');
-                htmlEl.classList.add('pbl-desktop');
+            if (htmlEl.classList.contains('uv-mobile')) {
+                htmlEl.classList.remove('uv-mobile');
+                htmlEl.classList.add('uv-desktop');
             }
             if (window.js_configurations) {
                 window.js_configurations.is_mobile = false;
@@ -285,13 +285,13 @@ function compareRemoveAll()
       var clickedBtn = window.event ? (window.event.target || window.event.srcElement) : null;
       var productName = "Eğitimleriniz";
       if (clickedBtn) {
-          var card = clickedBtn.closest('.pbl-product-card-item') || clickedBtn.closest('.product-layout') || clickedBtn.closest('.left-content-product');
+          var card = clickedBtn.closest('.uv-product-card-item') || clickedBtn.closest('.product-layout') || clickedBtn.closest('.left-content-product');
           if (card) {
               var img = card.querySelector('img');
               if (img && img.getAttribute('alt')) {
                   productName = img.getAttribute('alt');
               } else {
-                  var titleLink = card.querySelector('.pbl-product-card-item-title a') || card.querySelector('.title a') || card.querySelector('h3 a') || card.querySelector('h4 a');
+                  var titleLink = card.querySelector('.uv-product-card-item-title a') || card.querySelector('.title a') || card.querySelector('h3 a') || card.querySelector('h4 a');
                   if (titleLink) {
                       productName = titleLink.textContent.trim();
                   }
@@ -355,9 +355,9 @@ function compareRemoveAll()
 	// If not on detail page, try to find from the clicked card
 	if (!courseName && document.activeElement) {
 		var activeEl = document.activeElement;
-		var card = activeEl.closest('.pbl-product-card-item');
+		var card = activeEl.closest('.uv-product-card-item');
 		if (card) {
-			var nameEl = card.querySelector('.pbl-product-card-item-name a');
+			var nameEl = card.querySelector('.uv-product-card-item-name a');
 			if (nameEl) {
 				courseName = nameEl.textContent.trim();
 			}
@@ -558,10 +558,10 @@ function ___addToBasket(pid, pcount, poptions, additionalentry, getit, extra_pri
 	}
 	else
 	{
-	  	$('.pbl-new-header-basket-side-bar-content').html(result.param.products);
+	  	$('.uv-new-header-basket-side-bar-content').html(result.param.products);
 	  	$('.cart-total-full').html(result.param.productcount + ' ' + lang_arr.js_text_product + ' - '+ result.param.totalprice);
-	  	$('.pbl-new-header-basket-total-price').html(result.param.totalprice);
-	    $('.pbl-new-header-basket-total-count').text(result.param.productcount);
+	  	$('.uv-new-header-basket-total-price').html(result.param.totalprice);
+	    $('.uv-new-header-basket-total-count').text(result.param.productcount);
 	    $('.sepet_sayi').text(result.param.productcount);
 	    
 	    if(typeof total_price !== 'undefined' && result.param.totalpriceraw !== undefined) {
@@ -825,7 +825,7 @@ $(window).on('load', function() {
   $("#pollsubmit").click(function() {
       $("#pollerror").addClass('display_none');
       $("#pollok").addClass('display_none');
-      var cookieName = "pobol_anket_" + activepollid;
+      var cookieName = "unityverse_anket_" + activepollid;
       var voted = "";
       if (readCookie(cookieName) == "true") {
           $("#pollerror").html('Daha Önce Katıldınız');
@@ -1098,9 +1098,9 @@ $(document).ready(function() {
     }
     
     /* Search Box*/
-    const $searchBox = $('.pbl-new-header-right-search-box');
+    const $searchBox = $('.uv-new-header-right-search-box');
     const $searchBoxWrapper = $('.search-pro');
-    const $searchResult = $('.pbl-new-header-right-search-result');
+    const $searchResult = $('.uv-new-header-right-search-result');
 
     function openSearchBox() {
        search();
@@ -1110,7 +1110,7 @@ $(document).ready(function() {
         var searchBox = document.getElementById('sosearchpro');
 
         // Eğer tıklanan alan searchBox'ın dışındaysa
-        if (!searchBox.contains(event.target) || event.currentTarget.className == 'pbl-new-header-right-search-result-close') {
+        if (!searchBox.contains(event.target) || event.currentTarget.className == 'uv-new-header-right-search-result-close') {
             $searchBox.removeClass('active');
             $searchBoxWrapper.removeClass('active');
             setTimeout(() => unfixBody(), 0);
@@ -1121,14 +1121,14 @@ $(document).ready(function() {
     }
     
     $searchBox.click((e) => {
-    	if ($(e.target).closest('.pbl-barcode-scanner').length) {
+    	if ($(e.target).closest('.uv-barcode-scanner').length) {
 	        return;
 	    }
         e.stopPropagation();
         $searchBox.hasClass('active') ? closeSearchBox(e) : openSearchBox();
     });
     $searchResult.click((e) => e.stopPropagation());
-    $('.pbl-new-header-right-search-result-close').click((e) => {
+    $('.uv-new-header-right-search-result-close').click((e) => {
         e.stopPropagation();
         closeSearchBox(e);
     });
@@ -1184,14 +1184,14 @@ $(document).ready(function() {
 					{
 						total_count = param.products.length;
 						
-						search_left_side_html += '<div class="pbl-new-header-right-search-result-left-side-content">';
+						search_left_side_html += '<div class="uv-new-header-right-search-result-left-side-content">';
 						if(undefined != param.categories)
 						{
 							total_count += param.categories.length;
 							for(i=0;i<param.categories.length;i++)
 							{
 								_category = param.categories[i];
-								search_left_side_html += '<div class="pbl-new-header-right-search-result-left-side-item pbl-results"><a href="'+_category.category_url+'"><img src="data:image/svg+xml;charset=utf-8,%3Csvg width=%2724%27 height=%2724%27 viewBox=%270 0 24 24%27 fill=%27none%27 xmlns=%27http://www.w3.org/2000/svg%27 stroke=%27none%27%3E %3Cpath d=%27M7.125 10.5C8.98896 10.5 10.5 8.98896 10.5 7.125C10.5 5.26104 8.98896 3.75 7.125 3.75C5.26104 3.75 3.75 5.26104 3.75 7.125C3.75 8.98896 5.26104 10.5 7.125 10.5Z%27 stroke=%27%239B9B9B%27 stroke-width=%271.5%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27/%3E %3Cpath d=%27M3.79593 17.4232C3.73469 17.316 3.73469 17.184 3.79593 17.0768L5.31203 14.4232C5.37326 14.316 5.48643 14.25 5.6089 14.25H8.6411C8.76357 14.25 8.87674 14.316 8.93797 14.4232L10.4541 17.0768C10.5153 17.184 10.5153 17.316 10.4541 17.4232L8.93798 20.0768C8.87674 20.184 8.76357 20.25 8.6411 20.25H5.6089C5.48643 20.25 5.37326 20.184 5.31203 20.0768L3.79593 17.4232Z%27 stroke=%27%239B9B9B%27 stroke-width=%271.5%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27/%3E %3Cpath d=%27M16.875 3.75L13.543 9.17112C13.4092 9.43708 13.6038 9.75 13.9031 9.75H19.8469C20.1462 9.75 20.3408 9.43708 20.207 9.17111L16.875 3.75Z%27 stroke=%27%239B9B9B%27 stroke-width=%271.5%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27/%3E %3Cpath d=%27M19.5 13.5H14.25C13.8358 13.5 13.5 13.8358 13.5 14.25V19.5C13.5 19.9142 13.8358 20.25 14.25 20.25H19.5C19.9142 20.25 20.25 19.9142 20.25 19.5V14.25C20.25 13.8358 19.9142 13.5 19.5 13.5Z%27 stroke=%27%239B9B9B%27 stroke-width=%271.5%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27/%3E %3C/svg%3E"><span>'+_category.name+'</span><span class="brand-category" style="color:#248df9;">Kategori</span></a></div>';
+								search_left_side_html += '<div class="uv-new-header-right-search-result-left-side-item uv-results"><a href="'+_category.category_url+'"><img src="data:image/svg+xml;charset=utf-8,%3Csvg width=%2724%27 height=%2724%27 viewBox=%270 0 24 24%27 fill=%27none%27 xmlns=%27http://www.w3.org/2000/svg%27 stroke=%27none%27%3E %3Cpath d=%27M7.125 10.5C8.98896 10.5 10.5 8.98896 10.5 7.125C10.5 5.26104 8.98896 3.75 7.125 3.75C5.26104 3.75 3.75 5.26104 3.75 7.125C3.75 8.98896 5.26104 10.5 7.125 10.5Z%27 stroke=%27%239B9B9B%27 stroke-width=%271.5%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27/%3E %3Cpath d=%27M3.79593 17.4232C3.73469 17.316 3.73469 17.184 3.79593 17.0768L5.31203 14.4232C5.37326 14.316 5.48643 14.25 5.6089 14.25H8.6411C8.76357 14.25 8.87674 14.316 8.93797 14.4232L10.4541 17.0768C10.5153 17.184 10.5153 17.316 10.4541 17.4232L8.93798 20.0768C8.87674 20.184 8.76357 20.25 8.6411 20.25H5.6089C5.48643 20.25 5.37326 20.184 5.31203 20.0768L3.79593 17.4232Z%27 stroke=%27%239B9B9B%27 stroke-width=%271.5%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27/%3E %3Cpath d=%27M16.875 3.75L13.543 9.17112C13.4092 9.43708 13.6038 9.75 13.9031 9.75H19.8469C20.1462 9.75 20.3408 9.43708 20.207 9.17111L16.875 3.75Z%27 stroke=%27%239B9B9B%27 stroke-width=%271.5%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27/%3E %3Cpath d=%27M19.5 13.5H14.25C13.8358 13.5 13.5 13.8358 13.5 14.25V19.5C13.5 19.9142 13.8358 20.25 14.25 20.25H19.5C19.9142 20.25 20.25 19.9142 20.25 19.5V14.25C20.25 13.8358 19.9142 13.5 19.5 13.5Z%27 stroke=%27%239B9B9B%27 stroke-width=%271.5%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27/%3E %3C/svg%3E"><span>'+_category.name+'</span><span class="brand-category" style="color:#248df9;">Kategori</span></a></div>';
 							}
 						}
 						if(undefined != param.brands)
@@ -1200,73 +1200,73 @@ $(document).ready(function() {
 							for(i=0;i<param.brands.length;i++)
 							{
 								_brand = param.brands[i];
-								search_left_side_html += '<div class="pbl-new-header-right-search-result-left-side-item pbl-results"><a href="'+_brand.brand_url+'"><img src="data:image/svg+xml;charset=utf-8,%3Csvg width=%2724%27 height=%2724%27 viewBox=%270 0 24 24%27 fill=%27none%27 xmlns=%27http://www.w3.org/2000/svg%27 stroke=%27none%27%3E %3Cg clip-path=%27url%28%23clip0_9764_114497%29%27%3E %3Cpath d=%27M12.375 20.625L12.4393 20.6893C13.0251 21.2751 13.9749 21.2751 14.5607 20.6893L20.6893 14.5607C21.2751 13.9749 21.2751 13.0251 20.6893 12.4393L11.3787 3.12868C10.8161 2.56607 10.053 2.25 9.25736 2.25H5.25C3.59315 2.25 2.25 3.59315 2.25 5.25V9.43934C2.25 10.1185 2.51978 10.7698 3 11.25M7.5 6C7.5 6.82843 6.82843 7.5 6 7.5C5.17157 7.5 4.5 6.82843 4.5 6C4.5 5.17157 5.17157 4.5 6 4.5C6.82843 4.5 7.5 5.17157 7.5 6ZM9.02625 13.9369L8.23058 11.5615C8.11629 11.2204 7.63371 11.2204 7.51942 11.5615L6.72375 13.9369H4.18124C3.81538 13.9369 3.66607 14.4072 3.96494 14.6182L6.01125 16.0631L5.22541 18.4168C5.11074 18.7602 5.50121 19.0507 5.79716 18.8421L7.875 17.3774L9.95284 18.8421C10.2488 19.0507 10.6393 18.7602 10.5246 18.4168L9.73875 16.0631L11.7851 14.6182C12.0839 14.4072 11.9346 13.9369 11.5688 13.9369H9.02625Z%27 stroke=%27%239B9B9B%27 stroke-width=%271.5%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27/%3E %3C/g%3E %3Cdefs%3E %3CclipPath id=%27clip0_9764_114497%27%3E %3Crect width=%2724%27 height=%2724%27 fill=%27white%27/%3E %3C/clipPath%3E %3C/defs%3E %3C/svg%3E"><span>'+_brand.name+'</span><span class="brand-category" style="color:#008817;">Marka</span></a></div>';
+								search_left_side_html += '<div class="uv-new-header-right-search-result-left-side-item uv-results"><a href="'+_brand.brand_url+'"><img src="data:image/svg+xml;charset=utf-8,%3Csvg width=%2724%27 height=%2724%27 viewBox=%270 0 24 24%27 fill=%27none%27 xmlns=%27http://www.w3.org/2000/svg%27 stroke=%27none%27%3E %3Cg clip-path=%27url%28%23clip0_9764_114497%29%27%3E %3Cpath d=%27M12.375 20.625L12.4393 20.6893C13.0251 21.2751 13.9749 21.2751 14.5607 20.6893L20.6893 14.5607C21.2751 13.9749 21.2751 13.0251 20.6893 12.4393L11.3787 3.12868C10.8161 2.56607 10.053 2.25 9.25736 2.25H5.25C3.59315 2.25 2.25 3.59315 2.25 5.25V9.43934C2.25 10.1185 2.51978 10.7698 3 11.25M7.5 6C7.5 6.82843 6.82843 7.5 6 7.5C5.17157 7.5 4.5 6.82843 4.5 6C4.5 5.17157 5.17157 4.5 6 4.5C6.82843 4.5 7.5 5.17157 7.5 6ZM9.02625 13.9369L8.23058 11.5615C8.11629 11.2204 7.63371 11.2204 7.51942 11.5615L6.72375 13.9369H4.18124C3.81538 13.9369 3.66607 14.4072 3.96494 14.6182L6.01125 16.0631L5.22541 18.4168C5.11074 18.7602 5.50121 19.0507 5.79716 18.8421L7.875 17.3774L9.95284 18.8421C10.2488 19.0507 10.6393 18.7602 10.5246 18.4168L9.73875 16.0631L11.7851 14.6182C12.0839 14.4072 11.9346 13.9369 11.5688 13.9369H9.02625Z%27 stroke=%27%239B9B9B%27 stroke-width=%271.5%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27/%3E %3C/g%3E %3Cdefs%3E %3CclipPath id=%27clip0_9764_114497%27%3E %3Crect width=%2724%27 height=%2724%27 fill=%27white%27/%3E %3C/clipPath%3E %3C/defs%3E %3C/svg%3E"><span>'+_brand.name+'</span><span class="brand-category" style="color:#008817;">Marka</span></a></div>';
 							}
 						}
 						for(i=0;i<param.products.length;i++)
 						{
 							_product = param.products[i];
-							search_left_side_html += '<div class="pbl-new-header-right-search-result-left-side-item pbl-results"><a href="'+_product.product_url+'"><span>'+_product.name+'</span></a></div>';
+							search_left_side_html += '<div class="uv-new-header-right-search-result-left-side-item uv-results"><a href="'+_product.product_url+'"><span>'+_product.name+'</span></a></div>';
 						}
 						if(total_count == 0)
-							search_left_side_html += '<div class="pbl-new-header-right-search-result-left-side-item pbl-results">Aradığınız kriterde ürün bulunamadı.</div>';
+							search_left_side_html += '<div class="uv-new-header-right-search-result-left-side-item uv-results">Aradığınız kriterde ürün bulunamadı.</div>';
 						search_left_side_html += '</div>';
 					}
 					if(undefined != param.search_history && param.search_history.length > 0)
 					{
-						search_left_side_html += '<div class="pbl-new-header-right-search-result-left-side-title"><h3>Geçmiş Aramalar</h3><button type="button" data-searchtext="" class="remove-search-history">Temizle</button></div><div class="pbl-new-header-right-search-result-left-side-content">';
+						search_left_side_html += '<div class="uv-new-header-right-search-result-left-side-title"><h3>Geçmiş Aramalar</h3><button type="button" data-searchtext="" class="remove-search-history">Temizle</button></div><div class="uv-new-header-right-search-result-left-side-content">';
 						for(i=0;i<param.search_history.length;i++)
 						{
 							_search_history = param.search_history[i];
-							search_left_side_html += '<div class="pbl-new-header-right-search-result-left-side-item pbl-results"><a href="'+_search_history.search_url+'">'+_search_history.searchtext+'</a><button type="button" data-searchtext="'+_search_history.searchtext+'" class="remove-search-history"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="#1e1e1e" stroke-linecap="round" stroke-linejoin="round" d="M17 7L7 17M7 7l10 10"></path></svg></button></div>';
+							search_left_side_html += '<div class="uv-new-header-right-search-result-left-side-item uv-results"><a href="'+_search_history.search_url+'">'+_search_history.searchtext+'</a><button type="button" data-searchtext="'+_search_history.searchtext+'" class="remove-search-history"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="#1e1e1e" stroke-linecap="round" stroke-linejoin="round" d="M17 7L7 17M7 7l10 10"></path></svg></button></div>';
 						}
 						search_left_side_html += '</div>';
 					}
 					if(undefined != param.popular_searches && param.popular_searches.length > 0)
 					{
-						search_left_side_html += '<div class="pbl-new-header-right-search-result-left-side-title"><h3>Popüler Aramalar</h3></div><div class="pbl-new-header-right-search-result-left-side-popular-search">';
+						search_left_side_html += '<div class="uv-new-header-right-search-result-left-side-title"><h3>Popüler Aramalar</h3></div><div class="uv-new-header-right-search-result-left-side-popular-search">';
 						for(i=0;i<param.popular_searches.length;i++)
 						{
 							_popular_search = param.popular_searches[i];
-							search_left_side_html += '<a href="'+site_url+'arama?q='+_popular_search+'" class="pbl-new-header-right-search-result-left-side-popular-search-item">'+_popular_search+'</a>';
+							search_left_side_html += '<a href="'+site_url+'arama?q='+_popular_search+'" class="uv-new-header-right-search-result-left-side-popular-search-item">'+_popular_search+'</a>';
 						}
 						search_left_side_html += '</div>';
 					}
 					if(undefined != param.last_viewed_products && param.last_viewed_products.length > 0)
 					{
-						search_right_side_html += '<div class="pbl-new-header-right-search-result-right-side-title"><h3>Son gezdiğin ürünler</h3></div><div class="pbl-new-header-right-search-result-right-side-content">';
+						search_right_side_html += '<div class="uv-new-header-right-search-result-right-side-title"><h3>Son gezdiğin ürünler</h3></div><div class="uv-new-header-right-search-result-right-side-content">';
 						for(i=0;i<param.last_viewed_products.length;i++)
 						{
 							_product = param.last_viewed_products[i];
 							_old_price = (undefined != _product.view_old_price && _product.view_old_price != '') ? '<s style="color: #999;margin-right:5px;">'+_product.view_old_price+'</s>' : '';
-							search_right_side_html += '<a href="'+_product.product_url+'" class="pbl-new-header-right-search-result-right-side-content-item">\
-	                                            <div class="pbl-new-header-right-search-result-right-side-content-item-image ratio-1"><img src="'+_product.picture_url+'" alt="'+_product.name+'"></div>\
-	                                            <div class="pbl-new-header-right-search-result-right-side-content-item-info">\
-	                                                <div class="pbl-new-header-right-search-result-right-side-content-item-text">'+_product.name+'</div>\
-	                                                <div class="pbl-new-header-right-search-result-right-side-content-item-price">'+_old_price+_product.view_price+'</div>\
+							search_right_side_html += '<a href="'+_product.product_url+'" class="uv-new-header-right-search-result-right-side-content-item">\
+	                                            <div class="uv-new-header-right-search-result-right-side-content-item-image ratio-1"><img src="'+_product.picture_url+'" alt="'+_product.name+'"></div>\
+	                                            <div class="uv-new-header-right-search-result-right-side-content-item-info">\
+	                                                <div class="uv-new-header-right-search-result-right-side-content-item-text">'+_product.name+'</div>\
+	                                                <div class="uv-new-header-right-search-result-right-side-content-item-price">'+_old_price+_product.view_price+'</div>\
 	                                            </div>\
 	                                        </a>';
 						}
 					} 
 					else if(undefined != param.popular_products && param.popular_products.length > 0)
 					{
-						search_right_side_html += '<div class="pbl-new-header-right-search-result-right-side-title"><h3>Popüler ürünler</h3></div><div class="pbl-new-header-right-search-result-right-side-content">';
+						search_right_side_html += '<div class="uv-new-header-right-search-result-right-side-title"><h3>Popüler ürünler</h3></div><div class="uv-new-header-right-search-result-right-side-content">';
 						for(i=0;i<param.popular_products.length;i++)
 						{
 							_product = param.popular_products[i];
 							_old_price = (undefined != _product.view_old_price && _product.view_old_price != '') ? '<s style="color: #999;margin-right:5px;">'+_product.view_old_price+'</s>' : '';
-							search_right_side_html += '<a href="'+_product.product_url+'" class="pbl-new-header-right-search-result-right-side-content-item">\
-	                                            <div class="pbl-new-header-right-search-result-right-side-content-item-image ratio-1"><img src="'+_product.picture_url+'" alt="'+_product.name+'"></div>\
-	                                            <div class="pbl-new-header-right-search-result-right-side-content-item-info">\
-	                                                <div class="pbl-new-header-right-search-result-right-side-content-item-text">'+_product.name+'</div>\
-	                                                <div class="pbl-new-header-right-search-result-right-side-content-item-price">'+_old_price+_product.view_price+'</div>\
+							search_right_side_html += '<a href="'+_product.product_url+'" class="uv-new-header-right-search-result-right-side-content-item">\
+	                                            <div class="uv-new-header-right-search-result-right-side-content-item-image ratio-1"><img src="'+_product.picture_url+'" alt="'+_product.name+'"></div>\
+	                                            <div class="uv-new-header-right-search-result-right-side-content-item-info">\
+	                                                <div class="uv-new-header-right-search-result-right-side-content-item-text">'+_product.name+'</div>\
+	                                                <div class="uv-new-header-right-search-result-right-side-content-item-price">'+_old_price+_product.view_price+'</div>\
 	                                            </div>\
 	                                        </a>';
 						}
 					}
 					
-					$('.pbl-new-header-right-search-result-left-side').html(search_left_side_html);
-					$('.pbl-new-header-right-search-result-right-side').html(search_right_side_html);
+					$('.uv-new-header-right-search-result-left-side').html(search_left_side_html);
+					$('.uv-new-header-right-search-result-right-side').html(search_right_side_html);
 					
 					$('#q').focus();
 					$searchBox.addClass('active');
@@ -1290,7 +1290,7 @@ $(document).ready(function() {
 	}
 	    
 	/* Basket Sidebar*/
-    const $basketSideBar = $('.pbl-new-header-basket-side-bar');
+    const $basketSideBar = $('.uv-new-header-basket-side-bar');
     function openBasket() {
         $basketSideBar.addClass('opened');
         fixBody();
@@ -1302,13 +1302,13 @@ $(document).ready(function() {
         setTimeout(() => unfixBody(), 160);
     }
 
-    $('.pbl-new-header-action-item-basket, .pbl-new-header-basket-side-bar-header-close').click((e) => {
+    $('.uv-new-header-action-item-basket, .uv-new-header-basket-side-bar-header-close').click((e) => {
         e.stopPropagation();
         $basketSideBar.hasClass('opened') ? closeBasket() : openBasket();
     });
 	
 	/* User Sidebar*/
-    const $userSideBar = $('.pbl-new-header-user-side-bar');
+    const $userSideBar = $('.uv-new-header-user-side-bar');
 
     function openUser() {
         $userSideBar.addClass('opened');
@@ -1326,10 +1326,10 @@ $(document).ready(function() {
 
     ensureDesktopUserAction();
 
-    $('.pbl-new-header-action-item-user, .pbl-new-header-user-side-bar-header-close').click((e) => {
+    $('.uv-new-header-action-item-user, .uv-new-header-user-side-bar-header-close').click((e) => {
         e.stopPropagation();
 
-        const isUserAction = $(e.currentTarget).hasClass('pbl-new-header-action-item-user');
+        const isUserAction = $(e.currentTarget).hasClass('uv-new-header-action-item-user');
 
         if (isUserAction && $('body').hasClass('member-logged-in')) {
             window.location.href = $('body').attr('data-member-profile-url') || '/uye/';
@@ -1341,13 +1341,13 @@ $(document).ready(function() {
 	
 	/* Global Click*/
     $(document).on('click', function (e) {
-        if ($searchBox.hasClass('active') && !$(e.target).closest('.pbl-new-header-right-search-box').length && !$(e.target).closest('.pbl-new-header-right-search-result').length) {
+        if ($searchBox.hasClass('active') && !$(e.target).closest('.uv-new-header-right-search-box').length && !$(e.target).closest('.uv-new-header-right-search-result').length) {
             closeSearchBox(e);
         }
-        if ($basketSideBar.hasClass('opened') && !$(e.target).closest('.pbl-new-header-basket-side-bar').length && !$(e.target).closest('.pbl-new-header-action-item-basket').length) {
+        if ($basketSideBar.hasClass('opened') && !$(e.target).closest('.uv-new-header-basket-side-bar').length && !$(e.target).closest('.uv-new-header-action-item-basket').length) {
             closeBasket();
         }
-        if ($userSideBar.hasClass('opened') && !$(e.target).closest('.pbl-new-header-user-side-bar').length && !$(e.target).closest('.pbl-new-header-action-item-user').length) {
+        if ($userSideBar.hasClass('opened') && !$(e.target).closest('.uv-new-header-user-side-bar').length && !$(e.target).closest('.uv-new-header-action-item-user').length) {
             closeUser();
         }
     });
@@ -1401,7 +1401,7 @@ function copyToClipboard(text = '')
 }
 
 $( document ).ready(function() {
-	$(".pbl-all-features-tab-button, .pbl-all-features-tab-close-button").click(function() {
+	$(".uv-all-features-tab-button, .uv-all-features-tab-close-button").click(function() {
 		$('.tabsslider').toggleClass("active");
 		$('body').toggleClass("body-fix");
 	});
@@ -1474,10 +1474,10 @@ $(document).ready(function () {
     }
 });
 
-$('.pbl-tabs .pbl-tab').click(function () {
-	var main_tab_id = $(this).parents('.pbl-tabs').attr('data-tabid');
-	$(this).parents('.pbl-tabs').find('.pbl-tab').removeClass('active');
-	$('#' + main_tab_id).find('.pbl-data-tab-content').removeClass('active');
+$('.uv-tabs .uv-tab').click(function () {
+	var main_tab_id = $(this).parents('.uv-tabs').attr('data-tabid');
+	$(this).parents('.uv-tabs').find('.uv-tab').removeClass('active');
+	$('#' + main_tab_id).find('.uv-data-tab-content').removeClass('active');
 	var tab_id = $(this).attr('data-tab');
 	$(this).addClass('active');
 	$('#' + main_tab_id).find('#' + tab_id).addClass('active');
@@ -2030,17 +2030,17 @@ if(readCookie(site_url))
 	$('input[name="sidebar_signin_email"]').val(readCookie(site_url));
 	$('input[name="signin_email"]').val(readCookie(site_url));
 }
-const headers = document.querySelectorAll('.pbl-acrdn-header');
+const headers = document.querySelectorAll('.uv-acrdn-header');
 headers.forEach(header => {
 	header.addEventListener('click', () => {
 		const item = header.parentElement;
-		const content = item.querySelector('.pbl-acrdn-content');
+		const content = item.querySelector('.uv-acrdn-content');
 		if (item.classList.contains('active')) {
 			content.style.display = 'none';
 			item.classList.remove('active');
 		} else {
-			document.querySelectorAll('.pbl-acrdn-item.active').forEach(openItem => {
-				const openContent = openItem.querySelector('.pbl-acrdn-content');
+			document.querySelectorAll('.uv-acrdn-item.active').forEach(openItem => {
+				const openContent = openItem.querySelector('.uv-acrdn-content');
 				openContent.style.display = 'none';
 				openItem.classList.remove('active');
 			});
@@ -2107,8 +2107,8 @@ if (typeof js_configurations !== 'undefined' && js_configurations.is_payment_pag
 }
 
 $( document ).ready(function() {
-	if (document.querySelector(".pbl-product-detail-quantity-boxes")) {
-	    new Swiper(".pbl-product-detail-quantity-boxes", {
+	if (document.querySelector(".uv-product-detail-quantity-boxes")) {
+	    new Swiper(".uv-product-detail-quantity-boxes", {
 	        slidesPerView: "auto",
 	        spaceBetween: 5,
 	        navigation: {
@@ -2228,7 +2228,7 @@ $( document ).ready(function() {
 	}
 
 	function renderLegacyListingPrices(productsById, productsBySlug) {
-		$('.pbl-product-card-item').each(function() {
+		$('.uv-product-card-item').each(function() {
 			var $card = $(this);
 			var id = productIdFromCard($card);
 			var $link = $card.find('a[href*="/urun/"]').first();
@@ -2238,7 +2238,7 @@ $( document ).ready(function() {
 			var html = productPriceHtml(product);
 			var $wrap;
 
-			$wrap = $card.find('.pbl-product-card-item-price-add-chart').first();
+			$wrap = $card.find('.uv-product-card-item-price-add-chart').first();
 			if (!$wrap.length || $wrap.find('.product-price').length) return;
 
 			if (html) {
@@ -2275,7 +2275,7 @@ $( document ).ready(function() {
 			return;
 		}
 
-		$target = $('.content-product-right .pbl-stock-code').first();
+		$target = $('.content-product-right .uv-stock-code').first();
 		if (!$target.length) {
 			$target = $('.content-product-right .product-label').first();
 		}
@@ -2289,7 +2289,7 @@ $( document ).ready(function() {
 				'</div>' +
 			'</div>';
 
-		if ($target.hasClass('pbl-stock-code')) {
+		if ($target.hasClass('uv-stock-code')) {
 			$target.before(detailPriceHtml);
 		} else {
 			$target.after(detailPriceHtml);
@@ -2350,7 +2350,7 @@ $( document ).ready(function() {
 			'<li><a class="users-tools__profile" href="' + profileUrl + '"><i class="fa fa-user" aria-hidden="true"></i> <span>' + safeFullName + '</span></a></li>' +
 			'<li><a href="#" class="js-member-logout"><i class="fa fa-sign-out" aria-hidden="true"></i> Çıkış Yap</a></li>'
 		);
-		$('.pbl-new-header-user-side-bar-content').html(sidebarHtml);
+		$('.uv-new-header-user-side-bar-content').html(sidebarHtml);
 	}
 
 	function refreshMemberState() {
@@ -2401,7 +2401,7 @@ $( document ).ready(function() {
 (function disableLegacyProductVideoLinks(document) {
     'use strict';
 
-    var videoLinkSelector = '.pbl-product-page-pictures .swiper-slide.video-product > a';
+    var videoLinkSelector = '.uv-product-page-pictures .swiper-slide.video-product > a';
 
     function disableVideoLink(link) {
         if (link.getAttribute('data-uv-video-disabled') === 'true') return;
@@ -3030,7 +3030,7 @@ $( document ).ready(function() {
     }
 
     function openUserSidebar() {
-        var sidebar = document.querySelector('.pbl-new-header-user-side-bar');
+        var sidebar = document.querySelector('.uv-new-header-user-side-bar');
         if (!sidebar) return;
 
         sidebar.classList.add('opened');

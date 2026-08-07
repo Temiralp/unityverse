@@ -139,12 +139,12 @@
         }
 
         function cardTitle(card) {
-            var title = card.querySelector('.pbl-product-card-item-name');
+            var title = card.querySelector('.uv-product-card-item-name');
             return title ? title.textContent.trim() : '';
         }
 
         function cardFeatureText(card) {
-            var privateInfo = card.querySelector('.pbl-private-info');
+            var privateInfo = card.querySelector('.uv-private-info');
             var image = card.querySelector('img');
             var productLink = card.querySelector('a[href*="/urun/"]');
 
@@ -157,7 +157,7 @@
 
         function collectEntries() {
             var cards = documentObject.querySelectorAll(
-                '.pbl-product-card-area-4 .pbl-product-card-item'
+                '.uv-product-card-area-4 .uv-product-card-item'
             );
 
             state.entries = Array.prototype.map.call(cards, function(card) {
@@ -176,7 +176,7 @@
             var grid;
 
             if (state.emptyState) return;
-            grid = documentObject.querySelector('.pbl-product-card-area-4');
+            grid = documentObject.querySelector('.uv-product-card-area-4');
             if (!grid || !grid.parentNode) return;
 
             state.emptyState = documentObject.createElement('div');
@@ -349,7 +349,7 @@
             render();
 
             if (userInitiated) {
-                var grid = documentObject.querySelector('.pbl-product-card-area-4');
+                var grid = documentObject.querySelector('.uv-product-card-area-4');
                 if (grid) {
                     windowObject.scrollTo({
                         top: Math.max(0, grid.getBoundingClientRect().top + windowObject.scrollY - 100),

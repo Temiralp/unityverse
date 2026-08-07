@@ -1,4 +1,4 @@
-html.pbl-tum-urunler .academy-instructor-banner {
+html.uv-tum-urunler .academy-instructor-banner {
   position: relative;
   display: block;
   overflow: hidden;
@@ -6,13 +6,13 @@ html.pbl-tum-urunler .academy-instructor-banner {
   line-height: 0;
 }
 
-html.pbl-tum-urunler .academy-instructor-banner img {
+html.uv-tum-urunler .academy-instructor-banner img {
   display: block;
   width: 100%;
   height: auto;
 }
 
-html.pbl-tum-urunler .academy-instructor-banner__name {
+html.uv-tum-urunler .academy-instructor-banner__name {
   position: absolute;
   top: 45%;
   z-index: 1;
@@ -25,27 +25,27 @@ html.pbl-tum-urunler .academy-instructor-banner__name {
   transform: translateY(-50%);
 }
 
-html.pbl-tum-urunler .academy-instructor-banner__name--left {
+html.uv-tum-urunler .academy-instructor-banner__name--left {
   left: 16.8%;
 }
 
-html.pbl-tum-urunler .academy-instructor-banner__name--right {
+html.uv-tum-urunler .academy-instructor-banner__name--right {
   right: 17.2%;
   text-align: right;
 }
 
 @media (min-width: 1200px) {
-  html.pbl-tum-urunler .academy-instructor-banner__name {
+  html.uv-tum-urunler .academy-instructor-banner__name {
     font-size: clamp(14px, 1.2vw, 18px);
   }
 }
 
 @media (max-width: 575.98px) {
-  html.pbl-tum-urunler .academy-instructor-banner {
+  html.uv-tum-urunler .academy-instructor-banner {
     padding-bottom: 30px;
   }
 
-  html.pbl-tum-urunler .academy-instructor-banner__name {
+  html.uv-tum-urunler .academy-instructor-banner__name {
     top: auto;
     bottom: 0;
     display: flex;
@@ -57,13 +57,13 @@ html.pbl-tum-urunler .academy-instructor-banner__name--right {
     transform: none;
   }
 
-  html.pbl-tum-urunler .academy-instructor-banner__name--left {
+  html.uv-tum-urunler .academy-instructor-banner__name--left {
     left: 0;
     padding-left: 8px;
     justify-content: flex-start;
   }
 
-  html.pbl-tum-urunler .academy-instructor-banner__name--right {
+  html.uv-tum-urunler .academy-instructor-banner__name--right {
     right: 0;
     padding-right: 8px;
     justify-content: flex-end;

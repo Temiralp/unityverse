@@ -66,7 +66,7 @@ async function buildCategories() {
       }
 
       const name = parseCategoryName(html);
-      const count = countMatches(html, /class="pbl-product-card-item"/g);
+      const count = countMatches(html, /class="uv-product-card-item"/g);
 
       if (!name || count <= 0 || !preferredCategoryOrder.includes(entry.name)) return;
 
@@ -86,7 +86,7 @@ async function buildCategories() {
 async function buildBrandFilters(totalProductCount) {
   const html = await fs.readFile(allProductsFile, 'utf8');
   const brandCounts = new Map();
-  const brandMatches = html.matchAll(/pbl-product-card-item-brand[\s\S]*?<a[^>]*>([\s\S]*?)<\/a>/g);
+  const brandMatches = html.matchAll(/uv-product-card-item-brand[\s\S]*?<a[^>]*>([\s\S]*?)<\/a>/g);
 
   for (const match of brandMatches) {
     const name = stripTags(match[1]);
@@ -157,7 +157,7 @@ async function buildFilterPayload(prismaClient = prisma) {
   }
 
   const allProductsHtml = await fs.readFile(allProductsFile, 'utf8');
-  const totalProductCount = countMatches(allProductsHtml, /class="pbl-product-card-item"/g);
+  const totalProductCount = countMatches(allProductsHtml, /class="uv-product-card-item"/g);
   const [subCategoryList, brandFilters] = await Promise.all([
     buildCategories(),
     buildBrandFilters(totalProductCount)

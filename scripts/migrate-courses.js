@@ -122,9 +122,9 @@ function parseCourseFile(filePath) {
   const $ = cheerio.load(html, { decodeEntities: false });
   const slug = slugFromFile(absolutePath);
   const title = normalizeWhitespace($('.content-product-right .title-product h1').first().text());
-  const code = normalizeWhitespace($('.pbl-stock-code a').first().text()) || null;
+  const code = normalizeWhitespace($('.uv-stock-code a').first().text()) || null;
   const summary = normalizeWhitespace($('.product_short_desc').first().text()) || null;
-  const image = normalizeAssetPath($('.pbl-product-slider img[src]').first().attr('src'));
+  const image = normalizeAssetPath($('.uv-product-slider img[src]').first().attr('src'));
   const price = parsePrice(html);
   const category = parseCategory($);
   const durationOptions = legacyDurationOptions($);

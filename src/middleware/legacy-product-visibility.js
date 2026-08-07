@@ -5,8 +5,8 @@ const {
 } = require('../services/public-product-detail');
 
 const PRODUCT_ROUTE_PATTERN = /^\/urun\/([^/]+)\/?$/;
-const PRODUCT_CARD_SECTION_PATTERN = /<section\b[^>]*class=["'][^"']*\bpbl-product-card-area-4\b[^"']*["'][^>]*>[\s\S]*?<\/section>/gi;
-const PRODUCT_CARD_START_PATTERN = /(?=<div\b[^>]*class=["'][^"']*\bpbl-product-card-item\b[^"']*["'][^>]*>)/gi;
+const PRODUCT_CARD_SECTION_PATTERN = /<section\b[^>]*class=["'][^"']*\buv-product-card-area-4\b[^"']*["'][^>]*>[\s\S]*?<\/section>/gi;
+const PRODUCT_CARD_START_PATTERN = /(?=<div\b[^>]*class=["'][^"']*\buv-product-card-item\b[^"']*["'][^>]*>)/gi;
 const LEGACY_CARD_PAGE_PREFIXES = ['/kategori', '/marka', '/sayfa'];
 const TITLE_SYNC_CATEGORY_SLUGS_BY_PATH = new Map([
   ['/kategori/oyun-gelistirme-egitimleri-244', ['oyun-gelistirme']],
@@ -22,7 +22,7 @@ const TITLE_SYNC_DETAIL_CATEGORY_SLUGS = new Set(
   [...TITLE_SYNC_CATEGORY_SLUGS_BY_PATH.values()].flat()
 );
 const PRODUCT_CARD_IMAGE_PATTERN = /(<a\b[^>]*href=(["'])[^"']*\/urun\/([^/"']+)\/?\2[^>]*>\s*<img\b[^>]*\balt=(["']))[^"']*(\4)/gi;
-const PRODUCT_CARD_NAME_PATTERN = /(<div\b[^>]*class=(["'])pbl-product-card-item-name\2[^>]*>\s*<a\b[^>]*href=(["'])[^"']*\/urun\/([^/"']+)\/?\3[^>]*>)[\s\S]*?(<\/a>\s*<\/div>)/gi;
+const PRODUCT_CARD_NAME_PATTERN = /(<div\b[^>]*class=(["'])uv-product-card-item-name\2[^>]*>\s*<a\b[^>]*href=(["'])[^"']*\/urun\/([^/"']+)\/?\3[^>]*>)[\s\S]*?(<\/a>\s*<\/div>)/gi;
 const PRODUCT_DETAIL_TITLE_PATTERN = /(<div\b[^>]*class=(["'])title-product\2[^>]*>\s*<h1\b[^>]*>)[\s\S]*?(<\/h1>)/i;
 
 function escapeHtml(value) {

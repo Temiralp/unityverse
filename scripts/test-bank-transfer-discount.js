@@ -240,7 +240,7 @@ async function bankTransferLockTests() {
 function viewIntegrationTests() {
   const legacyHtml = renderLegacyProductDetails(product(), 'http://localhost:8000');
   const priceRowPosition = legacyHtml.indexOf('uv-product-price-row');
-  const stockCodePosition = legacyHtml.indexOf('pbl-stock-code');
+  const stockCodePosition = legacyHtml.indexOf('uv-stock-code');
 
   assert.match(legacyHtml, /Havale İndirimi ile: <strong>44\.100,00 TL<\/strong>/);
   assert.doesNotMatch(legacyHtml, /Havale ile %10 indirim/);

@@ -41,7 +41,7 @@ async function main() {
     console.log('2. /tum-urunler arama sonucunda kurs görünür mü yoxlanılır...');
     const listPublished = await fetchText(`/tum-urunler/?q=${encodeURIComponent(unique)}`);
     assert(listPublished.response.status === 200, `/tum-urunler HTTP ${listPublished.response.status}`);
-    assert(listPublished.body.includes('pbl-product-card-item'), 'Köhnə ürün kartı markup-u /tum-urunler içinde bulunamadı.');
+    assert(listPublished.body.includes('uv-product-card-item'), 'Köhnə ürün kartı markup-u /tum-urunler içinde bulunamadı.');
     assert(listPublished.body.includes(title), 'PUBLISHED kurs köhnə /tum-urunler kart listesinde görünmedi.');
 
     console.log('3. /urun/:slug detay sayfası açılır mı yoxlanılır...');
@@ -49,7 +49,7 @@ async function main() {
     assert(detailPublished.response.status === 200, `/urun/:slug HTTP ${detailPublished.response.status}`);
     assert(detailPublished.body.includes(title), 'PUBLISHED kurs detay sayfasında görünmedi.');
     assert(detailPublished.body.includes('product-view row'), 'Köhnə ürün detay product-view markup-u bulunamadı.');
-    assert(detailPublished.body.includes('pbl-product-detail-buy-box'), 'Köhnə ürün detay kayıt kutusu markup-u bulunamadı.');
+    assert(detailPublished.body.includes('uv-product-detail-buy-box'), 'Köhnə ürün detay kayıt kutusu markup-u bulunamadı.');
     assert(detailPublished.body.includes('producttab col-xs-12'), 'Köhnə ürün detay tab markup-u bulunamadı.');
     assert(detailPublished.body.includes('list-filter size-filter font-small'), 'Köhnə eğitim saatleri seçenek listesi markup-u bulunamadı.');
     assert(detailPublished.body.includes(`id="poptions1_${productId}"`), 'Eğitim saatleri seçenek listesi ürün id-si ile render edilmedi.');

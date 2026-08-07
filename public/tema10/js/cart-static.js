@@ -144,8 +144,8 @@
         }
 
         $('.cart-total-full').html(result.param.productcount + ' ' + window.lang_arr.js_text_product + ' - ' + result.param.totalprice);
-        $('.pbl-new-header-basket-total-price').html(result.param.totalprice);
-        $('.pbl-new-header-basket-total-count').text(result.param.productcount);
+        $('.uv-new-header-basket-total-price').html(result.param.totalprice);
+        $('.uv-new-header-basket-total-count').text(result.param.productcount);
         $('.sepet_sayi').text(result.param.productcount);
 
         if (result.param.totalpriceraw !== undefined) {
@@ -348,7 +348,7 @@
   };
 
   function loadLastViewedProducts() {
-    var localproductids = window.localStorage ? window.localStorage.getItem('pobol_last_viewed_products') : null;
+    var localproductids = window.localStorage ? window.localStorage.getItem('unityverse_last_viewed_products') : null;
 
     $.ajax({
       type: 'POST',
@@ -360,7 +360,7 @@
         if (result.status === 'success') {
           $('#lastviewedproducts').html(result.message);
           if (result.param && window.localStorage) {
-            window.localStorage.removeItem('pobol_last_viewed_products');
+            window.localStorage.removeItem('unityverse_last_viewed_products');
           }
         }
       }

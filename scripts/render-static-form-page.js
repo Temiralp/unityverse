@@ -205,7 +205,7 @@ function renderFields(fields) {
 
 async function readSourceHtml(pagePath, slug) {
   const html = await fs.readFile(pagePath, 'utf8');
-  if (html.includes('pbl-form')) return html;
+  if (html.includes('uv-form')) return html;
 
   try {
     return execFileSync('git', ['show', `HEAD:form/${slug}/index.html`], {

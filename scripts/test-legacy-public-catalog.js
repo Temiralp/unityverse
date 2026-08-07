@@ -195,8 +195,8 @@ function listingRenderTests() {
   const template = [
     '<html><body>',
     '<span id="search_result">999 ürün bulundu</span>',
-    '<section class="pbl-product-card-area-4 pbl-product-card-area-mobile-2" style="--gap:10px">',
-    '<div class="pbl-product-card-item"><a href="/urun/draft-course/">Draft Course</a></div>',
+    '<section class="uv-product-card-area-4 uv-product-card-area-mobile-2" style="--gap:10px">',
+    '<div class="uv-product-card-item"><a href="/urun/draft-course/">Draft Course</a></div>',
     '</section>',
     '</body></html>'
   ].join('');
@@ -244,7 +244,7 @@ function listingRenderTests() {
     const rendered = renderLegacyProductListing(categoryTemplate, [product()]);
 
     assert.match(rendered, /href="\/urun\/published-course\/"/);
-    assert.equal((rendered.match(/class="pbl-product-card-item"/g) || []).length, 1);
+    assert.equal((rendered.match(/class="uv-product-card-item"/g) || []).length, 1);
   });
 }
 
@@ -283,7 +283,7 @@ function frontendSearchContractTest() {
   assert.doesNotMatch(template, /setTimeout\(refreshLegacyCourseFilters/);
 
   assert.match(controller, /SEARCH_DEBOUNCE_MS = 200/);
-  assert.match(controller, /\.pbl-product-card-item-name/);
+  assert.match(controller, /\.uv-product-card-item-name/);
   assert.match(controller, /entry\.searchText\.indexOf\(normalizedQuery\)/);
   assert.doesNotMatch(controller, /pbl-product-card-item-brand/);
   assert.match(controller, /windowObject\.clearTimeout\(state\.timer\)/);
@@ -292,7 +292,7 @@ function frontendSearchContractTest() {
   assert.doesNotMatch(controller, /state\.result\.innerHTML/);
 
   assert.match(filters, /legacyCourseCatalog\.refreshFromUrl\(\)/);
-  assert.match(css, /\.pbl-product-card-item\[hidden\][\s\S]*display: none !important/);
+  assert.match(css, /\.uv-product-card-item\[hidden\][\s\S]*display: none !important/);
   assert.match(
     versionedTemplate,
     new RegExp(`legacy-course-catalog\\.js\\?v=${LEGACY_CATALOG_JS_VERSION}`)

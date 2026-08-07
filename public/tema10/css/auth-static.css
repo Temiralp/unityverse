@@ -76,7 +76,7 @@ body .uv-auth-page .login-signup-heading h3 {
   max-width: 430px;
 }
 
-body .uv-auth-page .pbl-tabs {
+body .uv-auth-page .uv-tabs {
   background: var(--uv-color-line-soft);
   border: 1px solid var(--uv-color-line);
   border-radius: var(--uv-radius-lg);
@@ -87,7 +87,7 @@ body .uv-auth-page .pbl-tabs {
   padding: var(--uv-space-2);
 }
 
-body .uv-auth-page .pbl-tab {
+body .uv-auth-page .uv-tab {
   align-items: center;
   border-radius: var(--uv-radius-md);
   color: var(--uv-color-text-muted);
@@ -101,7 +101,7 @@ body .uv-auth-page .pbl-tab {
   transition: background var(--uv-transition-base), color var(--uv-transition-base), box-shadow var(--uv-transition-base);
 }
 
-body .uv-auth-page .pbl-tab.active {
+body .uv-auth-page .uv-tab.active {
   background: var(--uv-color-surface);
   box-shadow: var(--uv-shadow-card);
   color: var(--uv-color-primary-dark);
@@ -295,7 +295,7 @@ body .uv-auth-page #tabs2 [class*="col-"] {
 }
 
 body .uv-auth-page #tabs2.active,
-body .uv-auth-page .pbl-data-tab-content#tabs2.active {
+body .uv-auth-page .uv-data-tab-content#tabs2.active {
   margin-top: var(--uv-space-3);
 }
 

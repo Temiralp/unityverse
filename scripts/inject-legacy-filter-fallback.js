@@ -86,7 +86,7 @@ function fallbackHtml() {
       return `                                            <div class="table_cell">
                                                 <fieldset>
                                                     <legend>${legend}</legend>
-                                                    <ul class="pbl-scroll checkboxes_list">
+                                                    <ul class="uv-scroll checkboxes_list">
 ${items}
                                                     </ul>
                                                 </fieldset>
@@ -117,7 +117,7 @@ ${categoryItems}
                                             <div class="table_cell">
                                                 <fieldset>
                                                     <legend>Markalar</legend>
-                                                    <ul class="pbl-scroll checkboxes_list">
+                                                    <ul class="uv-scroll checkboxes_list">
                                                         <li><input type="checkbox" class="filterchanged" id="brand_1" value="1"> <label for="brand_1">Unityverse Academy (245)</label></li>
                                                     </ul>
                                                 </fieldset>
@@ -125,7 +125,7 @@ ${categoryItems}
                                             <div class="table_cell">
                                                 <fieldset>
                                                     <legend>Özel Filtreler</legend>
-                                                    <ul class="pbl-scroll checkboxes_list">
+                                                    <ul class="uv-scroll checkboxes_list">
                                                         <li><input type="checkbox" class="filterchanged" id="special_new"> <label for="special_new">Yeni Ürünler (3)</label></li>
                                                         <li><input type="checkbox" class="filterchanged" id="special_bestseller"> <label for="special_bestseller">Çok Satan Ürünler (7)</label></li>
                                                     </ul>
@@ -135,7 +135,7 @@ ${featureHtml}
                                             <div class="table_cell legacy-price-filter">
                                                 <fieldset>
                                                     <legend>Fiyat Aralığı</legend>
-                                                    <ul class="pbl-scroll checkboxes_list">
+                                                    <ul class="uv-scroll checkboxes_list">
 ${priceItems}
                                                     </ul>
                                                 </fieldset>

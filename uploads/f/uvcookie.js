@@ -3,7 +3,7 @@ CookieConsent.run({
     disablePageInteraction: true,
 
     cookie: {
-        name: "pbl_cookie",
+        name: "uv_cookie",
     },
 
     guiOptions: {

@@ -161,7 +161,7 @@
 
 .uv-cart-products .urun_adi,
 .uv-cart-products .product-name,
-.uv-cart-products .pbl-product-name {
+.uv-cart-products .uv-product-name {
   color: var(--uv-color-text-strong);
   font-weight: var(--uv-font-weight-extrabold);
   line-height: var(--uv-line-height-card-title);
