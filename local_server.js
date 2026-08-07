@@ -274,8 +274,36 @@ const server = http.createServer((req, res) => {
         }
     }
 
-    // Handle GET requests (Static file server)
+    // Handle GET requests (Static file server with live-site fallback)
     if (req.method === 'GET') {
+        // Proxy certain paths directly to live site (they don't exist locally)
+        if (pathname.startsWith('/api/') || pathname.startsWith('/uploads/')) {
+            console.log(`[PROXY GET] ${pathname} -> live server`);
+            const proxyHeaders = { ...req.headers };
+            proxyHeaders['host'] = 'unityverseacademy.com';
+            delete proxyHeaders['accept-encoding']; // avoid compressed responses
+
+            const proxyOpts = {
+                hostname: 'unityverseacademy.com',
+                port: 443,
+                path: req.url,
+                method: 'GET',
+                headers: proxyHeaders
+            };
+
+            const proxyReq = https.request(proxyOpts, (proxyRes) => {
+                res.writeHead(proxyRes.statusCode, proxyRes.headers);
+                proxyRes.pipe(res);
+            });
+            proxyReq.on('error', (err) => {
+                console.error(`[PROXY GET ERROR] ${pathname}:`, err.message);
+                res.writeHead(502, { 'Content-Type': 'text/plain' });
+                res.end('Proxy error');
+            });
+            proxyReq.end();
+            return;
+        }
+
         // Resolve target file path (sanitize pathname to stay within workspace)
         let filePath = path.join(process.cwd(), pathname);
         
