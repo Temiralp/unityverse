@@ -167,10 +167,10 @@
       Sıralama
       <input name="sortOrder" type="number" value="<%= product ? product.sortOrder || 0 : 0 %>">
     </label>
-    <% if (product && product.image) { %>
+    <% if (productImagePreviewUrl) { %>
       <div class="wide product-image-preview">
         <span>Mevcut kurs görseli</span>
-        <img src="<%= product.image %>" alt="" width="320" height="180">
+        <img src="<%= productImagePreviewUrl %>" alt="" width="320" height="180">
         <small>Yeni dosya seçmezseniz mevcut görsel korunur.</small>
       </div>
     <% } %>

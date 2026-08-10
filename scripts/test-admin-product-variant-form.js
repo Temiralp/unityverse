@@ -33,6 +33,9 @@ assert.match(form, /name="defaultVariantIndex"/);
 assert.match(form, /durationRows\.length <= 1 \? 'hidden' : ''/);
 assert.match(form, /role="status" aria-live="polite"/);
 assert.doesNotMatch(form, /data-variant-search|variant-candidates-url|Bağlı Kurs/);
+assert.match(form, /if \(productImagePreviewUrl\)/);
+assert.match(form, /src="<%= productImagePreviewUrl %>"/);
+assert.doesNotMatch(form, /<img src="<%= product\.image %>"/);
 
 assert.match(editor, /\['id', 'variantProductId', 'label', 'price', 'status', 'sortOrder', 'isActivePresent', 'isActive'\]/);
 assert.match(editor, /durationList\.appendChild\(durationTemplate\.content\.cloneNode\(true\)\)/);
@@ -58,6 +61,8 @@ assert.match(adminRoutes, /status: normalizePublishStatus\(body\.status\)/);
 assert.match(adminRoutes, /setParentProductStatus\(tx, productId, data\.status/);
 assert.match(adminRoutes, /cascadeDraft: currentProduct\.status === 'PUBLISHED' && data\.status === 'DRAFT'/);
 assert.doesNotMatch(adminRoutes, /recalculateVariantParentStatus|recalculateParentsForVariantProduct/);
+assert.match(adminRoutes, /normalizeProductImageSource/);
+assert.match(adminRoutes, /productImagePreviewUrl: normalizeProductImageSource\(options\.product\?\.image\)/);
 assert.match(list, /const hasDurationVariants = Array\.isArray\(product\.productVariants\)/);
 assert.match(list, /variant\.variantProduct\.price %> TL/);
 assert.match(list, /hasDurationVariants \? 'Süreleri Yönet' : 'Düzenle'/);

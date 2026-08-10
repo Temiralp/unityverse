@@ -31,6 +31,7 @@ const {
   syncManagedProductVariants
 } = require('../services/product-variants');
 const { validateBlogContentImages } = require('../services/blog-images');
+const { normalizeProductImageSource } = require('../services/product-content');
 const {
   hasAnyRegistrationProfileInput,
   validateRegistrationProfile
@@ -911,6 +912,7 @@ async function renderProductForm(req, res, options) {
 
   return res.status(options.statusCode || 200).render('admin/products/form', {
     product: options.product || null,
+    productImagePreviewUrl: normalizeProductImageSource(options.product?.image),
     productTabs: buildProductEditorTabs(
       options.productTabs || options.product?.tabs || options.product?.tabsInput,
       pageOrigin
