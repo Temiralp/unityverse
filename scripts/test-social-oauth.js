@@ -2,6 +2,7 @@ const assert = require('assert/strict');
 const fs = require('fs');
 const http = require('http');
 const path = require('path');
+const cheerio = require('cheerio');
 const express = require('express');
 const session = require('express-session');
 
@@ -114,7 +115,7 @@ async function googleFlowTest() {
   });
 
   try {
-    const start = await fetch(`${server.baseUrl}/auth/google?returnTo=%2Fuye-girisi%2F`, {
+    const start = await fetch(`${server.baseUrl}/auth/google?returnTo=%2Fuye%2F`, {
       redirect: 'manual'
     });
     assert.equal(start.status, 302);
@@ -133,7 +134,7 @@ async function googleFlowTest() {
       redirect: 'manual'
     });
     assert.equal(completed.status, 303);
-    assert.equal(completed.headers.get('location'), '/uye-girisi/');
+    assert.equal(completed.headers.get('location'), '/uye/');
     assert.equal(providerRequests.length, 2);
     assert.match(String(providerRequests[0].options.body), /code_verifier=/);
     assert.equal(providerRequests[1].options.headers.Authorization, 'Bearer google-access-token');
@@ -197,6 +198,19 @@ function frontendWiringTest() {
   const routerSource = fs.readFileSync(path.join(root, 'src/routes/social-auth.js'), 'utf8');
   const loginPage = fs.readFileSync(path.join(root, 'uye-girisi/index.html'), 'utf8');
   const registerPage = fs.readFileSync(path.join(root, 'uye-ol/index.html'), 'utf8');
+  const loginDocument = cheerio.load(loginPage);
+  const registerGoogleAction = loginDocument('#tabs2 [onclick*="loginwithgoogle"]').attr('onclick');
+  const returnPathFunctionSource = scriptsSource.match(
+    /function socialLoginReturnPath\(p\)\s*\{[\s\S]*?\n  \}/
+  );
+
+  assert.ok(returnPathFunctionSource, 'socialLoginReturnPath function is missing');
+  const socialLoginReturnPath = (href, params) => Function(
+    'window',
+    'URL',
+    'URLSearchParams',
+    `return (${returnPathFunctionSource[0]});`
+  )({ location: new URL(href) }, URL, URLSearchParams)(params);
 
   assert.doesNotMatch(scriptsSource, /e-eticaret\.net\/social\/(google|facebook)/);
   assert.doesNotMatch(scriptsSource, /loginwithfacebook/);
@@ -206,14 +220,27 @@ function frontendWiringTest() {
   assert.match(scriptsSource, /'\/auth\/' \+ provider/);
   assert.match(loginPage, /loginwithgoogle/);
   assert.doesNotMatch(loginPage, /loginwithfacebook|pbl-social-facebook/);
+  assert.match(registerGoogleAction, /[?&]r=\.\.\/uye-girisi/);
+  assert.equal(socialLoginReturnPath(
+    'http://localhost:8000/uye-girisi/?tab=register',
+    'r=../uye-girisi'
+  ), '/uye/');
+  assert.equal(socialLoginReturnPath(
+    'http://localhost:8000/uye-girisi/',
+    'r=../uye-girisi'
+  ), '/uye-girisi');
+  assert.equal(socialLoginReturnPath(
+    'http://localhost:8000/urun/test-course/',
+    'r=../../urun/test-course'
+  ), '/urun/test-course');
   assert.match(registerPage, /loginwithgoogle/);
   assert.doesNotMatch(registerPage, /loginwithfacebook|pbl-social-facebook/);
 
   for (const filePath of htmlFiles(root)) {
     const html = fs.readFileSync(filePath, 'utf8');
     assert.doesNotMatch(html, /loginwithfacebook|pbl-social-facebook/, filePath);
-    if (html.includes('home2.css?v=')) assert.match(html, /home2\.css\?v=5\.4\.96/, filePath);
-    if (html.includes('scripts.js?v=')) assert.match(html, /scripts\.js\?v=5\.4\.105/, filePath);
+    if (html.includes('home2.css?v=')) assert.match(html, /home2\.css\?v=5\.4\.105/, filePath);
+    if (html.includes('scripts.js?v=')) assert.match(html, /scripts\.js\?v=5\.4\.116/, filePath);
   }
 }
 

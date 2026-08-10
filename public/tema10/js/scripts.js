@@ -736,6 +736,12 @@ var searchRequest = null;
   function socialLoginReturnPath(p)
   {
       try {
+          var pageParams = new URLSearchParams(window.location.search);
+          var isRegistrationPage = window.location.pathname.replace(/\/+$/, '') === '/uye-girisi'
+              && pageParams.get('tab') === 'register';
+
+          if (isRegistrationPage) return '/uye/';
+
           var legacyParams = new URLSearchParams(p || '');
           var requestedReturn = legacyParams.get('r') || window.location.pathname;
           var resolvedReturn = new URL(requestedReturn, window.location.href);
