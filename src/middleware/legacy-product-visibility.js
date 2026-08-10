@@ -254,6 +254,32 @@ function createLegacyProductVisibility(prisma) {
         if (routeDecision.group && Number(routeDecision.group.parent.id) !== Number(product.id)) {
           res.locals.legacyCanonicalUrl = `${req.protocol}://${req.get('host')}/urun/${encodeURIComponent(routeDecision.group.parent.slug)}/`;
         }
+
+        // Fallback: if no variant relationship, find parent by slug pattern
+        if (!res.locals.legacyCanonicalUrl && product) {
+          const extractBase = (slug) => slug.replace(/-\d+$/, '')
+            .replace(/-(\d+)-(ay|saat)$/, '')
+            .replace(/-\d+-saat$/, '')
+            .replace(/-\d+-ay$/, '');
+          const baseName = extractBase(product.slug);
+          const candidates = await prisma.product.findMany({
+            where: {
+              slug: { startsWith: baseName + '-' },
+              status: 'PUBLISHED',
+              id: { not: product.id }
+            },
+            select: { slug: true }
+          });
+          // Only keep siblings whose base name matches exactly
+          const siblings = candidates.filter((s) => extractBase(s.slug) === baseName);
+          if (siblings.length > 0) {
+            const shortest = siblings.sort((a, b) => a.slug.length - b.slug.length)[0];
+            if (shortest.slug.length < product.slug.length) {
+              res.locals.legacyCanonicalUrl = `${req.protocol}://${req.get('host')}/urun/${encodeURIComponent(shortest.slug)}/`;
+            }
+          }
+        }
+
         res.locals.legacyProductDetailTitle = product
           && product.category
           && TITLE_SYNC_DETAIL_CATEGORY_SLUGS.has(product.category.slug)
