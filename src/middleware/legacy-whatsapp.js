@@ -43,7 +43,8 @@ function enhanceLegacyHtml(
   productTabs = null,
   productPageOrigin = null,
   corporateReferences = [],
-  productVariantContext = null
+  productVariantContext = null,
+  canonicalUrl = null
 ) {
   const withVisibleProducts = filterLegacyDraftProductCards(html, draftProducts);
   const withCurrentProductTitles = synchronizeLegacyProductCardTitles(
@@ -70,7 +71,13 @@ function enhanceLegacyHtml(
   );
   const withCurrentAssets = ensureLegacyAssetVersions(withCorporateReferences);
   const withLocalHomepageAssets = ensureLegacyHomepageLocalAssets(withCurrentAssets);
-  return ensureLegacyWhatsappButton(ensureLegacyHeaderLayout(withLocalHomepageAssets));
+  const withCanonical = canonicalUrl
+    ? withLocalHomepageAssets.replace(
+        /<link\s+rel=["']canonical["']\s+href=["'][^"']*["']\s*\/?>/i,
+        `<link rel="canonical" href="${canonicalUrl}" />`
+      )
+    : withLocalHomepageAssets;
+  return ensureLegacyWhatsappButton(ensureLegacyHeaderLayout(withCanonical));
 }
 
 function injectLegacyWhatsappIntoHtmlResponses(req, res, next) {
@@ -87,7 +94,8 @@ function injectLegacyWhatsappIntoHtmlResponses(req, res, next) {
         res.locals.legacyProductTabs,
         res.locals.legacyProductPageOrigin,
         res.locals.legacyCorporateReferences,
-        res.locals.legacyProductVariantContext
+        res.locals.legacyProductVariantContext,
+        res.locals.legacyCanonicalUrl
       ));
     }
 
@@ -101,7 +109,8 @@ function injectLegacyWhatsappIntoHtmlResponses(req, res, next) {
         res.locals.legacyProductTabs,
         res.locals.legacyProductPageOrigin,
         res.locals.legacyCorporateReferences,
-        res.locals.legacyProductVariantContext
+        res.locals.legacyProductVariantContext,
+        res.locals.legacyCanonicalUrl
       );
       return send(transformed === source ? body : Buffer.from(transformed));
     }
@@ -174,7 +183,8 @@ function serveLegacyHtmlWithWhatsapp(staticRoot, setHeaders) {
         res.locals.legacyProductTabs,
         res.locals.legacyProductPageOrigin,
         res.locals.legacyCorporateReferences,
-        res.locals.legacyProductVariantContext
+        res.locals.legacyProductVariantContext,
+        res.locals.legacyCanonicalUrl
       ));
     } catch (error) {
       return next(error);
@@ -194,7 +204,8 @@ async function sendLegacyHtmlFile(res, filePath, setHeaders) {
     res.locals.legacyProductTabs,
     res.locals.legacyProductPageOrigin,
     res.locals.legacyCorporateReferences,
-    res.locals.legacyProductVariantContext
+    res.locals.legacyProductVariantContext,
+    res.locals.legacyCanonicalUrl
   ));
 }
 

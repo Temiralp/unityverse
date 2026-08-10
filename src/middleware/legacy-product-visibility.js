@@ -251,6 +251,9 @@ function createLegacyProductVisibility(prisma) {
         );
         res.locals.legacyProductTabs = routeDecision.group?.parent?.tabs || product?.tabs || null;
         res.locals.legacyProductPageOrigin = `${req.protocol}://${req.get('host')}`;
+        if (routeDecision.group && Number(routeDecision.group.parent.id) !== Number(product.id)) {
+          res.locals.legacyCanonicalUrl = `${req.protocol}://${req.get('host')}/urun/${encodeURIComponent(routeDecision.group.parent.slug)}/`;
+        }
         res.locals.legacyProductDetailTitle = product
           && product.category
           && TITLE_SYNC_DETAIL_CATEGORY_SLUGS.has(product.category.slug)
