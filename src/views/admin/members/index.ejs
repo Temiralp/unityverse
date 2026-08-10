@@ -5,7 +5,10 @@
     <h1>Üyeler</h1>
     <p class="page-subtitle">Kayıt olan kişilerin listesi ve toplam sayısı.</p>
   </div>
-  <a class="button" href="/admin">Panele Dön</a>
+  <div class="row-actions">
+    <a class="button" href="/admin/members/new">Yeni Üye Ekle</a>
+    <a class="button button-secondary" href="/admin">Panele Dön</a>
+  </div>
 </div>
 
 <section class="panel list-panel">
@@ -77,7 +80,16 @@
             </span>
           </td>
           <td><%= member.createdAt.toLocaleString('tr-TR') %></td>
-          <td><a class="table-action" href="/admin/members/<%= member.id %>">Detay / Notlar</a></td>
+          <td>
+            <div class="row-actions">
+              <a class="table-action" href="/admin/members/<%= member.id %>">Detay / Notlar</a>
+              <a class="button button-secondary" href="/admin/members/<%= member.id %>/edit">Düzenle</a>
+              <form method="post" action="/admin/members/<%= member.id %>/delete" class="inline-form" onsubmit="return confirm('Bu üyeyi kalıcı olarak silmek istediğinize emin misiniz? Üyeye bağlı notlar, kurs ilgileri ve sosyal giriş bağlantıları silinecektir. Eğitim kayıtları korunacaktır.');">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <button type="submit" class="button-danger">Sil</button>
+              </form>
+            </div>
+          </td>
         </tr>
       <% }) %>
       <% if (!members.length) { %>

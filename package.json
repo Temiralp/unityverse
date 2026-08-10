@@ -51,6 +51,10 @@
     "test:social-oauth": "node scripts/test-social-oauth.js",
     "test:profile-completion": "node scripts/test-profile-completion.js",
     "test:member-profile-layout": "node scripts/test-member-profile-layout.js",
+    "test:payment-responsive-navbar": "node scripts/test-payment-responsive-navbar.js",
+    "test:legacy-member-import": "node scripts/test-legacy-member-import.js",
+    "test:admin-members": "node scripts/test-admin-members.js",
+    "import:legacy-members": "node scripts/import-legacy-members.js",
     "test:member-registration": "node scripts/test-member-registration.js",
     "test:rate-limit": "node scripts/test-rate-limit.js",
     "seed": "node prisma/seed.js"

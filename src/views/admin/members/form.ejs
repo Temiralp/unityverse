@@ -1,0 +1,55 @@
+<%- include('../partials/header') %>
+
+<div class="page-head">
+  <div>
+    <h1><%= pageTitle %></h1>
+    <p class="page-subtitle"><%= pageSubtitle %></p>
+  </div>
+  <a class="button button-secondary" href="<%= backHref %>"><%= backLabel %></a>
+</div>
+
+<section class="panel">
+  <% if (error) { %>
+    <p class="alert" role="alert"><%= error %></p>
+  <% } %>
+
+  <form method="post" action="<%= action %>" class="form grid-form">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <label>
+      Ad
+      <input name="name" value="<%= member.name || '' %>" maxlength="200" required autocomplete="given-name">
+    </label>
+    <label>
+      Soyad
+      <input name="surname" value="<%= member.surname || '' %>" maxlength="200" autocomplete="family-name">
+    </label>
+    <label>
+      E-posta
+      <input name="email" type="email" value="<%= member.email || '' %>" maxlength="320" required autocomplete="email">
+    </label>
+    <label>
+      Telefon
+      <input name="phone" type="tel" value="<%= member.phone || '' %>" maxlength="50" autocomplete="tel">
+    </label>
+    <label>
+      Durum
+      <select name="status" required>
+        <% Object.keys(statusLabels).forEach((key) => { %>
+          <option value="<%= key %>" <%= member.status === key ? 'selected' : '' %>><%= statusLabels[key] %></option>
+        <% }) %>
+      </select>
+    </label>
+    <div></div>
+    <label class="check">
+      <input type="checkbox" name="mailList" <%= member.mailList ? 'checked' : '' %>>
+      E-posta listesi izni
+    </label>
+    <label class="check">
+      <input type="checkbox" name="smsList" <%= member.smsList ? 'checked' : '' %>>
+      SMS listesi izni
+    </label>
+    <button type="submit"><%= submitLabel %></button>
+  </form>
+</section>
+
+<%- include('../partials/footer') %>

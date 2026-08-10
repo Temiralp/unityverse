@@ -57,6 +57,7 @@ const {
   saveCorporateReferenceLogo,
   validateCorporateReferenceForm
 } = require('../services/corporate-references');
+const { validateMemberAdminForm } = require('../services/member-admin');
 
 const router = express.Router();
 const ADMIN_LOGIN_SCOPE = 'admin-login';
@@ -1049,6 +1050,33 @@ function renderCategoryForm(res, options) {
     pageTitle: options.pageTitle || 'Yeni Kategori',
     submitLabel: options.submitLabel || 'Kaydet',
     error: options.error || null
+  });
+}
+
+function renderMemberForm(res, options) {
+  const member = options.member || {
+    name: '',
+    surname: null,
+    email: '',
+    phone: null,
+    mailList: false,
+    smsList: false,
+    status: 'ACTIVE'
+  };
+  const isEdit = Boolean(member.id);
+
+  return res.status(options.statusCode || 200).render('admin/members/form', {
+    member,
+    statusLabels: memberStatusLabels,
+    error: options.error || null,
+    action: options.action || (isEdit ? `/admin/members/${member.id}` : '/admin/members'),
+    pageTitle: options.pageTitle || (isEdit ? 'Üyeyi Düzenle' : 'Yeni Üye Ekle'),
+    pageSubtitle: options.pageSubtitle || (isEdit
+      ? 'Üyenin iletişim, izin ve durum bilgilerini güncelleyin.'
+      : 'Yeni üyenin iletişim, izin ve durum bilgilerini girin.'),
+    submitLabel: options.submitLabel || (isEdit ? 'Üyeyi Güncelle' : 'Üyeyi Oluştur'),
+    backHref: options.backHref || (isEdit ? `/admin/members/${member.id}` : '/admin/members'),
+    backLabel: options.backLabel || (isEdit ? 'Üye Detayına Dön' : 'Üyelere Dön')
   });
 }
 
@@ -2877,6 +2905,66 @@ router.get('/members', requireAdmin, async (req, res, next) => {
   }
 });
 
+router.get('/members/new', requireAdmin, (req, res) => {
+  return renderMemberForm(res, {});
+});
+
+router.post('/members', requireAdmin, async (req, res, next) => {
+  const validation = validateMemberAdminForm(req.body);
+
+  if (validation.error) {
+    return renderMemberForm(res, {
+      statusCode: 400,
+      member: validation.data,
+      error: validation.error
+    });
+  }
+
+  try {
+    const member = await prisma.member.create({
+      data: {
+        ...validation.data,
+        gender: null,
+        passwordHash: null
+      }
+    });
+
+    return res.redirect(`/admin/members/${member.id}`);
+  } catch (error) {
+    if (error.code === 'P2002') {
+      return renderMemberForm(res, {
+        statusCode: 400,
+        member: validation.data,
+        error: 'Bu e-posta adresi başka bir üye tarafından kullanılıyor.'
+      });
+    }
+    return next(error);
+  }
+});
+
+router.get('/members/:id/edit', requireAdmin, async (req, res, next) => {
+  try {
+    if (!hasMemberModel()) {
+      return res.redirect('/admin/members');
+    }
+
+    const member = await prisma.member.findUnique({
+      where: { id: Number(req.params.id) }
+    });
+
+    if (!member) {
+      return res.status(404).send('Üye bulunamadı');
+    }
+
+    return renderMemberForm(res, { member });
+  } catch (error) {
+    if (isMissingTableError(error)) {
+      return res.redirect('/admin/members');
+    }
+    return next(error);
+  }
+});
+
 router.get('/members/:id', requireAdmin, async (req, res, next) => {
   try {
     if (!hasMemberModel()) {
@@ -2920,6 +3008,61 @@ router.get('/members/:id', requireAdmin, async (req, res, next) => {
     }
 
     next(error);
+  }
+});
+
+router.post('/members/:id', requireAdmin, async (req, res, next) => {
+  const memberId = Number(req.params.id);
+  const validation = validateMemberAdminForm(req.body);
+
+  if (validation.error) {
+    return renderMemberForm(res, {
+      statusCode: 400,
+      member: { id: memberId, ...validation.data },
+      error: validation.error
+    });
+  }
+
+  try {
+    const member = await prisma.member.findUnique({ where: { id: memberId } });
+    if (!member) {
+      return res.status(404).send('Üye bulunamadı');
+    }
+
+    await prisma.member.update({
+      where: { id: memberId },
+      data: validation.data
+    });
+
+    return res.redirect(`/admin/members/${memberId}`);
+  } catch (error) {
+    if (error.code === 'P2002') {
+      return renderMemberForm(res, {
+        statusCode: 400,
+        member: { id: memberId, ...validation.data },
+        error: 'Bu e-posta adresi başka bir üye tarafından kullanılıyor.'
+      });
+    }
+    return next(error);
+  }
+});
+
+router.post('/members/:id/delete', requireAdmin, async (req, res, next) => {
+  try {
+    const memberId = Number(req.params.id);
+    const member = await prisma.member.findUnique({
+      where: { id: memberId },
+      select: { id: true }
+    });
+
+    if (!member) {
+      return res.status(404).send('Üye bulunamadı');
+    }
+
+    await prisma.member.delete({ where: { id: memberId } });
+    return res.redirect('/admin/members');
+  } catch (error) {
+    return next(error);
   }
 });
 

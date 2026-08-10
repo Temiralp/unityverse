@@ -5,7 +5,14 @@
     <h1><%= [member.name, member.surname].filter(Boolean).join(' ') %></h1>
     <p class="page-subtitle"><%= member.email %> · <%= member.phone || 'Telefon yok' %></p>
   </div>
-  <a class="button" href="/admin/members">Üyelere Dön</a>
+  <div class="row-actions">
+    <a class="button button-secondary" href="/admin/members">Üyelere Dön</a>
+    <a class="button" href="/admin/members/<%= member.id %>/edit">Düzenle</a>
+    <form method="post" action="/admin/members/<%= member.id %>/delete" class="inline-form" onsubmit="return confirm('Bu üyeyi kalıcı olarak silmek istediğinize emin misiniz? Üyeye bağlı notlar, kurs ilgileri ve sosyal giriş bağlantıları silinecektir. Eğitim kayıtları korunacaktır.');">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <button type="submit" class="button-danger">Sil</button>
+    </form>
+  </div>
 </div>
 
 <section class="detail-grid">
