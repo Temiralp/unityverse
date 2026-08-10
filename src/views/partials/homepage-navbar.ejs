@@ -1,0 +1,57 @@
+<nav
+  class="header-bottom member-home-navbar"
+  aria-label="Ana navigasyon"
+  <% if (typeof usePaymentResponsiveHeader !== 'undefined' && usePaymentResponsiveHeader) { %>
+    id="uv-payment-mobile-navigation"
+    data-navbar-drawer
+  <% } %>
+>
+  <% if (typeof usePaymentResponsiveHeader !== 'undefined' && usePaymentResponsiveHeader) { %>
+    <div class="member-home-navbar__drawer-header">
+      <strong>Menü</strong>
+      <button type="button" aria-label="Menüyü kapat" data-navbar-close>
+        <i class="fa fa-times" aria-hidden="true"></i>
+      </button>
+    </div>
+  <% } %>
+  <div class="container member-home-navbar__container">
+    <div class="row member-home-navbar__row">
+      <div class="sidebar-menu col-md-3 col-sm-3 col-xs-12 member-home-navbar__courses">
+        <details class="member-home-navbar__courses-dropdown">
+          <summary class="member-home-navbar__courses-link">
+            <i class="fa fa-bars" aria-hidden="true"></i>
+            <span>Tüm Kurslarımız</span>
+            <i class="fa fa-chevron-circle-up" aria-hidden="true"></i>
+          </summary>
+          <ul class="member-home-navbar__courses-menu">
+            <li><a href="/kategori/oyun-gelistirme-egitimleri-244/">Oyun Geliştirme Eğitimleri</a></li>
+            <li><a href="/kategori/yazilim-egitimleri-245/">Yazılım Eğitimleri</a></li>
+            <li><a href="/kategori/grafik-tasarim-egitimleri-246/">Grafik - Tasarım Eğitimleri</a></li>
+            <li><a href="/kategori/3d-modelleme-egitimleri-247/">3D Modelleme Eğitimleri</a></li>
+            <li><a href="/kategori/animasyon-egitimleri-248/">Animasyon Eğitimleri</a></li>
+            <li><a href="/kategori/ses-tasarim-egitimleri-251/">Ses Tasarım Eğitimleri</a></li>
+            <li><a href="/kategori/senaryo-sinema-ve-yonetmenlik-egitimleri-252/">Senaryo, Sinema ve Yönetmenlik Eğitimleri</a></li>
+            <li><a href="/kategori/endustriyel-urun-tasarim-egitimleri-253/">Endüstriyel Ürün Tasarım Eğitimleri</a></li>
+            <li><a href="/kategori/dil-egitimleri-257/">Dil Eğitimleri</a></li>
+            <li><a href="/kategori/dijital-pazarlama-egitimleri-255/">Dijital Pazarlama Eğitimleri</a></li>
+            <li><a href="/kategori/ozel-dersler-256/">Özel Dersler</a></li>
+            <li><a href="/kategori/muhasebe-ve-ofis-egitimleri-258/">Muhasebe ve Ofis Eğitimleri</a></li>
+            <li><a href="/kategori/mimarlik-egitimleri-259/">Mimarlık Eğitimleri</a></li>
+          </ul>
+        </details>
+      </div>
+      <div class="col-md-9 member-home-navbar__links">
+        <ul class="megamenu">
+          <li><a href="/tum-urunler/">Eğitimlerimiz</a></li>
+          <li><a href="/os/KURUMSAL-EGITIMLER-10/">Kurumsal Eğitimler</a></li>
+          <li><a href="/sayfa/hakkimizda-25/">Hakkımızda</a></li>
+          <li><a href="/sayfa/egitmenler-10/">Eğitmenler</a></li>
+          <li><a href="/form/hemen-bilgi-al-1/">Bilgi/Randevu Al</a></li>
+          <li><a href="/sayfa/iletisim-5/">İletişim</a></li>
+          <li><a href="/blog/">Blog</a></li>
+          <li><a href="/os/yazilim-cozumleri-20/">Yazılım Çözümleri</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</nav>

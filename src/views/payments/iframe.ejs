@@ -1,4 +1,8 @@
-<%- include('../partials/header', { useLegacyPaymentHeader: true }) %>
+<%- include('../partials/header', {
+  useLegacyPaymentHeader: true,
+  useHomepageNavbar: true,
+  usePaymentResponsiveHeader: true
+}) %>
 <%
   const paytrPaymentOptions = typeof paymentOptions === 'undefined' ? {} : paymentOptions;
   const installmentsEnabled = paytrPaymentOptions.installmentsEnabled === true;

@@ -70,8 +70,12 @@
   function initNavbar(navbar) {
     var toggle = navbar.querySelector('[data-navbar-toggle]');
     var drawer = navbar.querySelector('[data-navbar-drawer]');
+    var closeButtons = navbar.querySelectorAll('[data-navbar-close]');
+    var backdrop = navbar.querySelector('[data-navbar-backdrop]');
     var dropdownTriggers = navbar.querySelectorAll('.uv-navbar__menu-trigger');
-    var mobileQuery = window.matchMedia('(max-width: 1120px)');
+    var mobileQuery = window.matchMedia(
+      navbar.getAttribute('data-navbar-mobile-query') || '(max-width: 1120px)'
+    );
     var previousFocus = null;
 
     if (!toggle || !drawer) return;
@@ -86,13 +90,46 @@
       });
     }
 
+    function syncDrawerAvailability(isOpen) {
+      if (!navbar.hasAttribute('data-navbar-manage-drawer')) return;
+
+      var isHidden = mobileQuery.matches && !isOpen;
+      drawer.setAttribute('aria-hidden', String(isHidden));
+
+      if ('inert' in drawer) {
+        drawer.inert = isHidden;
+      }
+    }
+
+    function syncNativeDetails(isOpen) {
+      if (!navbar.hasAttribute('data-navbar-open-details')) return;
+
+      Array.prototype.forEach.call(drawer.querySelectorAll('details'), function(details) {
+        details.open = isOpen && mobileQuery.matches;
+      });
+    }
+
     function setMenuState(isOpen, shouldRestoreFocus) {
       navbar.classList.toggle('uv-navbar--open', isOpen);
       toggle.setAttribute('aria-expanded', String(isOpen));
       toggle.setAttribute('aria-label', isOpen ? toggle.dataset.closeLabel : toggle.dataset.openLabel);
+      syncDrawerAvailability(isOpen);
+      syncNativeDetails(isOpen);
+
+      if (navbar.hasAttribute('data-navbar-lock-scroll')) {
+        document.body.classList.toggle('uv-navbar-scroll-lock', isOpen && mobileQuery.matches);
+      }
 
       if (isOpen) {
         previousFocus = document.activeElement;
+
+        if (navbar.hasAttribute('data-navbar-focus-drawer')) {
+          window.requestAnimationFrame(function() {
+            var firstDrawerControl = getFocusable(drawer)[0];
+            if (firstDrawerControl) firstDrawerControl.focus();
+          });
+        }
+
         return;
       }
 
@@ -108,7 +145,8 @@
         return;
       }
 
-      var focusable = getFocusable(navbar);
+      var focusRoot = navbar.hasAttribute('data-navbar-trap-drawer') ? drawer : navbar;
+      var focusable = getFocusable(focusRoot);
       var first = focusable[0];
       var last = focusable[focusable.length - 1];
 
@@ -131,6 +169,18 @@
       var isOpen = !navbar.classList.contains('uv-navbar--open');
       setMenuState(isOpen, false);
     });
+
+    Array.prototype.forEach.call(closeButtons, function(closeButton) {
+      closeButton.addEventListener('click', function() {
+        setMenuState(false, true);
+      });
+    });
+
+    if (backdrop) {
+      backdrop.addEventListener('click', function() {
+        setMenuState(false, true);
+      });
+    }
 
     Array.prototype.forEach.call(dropdownTriggers, function(trigger) {
       var item = trigger.parentNode;
@@ -181,7 +231,7 @@
     });
 
     document.addEventListener('keydown', function(event) {
-      if (event.key === 'Escape') {
+      if (event.key === 'Escape' && navbar.classList.contains('uv-navbar--open')) {
         setMenuState(false, true);
       }
 
@@ -196,6 +246,8 @@
       setMenuState(false, false);
       closeDropdowns();
     }
+
+    setMenuState(false, false);
 
     if (mobileQuery.addEventListener) {
       mobileQuery.addEventListener('change', handleViewportChange);

@@ -25,15 +25,39 @@
       <link rel="stylesheet" href="<%= href %>">
     <% }) %>
   <% } %>
+  <% if (typeof useHomepageNavbar !== 'undefined' && useHomepageNavbar) { %>
+    <link rel="stylesheet" href="/public/tema10/css/homepage-navbar.css?v=20260810-2">
+  <% } %>
 </head>
 <body<% if (typeof bodyClass !== 'undefined' && bodyClass) { %> class="<%= bodyClass %>"<% } %>>
   <% if (typeof useLegacyPaymentHeader !== 'undefined' && useLegacyPaymentHeader) { %>
-    <header class="uv-payment-legacy-header" aria-label="Unityverse Academy">
+    <%
+      const paymentResponsiveHeader = typeof usePaymentResponsiveHeader !== 'undefined'
+        && usePaymentResponsiveHeader;
+    %>
+    <header
+      class="uv-payment-legacy-header<%= paymentResponsiveHeader ? ' uv-payment-legacy-header--responsive-payment' : '' %>"
+      aria-label="Unityverse Academy"
+      <% if (paymentResponsiveHeader) { %>
+        data-navbar
+        data-navbar-mobile-query="(max-width: 1199.98px)"
+        data-navbar-focus-drawer
+        data-navbar-trap-drawer
+        data-navbar-lock-scroll
+        data-navbar-manage-drawer
+        data-navbar-open-details
+      <% } %>
+    >
       <div class="uv-payment-legacy-header__top">
         <div class="uv-shell uv-payment-legacy-header__top-inner">
-          <a href="/form/hemen-bilgi-al-1/">Eğitimler Hakkında Bilgi Al</a>
-          <a href="tel:+902128072828">0212 807 28 28</a>
-          <a href="https://api.whatsapp.com/send?phone=905454228887&text=Merhaba,%20e%C4%9Fitimler%20hakk%C4%B1nda%20bilgi%20almak%20istiyorum" target="_blank" rel="noopener">Bize Sorun</a>
+          <a class="uv-payment-legacy-header__info" href="/form/hemen-bilgi-al-1/">Eğitimler Hakkında Bilgi Al</a>
+          <a class="uv-payment-legacy-header__phone" href="tel:+902128072828">
+            <span class="uv-payment-legacy-header__phone-desktop">0212 807 28 28</span>
+            <% if (paymentResponsiveHeader) { %>
+              <span class="uv-payment-legacy-header__phone-mobile">0 212 807 28 28</span>
+            <% } %>
+          </a>
+          <a class="uv-payment-legacy-header__question" href="https://api.whatsapp.com/send?phone=905454228887&text=Merhaba,%20e%C4%9Fitimler%20hakk%C4%B1nda%20bilgi%20almak%20istiyorum" target="_blank" rel="noopener">Bize Sorun</a>
           <% if (typeof showMemberProfileActions !== 'undefined' && showMemberProfileActions) { %>
             <nav class="member-profile-nav" aria-label="Üye bağlantıları">
               <a class="member-profile-home" href="/">Ana Sayfaya Dön</a>
@@ -48,28 +72,55 @@
       </div>
       <div class="uv-payment-legacy-header__brand">
         <div class="uv-shell uv-payment-legacy-header__brand-inner">
+          <% if (paymentResponsiveHeader) { %>
+            <button
+              class="uv-payment-mobile-nav-toggle"
+              type="button"
+              aria-label="Menüyü aç"
+              aria-controls="uv-payment-mobile-navigation"
+              aria-expanded="false"
+              data-navbar-toggle
+            >
+              <i class="fa fa-bars" aria-hidden="true"></i>
+            </button>
+          <% } %>
           <a class="uv-payment-legacy-header__logo" href="/" aria-label="Unityverse Academy ana sayfa">
-            <img src="/uploads/p/o/M8NILhl4t7HF.jpg?v=1701782743" alt="Unityverse Academy" width="290" height="95" decoding="async" fetchpriority="high">
+            <img class="uv-payment-legacy-header__desktop-logo" src="/uploads/p/o/M8NILhl4t7HF.jpg?v=1701782743" alt="Unityverse Academy" width="290" height="95" decoding="async" fetchpriority="high">
+            <% if (paymentResponsiveHeader) { %>
+              <img class="uv-payment-legacy-header__mobile-logo" src="/uploads/p/o/yfTW41vdMOxS.jpg?v=1701783131" alt="" width="177" height="50" decoding="async">
+            <% } %>
           </a>
+          <% if (paymentResponsiveHeader) { %>
+            <a class="uv-payment-mobile-profile" href="/uye/" aria-label="Üye profili">
+              <i class="fa fa-user-circle" aria-hidden="true"></i>
+            </a>
+          <% } %>
         </div>
       </div>
-      <nav class="uv-payment-legacy-header__nav" aria-label="Ana navigasyon">
-        <div class="uv-shell uv-payment-legacy-header__nav-inner">
-          <a href="/tum-urunler/">Eğitimlerimiz</a>
-          <a href="/os/KURUMSAL-EGITIMLER-10/">Kurumsal Eğitimler</a>
-          <a href="/sayfa/hakkimizda-25/">Hakkımızda</a>
-          <a href="/sayfa/egitmenler-10/">Eğitmenler</a>
-          <a href="/form/hemen-bilgi-al-1/">Bilgi/Randevu Al</a>
-          <a href="/sayfa/iletisim-5/">İletişim</a>
-          <a href="/blog/">Blog</a>
-          <a href="/os/yazilim-cozumleri-20/">Yazılım Çözümleri</a>
-          <a class="uv-payment-legacy-header__all-courses" href="/tum-urunler/">
-            <i class="fa fa-bars" aria-hidden="true"></i>
-            <span>Tüm Kurslarımız</span>
-            <i class="fa fa-chevron-circle-up" aria-hidden="true"></i>
-          </a>
-        </div>
-      </nav>
+      <% if (typeof useHomepageNavbar !== 'undefined' && useHomepageNavbar) { %>
+        <%- include('homepage-navbar') %>
+      <% } else { %>
+        <nav class="uv-payment-legacy-header__nav" aria-label="Ana navigasyon">
+          <div class="uv-shell uv-payment-legacy-header__nav-inner">
+            <a href="/tum-urunler/">Eğitimlerimiz</a>
+            <a href="/os/KURUMSAL-EGITIMLER-10/">Kurumsal Eğitimler</a>
+            <a href="/sayfa/hakkimizda-25/">Hakkımızda</a>
+            <a href="/sayfa/egitmenler-10/">Eğitmenler</a>
+            <a href="/form/hemen-bilgi-al-1/">Bilgi/Randevu Al</a>
+            <a href="/sayfa/iletisim-5/">İletişim</a>
+            <a href="/blog/">Blog</a>
+            <a href="/os/yazilim-cozumleri-20/">Yazılım Çözümleri</a>
+            <a class="uv-payment-legacy-header__all-courses" href="/tum-urunler/">
+              <i class="fa fa-bars" aria-hidden="true"></i>
+              <span>Tüm Kurslarımız</span>
+              <i class="fa fa-chevron-circle-up" aria-hidden="true"></i>
+            </a>
+          </div>
+        </nav>
+      <% } %>
+      <% if (paymentResponsiveHeader) { %>
+        <button class="uv-payment-mobile-backdrop" type="button" aria-label="Menüyü kapat" tabindex="-1" data-navbar-backdrop></button>
+      <% } %>
     </header>
   <% } else { %>
   <%

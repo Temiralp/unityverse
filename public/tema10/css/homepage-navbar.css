@@ -1,0 +1,505 @@
+.member-home-navbar {
+  --homepage-navbar-primary: #0f005a;
+  min-height: 70px;
+  margin: 0;
+  background: var(--homepage-navbar-primary);
+  color: #fff;
+  font-family: "Montserrat", "Poppins", Arial, sans-serif;
+}
+
+.member-home-navbar__container {
+  width: min(1340px, 100%);
+  padding: 0;
+}
+
+.member-home-navbar__row {
+  display: flex;
+  min-height: 70px;
+  margin: 0;
+}
+
+.member-home-navbar__links {
+  width: calc(100% - 335px);
+  padding: 0;
+  order: 1;
+}
+
+.member-home-navbar__links .megamenu {
+  display: flex;
+  min-height: 70px;
+  align-items: center;
+  justify-content: flex-end;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.member-home-navbar__links li {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+}
+
+.member-home-navbar__links a {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 10px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 34px;
+  text-decoration: none;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.member-home-navbar__courses {
+  position: relative;
+  width: 335px;
+  padding: 0;
+  order: 2;
+}
+
+.member-home-navbar__courses-dropdown {
+  position: relative;
+}
+
+.member-home-navbar__courses-link {
+  display: flex;
+  min-height: 70px;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 27px;
+  font-weight: 500;
+  text-decoration: none;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.member-home-navbar__courses-link::-webkit-details-marker {
+  display: none;
+}
+
+.member-home-navbar__courses-link::marker {
+  content: "";
+}
+
+.member-home-navbar__courses-link .fa-bars {
+  font-size: 20px;
+}
+
+.member-home-navbar__courses-link .fa-chevron-circle-up {
+  margin-left: auto;
+  font-size: 22px;
+  transition: transform 160ms ease;
+}
+
+.member-home-navbar__courses-dropdown[open]
+  .member-home-navbar__courses-link .fa-chevron-circle-up {
+  transform: rotate(180deg);
+}
+
+.member-home-navbar__courses-menu {
+  position: absolute;
+  z-index: 100;
+  top: 100%;
+  right: 0;
+  width: 335px;
+  margin: 0;
+  padding: 0;
+  background: #fff;
+  border: 1px solid #ddd;
+  list-style: none;
+}
+
+.member-home-navbar__courses-menu a {
+  display: block;
+  padding: 9px 14px;
+  color: var(--homepage-navbar-primary);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.25;
+  text-decoration: none;
+}
+
+@media (max-width: 1199px) {
+  .member-home-navbar__container {
+    width: 100%;
+  }
+
+  .member-home-navbar__row {
+    min-height: 64px;
+  }
+
+  .member-home-navbar__links {
+    min-width: 0;
+    width: auto;
+    flex: 1 1 auto;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .member-home-navbar__links::-webkit-scrollbar {
+    display: none;
+  }
+
+  .member-home-navbar__links .megamenu {
+    width: max-content;
+    min-height: 64px;
+    justify-content: flex-start;
+  }
+
+  .member-home-navbar__links a {
+    font-size: 13px;
+  }
+
+  .member-home-navbar__courses {
+    width: auto;
+  }
+
+  .member-home-navbar__courses-link {
+    min-height: 64px;
+    font-size: 20px;
+  }
+
+  .member-home-navbar__courses-menu {
+    width: min(335px, 100vw);
+    max-height: min(70vh, 520px);
+    overflow-y: auto;
+  }
+}
+
+.uv-payment-legacy-header--responsive-payment .uv-payment-mobile-nav-toggle,
+.uv-payment-legacy-header--responsive-payment .uv-payment-mobile-profile,
+.uv-payment-legacy-header--responsive-payment .uv-payment-legacy-header__mobile-logo,
+.uv-payment-legacy-header--responsive-payment .uv-payment-legacy-header__phone-mobile,
+.uv-payment-legacy-header--responsive-payment .member-home-navbar__drawer-header,
+.uv-payment-legacy-header--responsive-payment .uv-payment-mobile-backdrop {
+  display: none;
+}
+
+@media (max-width: 1199.98px) {
+  body.uv-navbar-scroll-lock {
+    overflow: hidden;
+  }
+
+  .uv-payment-legacy-header--responsive-payment {
+    position: sticky;
+    z-index: 1048;
+    top: 0;
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    margin: 0;
+    background: #fff;
+  }
+
+  .uv-payment-legacy-header--responsive-payment .uv-payment-legacy-header__brand {
+    order: 1;
+  }
+
+  .uv-payment-legacy-header--responsive-payment .uv-payment-legacy-header__brand-inner {
+    display: flex;
+    width: 100%;
+    min-height: 58px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 14px;
+  }
+
+  .uv-payment-legacy-header--responsive-payment .uv-payment-mobile-nav-toggle,
+  .uv-payment-legacy-header--responsive-payment .uv-payment-mobile-profile {
+    display: inline-flex;
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .uv-payment-legacy-header--responsive-payment .uv-payment-mobile-nav-toggle {
+    background: transparent;
+    color: #130b5f;
+    font-size: 28px;
+  }
+
+  .uv-payment-legacy-header--responsive-payment .uv-payment-mobile-profile {
+    background: #130b5f;
+    color: #fff;
+    font-size: 23px;
+    text-decoration: none;
+  }
+
+  .uv-payment-legacy-header--responsive-payment .uv-payment-mobile-nav-toggle:focus-visible,
+  .uv-payment-legacy-header--responsive-payment .uv-payment-mobile-profile:focus-visible,
+  .uv-payment-legacy-header--responsive-payment .member-home-navbar__drawer-header button:focus-visible {
+    outline: 3px solid #16be45;
+    outline-offset: 2px;
+  }
+
+  .uv-payment-legacy-header--responsive-payment .uv-payment-legacy-header__logo {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 auto;
+    align-items: center;
+    justify-content: center;
+    padding: 0 10px;
+  }
+
+  .uv-payment-legacy-header--responsive-payment .uv-payment-legacy-header__desktop-logo {
+    display: none;
+  }
+
+  .uv-payment-legacy-header--responsive-payment .uv-payment-legacy-header__mobile-logo {
+    display: block;
+    width: min(177px, calc(100vw - 132px));
+    max-width: 100%;
+    height: 48px;
+    object-fit: contain;
+  }
+
+  .uv-payment-legacy-header--responsive-payment .uv-payment-legacy-header__top {
+    min-height: 70px;
+    order: 2;
+    background: #130b5f;
+  }
+
+  .uv-payment-legacy-header--responsive-payment .uv-payment-legacy-header__top-inner {
+    width: 100%;
+    min-height: 70px;
+    justify-content: flex-end;
+    padding: 0 16px;
+    color: #fff;
+  }
+
+  .uv-payment-legacy-header--responsive-payment .uv-payment-legacy-header__info,
+  .uv-payment-legacy-header--responsive-payment .uv-payment-legacy-header__question,
+  .uv-payment-legacy-header--responsive-payment .uv-payment-legacy-header__profile {
+    display: none;
+  }
+
+  .uv-payment-legacy-header--responsive-payment .uv-payment-legacy-header__phone {
+    display: inline-flex;
+    align-items: center;
+    color: #fff;
+    font-size: clamp(20px, 5.5vw, 26px);
+    font-weight: 400;
+    line-height: 1;
+  }
+
+  .uv-payment-legacy-header--responsive-payment .uv-payment-legacy-header__phone-desktop {
+    display: none;
+  }
+
+  .uv-payment-legacy-header--responsive-payment .uv-payment-legacy-header__phone-mobile {
+    display: inline;
+  }
+
+  .uv-payment-legacy-header--responsive-payment .uv-payment-mobile-backdrop {
+    position: fixed;
+    z-index: 1098;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    visibility: hidden;
+    cursor: pointer;
+    background: rgb(0 0 0 / 42%);
+    border: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 300ms ease, visibility 300ms ease;
+  }
+
+  .uv-payment-legacy-header--responsive-payment .member-home-navbar {
+    position: fixed;
+    z-index: 1099;
+    top: 0;
+    left: 0;
+    display: block;
+    width: min(82vw, 320px);
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    margin: 0;
+    visibility: hidden;
+    overflow: hidden;
+    color: #202020;
+    background: #f7f7f7;
+    box-shadow: 8px 0 24px rgb(0 0 0 / 18%);
+    pointer-events: none;
+    transform: translateX(-100%);
+    transition: transform 300ms ease, visibility 300ms ease;
+  }
+
+  .uv-payment-legacy-header--responsive-payment.uv-navbar--open .uv-payment-mobile-backdrop {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .uv-payment-legacy-header--responsive-payment.uv-navbar--open .member-home-navbar {
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateX(0);
+  }
+
+  .uv-payment-legacy-header--responsive-payment .member-home-navbar__drawer-header {
+    display: flex;
+    min-height: 58px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 12px 0 16px;
+    color: #fff;
+    background: #130b5f;
+  }
+
+  .uv-payment-legacy-header--responsive-payment .member-home-navbar__drawer-header strong {
+    font-size: 16px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .uv-payment-legacy-header--responsive-payment .member-home-navbar__drawer-header button {
+    display: inline-flex;
+    width: 40px;
+    height: 40px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    cursor: pointer;
+    color: #fff;
+    background: transparent;
+    border: 0;
+    font-size: 22px;
+  }
+
+  .uv-payment-legacy-header--responsive-payment .member-home-navbar__container {
+    width: 100%;
+    height: calc(100vh - 58px);
+    height: calc(100dvh - 58px);
+    padding: 8px 16px 20px;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .uv-payment-legacy-header--responsive-payment .member-home-navbar__row {
+    display: flex;
+    min-height: 0;
+    flex-direction: column;
+    margin: 0;
+  }
+
+  .uv-payment-legacy-header--responsive-payment .member-home-navbar__links,
+  .uv-payment-legacy-header--responsive-payment .member-home-navbar__courses {
+    width: 100%;
+    min-width: 0;
+    float: none;
+    padding: 0;
+    overflow: visible;
+  }
+
+  .uv-payment-legacy-header--responsive-payment .member-home-navbar__links {
+    order: 1;
+  }
+
+  .uv-payment-legacy-header--responsive-payment .member-home-navbar__courses {
+    order: 2;
+  }
+
+  .uv-payment-legacy-header--responsive-payment .member-home-navbar__links .megamenu {
+    display: flex;
+    width: 100%;
+    min-height: 0;
+    flex-direction: column;
+    align-items: stretch;
+    margin: 0;
+  }
+
+  .uv-payment-legacy-header--responsive-payment .member-home-navbar__links li {
+    display: block;
+    width: 100%;
+  }
+
+  .uv-payment-legacy-header--responsive-payment .member-home-navbar__links a {
+    display: flex;
+    width: 100%;
+    min-height: 46px;
+    align-items: center;
+    padding: 10px 0;
+    color: #202020;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.35;
+    white-space: normal;
+  }
+
+  .uv-payment-legacy-header--responsive-payment .member-home-navbar__courses-link {
+    min-height: 50px;
+    padding: 0;
+    color: #130b5f;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 16px;
+    font-weight: 600;
+    white-space: normal;
+  }
+
+  .uv-payment-legacy-header--responsive-payment .member-home-navbar__courses-link .fa-bars {
+    font-size: 16px;
+  }
+
+  .uv-payment-legacy-header--responsive-payment .member-home-navbar__courses-link .fa-chevron-circle-up {
+    font-size: 18px;
+  }
+
+  .uv-payment-legacy-header--responsive-payment .member-home-navbar__courses-menu {
+    position: static;
+    width: 100%;
+    max-height: none;
+    overflow: visible;
+    background: transparent;
+    border: 0;
+  }
+
+  .uv-payment-legacy-header--responsive-payment .member-home-navbar__courses-menu a {
+    min-height: 42px;
+    padding: 10px 0 10px 14px;
+    color: #202020;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 13px;
+    font-weight: 500;
+  }
+}
+
+@media (max-width: 420px) {
+  .uv-payment-legacy-header--responsive-payment .uv-payment-legacy-header__brand-inner {
+    padding: 0 10px;
+  }
+
+  .uv-payment-legacy-header--responsive-payment .uv-payment-mobile-nav-toggle,
+  .uv-payment-legacy-header--responsive-payment .uv-payment-mobile-profile {
+    width: 38px;
+    height: 38px;
+    flex-basis: 38px;
+  }
+
+  .uv-payment-legacy-header--responsive-payment .uv-payment-legacy-header__mobile-logo {
+    width: min(165px, calc(100vw - 116px));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .uv-payment-legacy-header--responsive-payment .member-home-navbar,
+  .uv-payment-legacy-header--responsive-payment .uv-payment-mobile-backdrop {
+    transition: none;
+  }
+}

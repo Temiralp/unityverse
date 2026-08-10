@@ -234,7 +234,7 @@ app.get(['/uye', '/uye/'], (req, res) => {
     bodyClass: 'member-profile-page',
     extraStyles: [
       '/public/tema10/css/payment.css',
-      '/public/tema10/css/member-profile.css?v=20260724-2'
+      '/public/tema10/css/member-profile.css?v=20260810-2'
     ],
     extraScripts: ['/public/tema10/js/member-profile.js']
   });
