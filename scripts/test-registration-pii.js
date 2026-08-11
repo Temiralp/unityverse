@@ -78,6 +78,9 @@ function aggregateRoundTripTests() {
     country: 'Azerbaijan',
     city: 'Baku',
     district: 'Nasimi',
+    countryCode: 'AZ',
+    subdivisionCode: 'BA',
+    localityCode: '153',
     postalCode: 'AZ 1000',
     addressLine: '28 May street 10'
   };
@@ -96,6 +99,18 @@ function aggregateRoundTripTests() {
 
   assert.equal(hasCompleteEncryptedRegistrationPii(encrypted), true);
   assert.deepEqual(decryptRegistrationPii(encrypted), profile);
+
+  const legacyProfile = { ...profile };
+  delete legacyProfile.countryCode;
+  delete legacyProfile.subdivisionCode;
+  delete legacyProfile.localityCode;
+  const legacyDecrypted = decryptRegistrationPii(encryptRegistrationPii(legacyProfile));
+  assert.equal(legacyDecrypted.country, legacyProfile.country);
+  assert.equal(legacyDecrypted.city, legacyProfile.city);
+  assert.equal(legacyDecrypted.district, legacyProfile.district);
+  assert.equal(legacyDecrypted.countryCode, '');
+  assert.equal(legacyDecrypted.subdivisionCode, '');
+  assert.equal(legacyDecrypted.localityCode, '');
   assert.equal(hasCompleteEncryptedRegistrationPii({ ...encrypted, identityDocumentCountryCode: '' }), false);
   assert.equal(hasCompleteEncryptedRegistrationPii({ ...encrypted, birthDateEncrypted: null }), false);
 }

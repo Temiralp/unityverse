@@ -2233,6 +2233,16 @@ $( document ).ready(function() {
 		return productSlugFromHref(window.location.pathname + '/');
 	}
 
+	function resolveLegacyDetailPriceProduct(productsById, productsBySlug) {
+		var slug = currentLegacyProductSlug();
+		var linkedProductId = Number(window.legacy_detail_price_product_id);
+		var hasLinkedProduct = Number.isInteger(linkedProductId) && linkedProductId > 0;
+
+		return (slug && productsBySlug[slug])
+			|| (hasLinkedProduct && productsById[linkedProductId])
+			|| null;
+	}
+
 	function renderLegacyListingPrices(productsById, productsBySlug) {
 		$('.uv-product-card-item').each(function() {
 			var $card = $(this);
@@ -2254,10 +2264,7 @@ $( document ).ready(function() {
 	}
 
 	function renderLegacyDetailPrice(productsById, productsBySlug) {
-		var slug = currentLegacyProductSlug();
-		var linkedProductId = Number(window.legacy_detail_price_product_id);
-		var hasLinkedProduct = Number.isInteger(linkedProductId) && linkedProductId > 0;
-		var product = hasLinkedProduct ? productsById[linkedProductId] : (slug && productsBySlug[slug]);
+		var product = resolveLegacyDetailPriceProduct(productsById, productsBySlug);
 		var priceHtml = productPriceHtml(product);
 		var bankTransferHtml = productBankTransferHtml(product);
 		var $existingPrice = $('.content-product-right .product_page_price').first();
@@ -2559,9 +2566,9 @@ $( document ).ready(function() {
 			errors.identityDocumentType = 'Kimlik belgesi türünü seçiniz.';
 		}
 		if (!birthDate || Number.isNaN(birthDate.getTime()) || birthDate.toISOString().slice(0, 10) !== values.birthDate || values.birthDate >= today) errors.birthDate = 'Geçerli ve geçmiş bir doğum tarihi giriniz.';
-		['country', 'city', 'district'].forEach(function(field) {
-			if (values[field].length < 2 || values[field].length > 100) errors[field] = field === 'country' ? 'Ülke 2-100 karakter arasında olmalıdır.' : field === 'city' ? 'Şehir 2-100 karakter arasında olmalıdır.' : 'İlçe 2-100 karakter arasında olmalıdır.';
-		});
+		if (!values.country) errors.country = 'Ülke seçiniz.';
+		if (!values.city) errors.city = 'Şehir seçiniz.';
+		if (!values.district) errors.district = 'İlçe seçiniz.';
 		if (values.postalCode && (values.postalCode.length > 20 || !/^[\p{L}\p{N}\s-]+$/u.test(values.postalCode))) errors.postalCode = 'Posta kodu en fazla 20 harf, rakam, boşluk veya tire içerebilir.';
 		if (values.addressLine.length < 5 || values.addressLine.length > 500) errors.addressLine = 'Açık adresi en az 5, en fazla 500 karakter giriniz.';
 		return errors;
@@ -2578,6 +2585,7 @@ $( document ).ready(function() {
 		state.submit.setAttribute('aria-busy', String(submitting));
 		state.submit.textContent = submitting ? 'Kaydediliyor...' : 'Ödemeye Geç';
 		state.close.disabled = submitting;
+		state.cancel.disabled = submitting;
 	}
 
 	function clearEnrollmentFieldError(state, name) {
@@ -2681,14 +2689,15 @@ $( document ).ready(function() {
 					'<label>Kimlik / Pasaport numarası<input name="identityDocumentNumber" type="text" autocomplete="off" maxlength="20" required aria-describedby="legacy-enrollment-error-identityDocumentNumber"><span id="legacy-enrollment-error-identityDocumentNumber" data-enrollment-error="identityDocumentNumber"></span></label>',
 					'<label data-document-country-field hidden>Belge ülke kodu<input name="documentCountryCode" type="text" autocomplete="off" maxlength="2" placeholder="Örn: AZ" aria-describedby="legacy-enrollment-error-documentCountryCode"><span id="legacy-enrollment-error-documentCountryCode" data-enrollment-error="documentCountryCode"></span></label>',
 					'<label>Doğum tarihi<input name="birthDate" type="date" autocomplete="bday" required aria-describedby="legacy-enrollment-error-birthDate"><span id="legacy-enrollment-error-birthDate" data-enrollment-error="birthDate"></span></label>',
-					'<label>Ülke<input name="country" type="text" autocomplete="country-name" maxlength="100" required aria-describedby="legacy-enrollment-error-country"><span id="legacy-enrollment-error-country" data-enrollment-error="country"></span></label>',
-					'<label>Şehir<input name="city" type="text" autocomplete="address-level1" maxlength="100" required aria-describedby="legacy-enrollment-error-city"><span id="legacy-enrollment-error-city" data-enrollment-error="city"></span></label>',
-					'<label>İlçe<input name="district" type="text" autocomplete="address-level2" maxlength="100" required aria-describedby="legacy-enrollment-error-district"><span id="legacy-enrollment-error-district" data-enrollment-error="district"></span></label>',
+					'<label>Ülke<select name="country" autocomplete="country-name" required aria-describedby="legacy-enrollment-error-country legacy-enrollment-location-status" data-enrollment-country><option value="">Ülke seçin</option></select><span id="legacy-enrollment-error-country" data-enrollment-error="country"></span></label>',
+					'<label>İl / Bölge<select name="city" autocomplete="address-level1" required disabled aria-describedby="legacy-enrollment-error-city legacy-enrollment-location-status" data-enrollment-subdivision><option value="">Önce ülke seçin</option></select><span id="legacy-enrollment-error-city" data-enrollment-error="city"></span></label>',
+					'<label>İlçe / Şehir<select name="district" autocomplete="address-level2" required disabled aria-describedby="legacy-enrollment-error-district legacy-enrollment-location-status" data-enrollment-locality><option value="">Önce şehir seçin</option></select><span id="legacy-enrollment-error-district" data-enrollment-error="district"></span></label>',
 					'<label>Posta kodu <small>(opsiyonel)</small><input name="postalCode" type="text" autocomplete="postal-code" maxlength="20" aria-describedby="legacy-enrollment-error-postalCode"><span id="legacy-enrollment-error-postalCode" data-enrollment-error="postalCode"></span></label>',
 					'<label class="uv-legacy-profile-completion__wide">Açık adres<textarea name="addressLine" autocomplete="street-address" maxlength="500" rows="3" required aria-describedby="legacy-enrollment-error-addressLine"></textarea><span id="legacy-enrollment-error-addressLine" data-enrollment-error="addressLine"></span></label>',
-					'<p class="uv-legacy-profile-completion__privacy">Bilgileriniz eğitim kaydı ve ödeme işlemleri için güvenli olarak işlenir. <a href="/sayfa/uyelik-sozlesmesi-ve-gizlilik-politikasi-27/" target="_blank" rel="noopener">Gizlilik politikasını inceleyin</a>.</p>',
+					'<p class="uv-legacy-profile-completion__location-status" id="legacy-enrollment-location-status" role="status" aria-live="polite" data-enrollment-location-status></p>',
+					'<p class="uv-legacy-profile-completion__privacy">Bilgileriniz eğitim kaydı ve ödeme işlemleri için güvenli olarak işlenir. <a href="/sayfa/uyelik-sozlesmesi-ve-gizlilik-politikasi-27/" target="_blank" rel="noopener">Gizlilik politikasını inceleyin</a>. Konum verisi <a href="https://github.com/dr5hn/countries-states-cities-database" target="_blank" rel="noopener">Countries States Cities Database</a> tarafından <a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noopener">ODbL 1.0</a> ile sağlanır. <a href="/api/locations/dataset/v1.json" download>Uyarlanmış konum verisini indirin</a>.</p>',
 					'<p class="uv-legacy-profile-completion__status" role="status" aria-live="polite"></p>',
-					'<button class="uv-legacy-profile-completion__submit" type="submit">Ödemeye Geç</button>',
+					'<div class="uv-legacy-profile-completion__actions"><button class="uv-legacy-profile-completion__cancel" type="button">Vazgeç</button><button class="uv-legacy-profile-completion__submit" type="submit">Ödemeye Geç</button></div>',
 				'</form>',
 			'</section>'
 		].join('');
@@ -2704,9 +2713,10 @@ $( document ).ready(function() {
 			fields: fields,
 			warning: modal.querySelector('.uv-legacy-profile-completion__warning'),
 			documentCountryField: modal.querySelector('[data-document-country-field]'),
-			status: modal.querySelector('[role="status"]'),
+			status: modal.querySelector('.uv-legacy-profile-completion__status'),
 			submit: modal.querySelector('[type="submit"]'),
 			close: modal.querySelector('.uv-legacy-profile-completion__close'),
+			cancel: modal.querySelector('.uv-legacy-profile-completion__cancel'),
 			productId: '',
 			lastFocus: null,
 			isSubmitting: false
@@ -2714,17 +2724,20 @@ $( document ).ready(function() {
 
 		profileCompletion.form.addEventListener('submit', submitProfileCompletion);
 		profileCompletion.close.addEventListener('click', closeProfileCompletion);
+		profileCompletion.cancel.addEventListener('click', closeProfileCompletion);
+		profileCompletion.locationController = window.UnityverseEnrollmentLocations
+			? window.UnityverseEnrollmentLocations.init(profileCompletion.form)
+			: null;
 		profileCompletion.fields.identityDocumentType.addEventListener('change', function() {
 			syncEnrollmentDocumentType(profileCompletion);
 		});
 		enrollmentFieldNames.forEach(function(name) {
-			profileCompletion.fields[name].addEventListener('input', function() {
+			function handleFieldUpdate() {
 				clearEnrollmentFieldError(profileCompletion, name);
 				if (!modal.querySelector('[aria-invalid="true"]')) profileCompletion.warning.hidden = true;
-			});
-		});
-		modal.addEventListener('click', function(event) {
-			if (event.target === modal) closeProfileCompletion();
+			}
+			profileCompletion.fields[name].addEventListener('input', handleFieldUpdate);
+			profileCompletion.fields[name].addEventListener('change', handleFieldUpdate);
 		});
 			document.addEventListener('keydown', function(event) {
 				if (modal.hidden) return;

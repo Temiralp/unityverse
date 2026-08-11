@@ -92,11 +92,6 @@
     </thead>
     <tbody>
       <% registrations.forEach((registration) => { %>
-        <%
-          const totalAmount = registration.totalAmount == null ? 0 : Number(registration.totalAmount);
-          const paidAmount = (registration.payments || []).reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
-          const remainingAmount = Math.max(totalAmount - paidAmount, 0);
-        %>
         <tr>
           <td>
             <strong><%= registration.courseTitle %></strong>
@@ -134,11 +129,45 @@
               Başlangıç: <%= registration.startsAt ? registration.startsAt.toLocaleDateString('tr-TR') : '-' %>
             </small>
             <small class="table-muted">
-              Ödenen: <%= paidAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> TL
+              Yöntem: <%= registration.paymentMethod === 'BANK_TRANSFER' ? 'Havale / EFT' : registration.paymentMethod === 'CARD' ? 'Kart' : 'Seçilmedi' %>
             </small>
             <small class="table-muted">
-              Kalan: <%= remainingAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> TL
+              Kurs Fiyatı: <%= registration.finance.courseAmountText %> TL
             </small>
+            <% if (registration.finance.hasCoupon) { %>
+              <small class="table-muted">
+                Kupon: <%= registration.couponCode %> · -<%= registration.finance.couponDiscountText %> TL
+              </small>
+            <% } %>
+            <% if (registration.finance.hasCoupon && registration.paymentMethod === 'BANK_TRANSFER') { %>
+              <small class="table-muted">
+                Kupon Sonrası: <%= registration.finance.couponAdjustedAmountText %> TL
+              </small>
+            <% } %>
+            <% if (registration.finance.hasBankTransferDiscount) { %>
+              <small class="table-muted">
+                Havale İndirimi: %<%= registration.finance.bankTransferDiscountRate %> · -<%= registration.finance.bankTransferDiscountText %> TL
+              </small>
+            <% } %>
+            <small class="table-muted">
+              <%= registration.finance.hasSettlementMismatch ? 'İndirimlerle Ödenecek' : 'Ödenecek' %>: <%= registration.finance.totalAmountText %> TL
+            </small>
+            <% if (registration.finance.hasSettlementMismatch) { %>
+              <small class="table-muted">
+                Kayıtlı Havale Tutarı: <%= registration.finance.settlementPayableAmountText %> TL
+              </small>
+            <% } %>
+            <small class="table-muted">
+              Ödenen: <%= registration.finance.paidAmountText %> TL
+            </small>
+            <small class="table-muted">
+              <%= registration.finance.hasSettlementMismatch ? 'İndirimli Kalan' : 'Kalan' %>: <%= registration.finance.remainingAmountText %> TL
+            </small>
+            <% if (registration.finance.hasSettlementMismatch) { %>
+              <small class="table-muted">
+                Kayıtlı Kalan: <%= registration.finance.settlementRemainingAmountText %> TL
+              </small>
+            <% } %>
           </td>
           <td><%= registration.createdAt.toLocaleString('tr-TR') %></td>
           <td>

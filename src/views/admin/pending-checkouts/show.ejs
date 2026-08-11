@@ -1,0 +1,45 @@
+<%- include('../partials/header') %>
+
+<div class="page-head">
+  <div>
+    <h1>Yarım Kalan Ödeme #<%= registration.id %></h1>
+    <p class="page-subtitle">Ödeme tamamlanmadığı için bu işlem henüz eğitim kaydı olarak değerlendirilmez.</p>
+  </div>
+  <a class="button button-secondary" href="/admin/pending-checkouts">Listeye Dön</a>
+</div>
+
+<section class="detail-grid">
+  <article class="panel detail-panel">
+    <div class="panel-head">
+      <div>
+        <h2>İletişim Bilgileri</h2>
+        <p>Kullanıcının checkout formunda paylaştığı temel iletişim bilgileri.</p>
+      </div>
+    </div>
+    <dl class="info-list">
+      <div><dt>Ad Soyad</dt><dd><%= [registration.name, registration.surname].filter(Boolean).join(' ') %></dd></div>
+      <div><dt>Telefon</dt><dd><%= registration.phone || '-' %></dd></div>
+      <div><dt>E-posta</dt><dd><%= registration.email || '-' %></dd></div>
+      <div><dt>Üye</dt><dd><%= registration.member ? `#${registration.member.id} · ${registration.member.status}` : '-' %></dd></div>
+    </dl>
+  </article>
+
+  <article class="panel detail-panel">
+    <div class="panel-head">
+      <div>
+        <h2>Checkout Bilgileri</h2>
+        <p>Ödeme tamamlandığında bu kayıt otomatik olarak Eğitim Kayıtlarına geçecek.</p>
+      </div>
+    </div>
+    <dl class="info-list">
+      <div><dt>Eğitim</dt><dd><%= registration.courseTitle %></dd></div>
+      <div><dt>Kurs Kodu</dt><dd><%= registration.product && registration.product.code ? registration.product.code : '-' %></dd></div>
+      <div><dt>Tutar</dt><dd><%= registration.totalAmount == null ? '-' : `${Number(registration.totalAmount).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL` %></dd></div>
+      <div><dt>Ödeme</dt><dd><span class="status-pill status-payment-pending">Ödeme Tamamlanmadı</span></dd></div>
+      <div><dt>Kayıt Tarihi</dt><dd><%= registration.createdAt.toLocaleString('tr-TR') %></dd></div>
+      <div><dt>Son Güncelleme</dt><dd><%= registration.updatedAt.toLocaleString('tr-TR') %></dd></div>
+    </dl>
+  </article>
+</section>
+
+<%- include('../partials/footer') %>

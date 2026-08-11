@@ -1,0 +1,90 @@
+<%- include('../partials/header') %>
+
+<div class="page-head">
+  <div>
+    <h1>Yarım Kalan Ödemeler</h1>
+    <p class="page-subtitle">Kayıt formunu tamamlayan ancak kart ödemesi veya havale bildirimi henüz alınmayan işlemleri takip edin.</p>
+  </div>
+  <a class="button button-secondary" href="/admin/registrations">Eğitim Kayıtları</a>
+</div>
+
+<section class="panel list-panel">
+  <% if (warning) { %>
+    <p class="panel-warning"><%= warning %></p>
+  <% } %>
+
+  <div class="list-toolbar">
+    <form method="get" action="/admin/pending-checkouts" class="search-form education-filter-form">
+      <input name="q" value="<%= q %>" placeholder="Eğitim, ad, e-posta veya telefon ara">
+      <select name="productId">
+        <option value="">Tüm Kurslar</option>
+        <% products.forEach((product) => { %>
+          <option value="<%= product.id %>" <%= productId === String(product.id) ? 'selected' : '' %>><%= product.code ? `${product.code} · ` : '' %><%= product.title %></option>
+        <% }) %>
+      </select>
+      <label class="filter-field">
+        <span>Başlangıç Tarihi</span>
+        <input type="date" name="createdFrom" value="<%= createdFrom %>">
+      </label>
+      <label class="filter-field">
+        <span>Bitiş Tarihi</span>
+        <input type="date" name="createdTo" value="<%= createdTo %>">
+      </label>
+      <button type="submit">Filtrele</button>
+      <% if (q || productId || createdFrom || createdTo) { %>
+        <a class="button button-secondary" href="/admin/pending-checkouts">Temizle</a>
+      <% } %>
+    </form>
+    <strong>Toplam Yarım Kalan: <%= totalCount %></strong>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Eğitim</th>
+        <th>Üye</th>
+        <th>İletişim</th>
+        <th>Ödeme</th>
+        <th>Kayıt Tarihi</th>
+        <th>Son Güncelleme</th>
+        <th>İşlem</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% registrations.forEach((registration) => { %>
+        <tr>
+          <td>
+            <strong><%= registration.courseTitle %></strong>
+            <% if (registration.product && registration.product.code) { %>
+              <small class="table-muted">Kod: <%= registration.product.code %></small>
+            <% } %>
+          </td>
+          <td>
+            <strong><%= [registration.name, registration.surname].filter(Boolean).join(' ') %></strong>
+            <% if (registration.member) { %>
+              <small class="table-muted">Üye kaydı bağlı</small>
+            <% } %>
+          </td>
+          <td>
+            <%= registration.phone || '-' %>
+            <small class="table-muted"><%= registration.email || '-' %></small>
+          </td>
+          <td>
+            <span class="status-pill status-payment-pending">Ödeme Tamamlanmadı</span>
+            <small class="table-muted">Ödeme yöntemi seçilmedi</small>
+          </td>
+          <td><%= registration.createdAt.toLocaleString('tr-TR') %></td>
+          <td><%= registration.updatedAt.toLocaleString('tr-TR') %></td>
+          <td><a class="table-action" href="/admin/pending-checkouts/<%= registration.id %>">İncele</a></td>
+        </tr>
+      <% }) %>
+      <% if (!registrations.length) { %>
+        <tr><td colspan="7">Yarım kalan ödeme bulunmuyor.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+
+  <%- include('../partials/pagination', { pagination }) %>
+</section>
+
+<%- include('../partials/footer') %>

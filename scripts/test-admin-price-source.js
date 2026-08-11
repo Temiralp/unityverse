@@ -1,6 +1,7 @@
 const assert = require('assert/strict');
 const fs = require('fs');
 const path = require('path');
+const vm = require('vm');
 
 const {
   parseCourseFile,
@@ -128,12 +129,67 @@ async function filterPriceTests() {
 
 function frontendFallbackTests() {
   const source = fs.readFileSync(path.join(root, 'public/tema10/js/scripts.js'), 'utf8');
+  const resolverStart = source.indexOf('\tfunction resolveLegacyDetailPriceProduct');
+  const resolverEnd = source.indexOf('\n\tfunction renderLegacyListingPrices', resolverStart);
 
   assert.doesNotMatch(source, /legacyPriceHtmlFromSource/);
   assert.doesNotMatch(source, /renderLegacyListingFallbackPrices/);
   assert.doesNotMatch(source, /typeof window\.base_price/);
   assert.match(source, /\$existingPrice\.html\(priceHtml\)/);
   assert.match(source, /\$priceRow\.find\('\.uv-bank-transfer-discount'\)\.remove\(\)/);
+  assert.match(
+    source,
+    /return \(slug && productsBySlug\[slug\]\)\s*\|\| \(hasLinkedProduct && productsById\[linkedProductId\]\)\s*\|\| null;/,
+    'Detay fiyatı önce güncel URL slugından, sonra eski bağlı ürün ID’sinden çözülmeli'
+  );
+  assert.doesNotMatch(
+    source,
+    /hasLinkedProduct \? productsById\[linkedProductId\] : \(slug && productsBySlug\[slug\]\)/,
+    'Eski bağlı ürün ID’si güncel slug fiyatını engellememeli'
+  );
+  assert.match(
+    source,
+    /function renderLegacyDetailPrice\(productsById, productsBySlug\) \{\s*var product = resolveLegacyDetailPriceProduct\(productsById, productsBySlug\);/,
+    'Detay fiyat rendererı ortak resolverı kullanmalı'
+  );
+
+  assert.ok(resolverStart >= 0 && resolverEnd > resolverStart, 'Detay fiyat resolverı bulunmalı');
+
+  const sandbox = {
+    currentLegacyProductSlug: () => 'bn32-current',
+    window: { legacy_detail_price_product_id: 1490 }
+  };
+  const resolveProduct = vm.runInNewContext(
+    `(${source.slice(resolverStart, resolverEnd).trim()})`,
+    sandbox
+  );
+  const currentProduct = { id: 651, slug: 'bn32-current', price: '89000.00' };
+  const staleProduct = { id: 1490, slug: 'bn32-stale', price: '49000.00' };
+
+  assert.equal(
+    resolveProduct({}, { 'bn32-current': currentProduct }),
+    currentProduct,
+    'Eski ID bulunmadığında güncel URL slugı kullanılmalı'
+  );
+  assert.equal(
+    resolveProduct({ 1490: staleProduct }, { 'bn32-current': currentProduct }),
+    currentProduct,
+    'Güncel URL slugı eski bağlı ID’den öncelikli olmalı'
+  );
+
+  sandbox.currentLegacyProductSlug = () => 'unknown-product';
+  assert.equal(
+    resolveProduct({ 1490: staleProduct }, {}),
+    staleProduct,
+    'Slug eşleşmezse eski bağlı ID geriye uyumluluk için kullanılmalı'
+  );
+
+  sandbox.window.legacy_detail_price_product_id = undefined;
+  assert.equal(
+    resolveProduct({}, {}),
+    null,
+    'Slug ve eski bağlı ID bulunmadığında fiyat ürünü seçilmemeli'
+  );
 }
 
 Promise.resolve()

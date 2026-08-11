@@ -46,9 +46,9 @@ const {
   DEFAULT_BANK_TRANSFER_DISCOUNT_RATE,
   bankTransferQuote,
   isValidBankTransferDiscountRate,
-  normalizeBankTransferDiscountRate,
-  registrationPayableAmount
+  normalizeBankTransferDiscountRate
 } = require('../services/bank-transfer-pricing');
+const { registrationFinanceAmounts } = require('../services/registration-finance');
 const {
   CORPORATE_REFERENCE_IMAGE_EXTENSIONS,
   CORPORATE_REFERENCE_IMAGE_MAX_SIZE,
@@ -59,6 +59,11 @@ const {
   validateCorporateReferenceForm
 } = require('../services/corporate-references');
 const { validateMemberAdminForm } = require('../services/member-admin');
+const {
+  adminVisibleRegistrationWhere,
+  isAdminVisibleRegistration,
+  pendingCheckoutWhere
+} = require('../services/registration-visibility');
 
 const router = express.Router();
 const ADMIN_LOGIN_SCOPE = 'admin-login';
@@ -389,8 +394,8 @@ async function getLeadDetail(id) {
 }
 
 async function getRegistrationDetail(id) {
-  return prisma.educationRegistration.findUnique({
-    where: { id: Number(id) },
+  return prisma.educationRegistration.findFirst({
+    where: adminVisibleRegistrationWhere({ id: Number(id) }),
     include: {
       advisor: true,
       member: true,
@@ -400,6 +405,13 @@ async function getRegistrationDetail(id) {
       payments: { orderBy: { paidAt: 'desc' } },
       installments: { orderBy: { dueDate: 'asc' } }
     }
+  });
+}
+
+async function adminVisibleRegistrationExists(prismaClient, id) {
+  return prismaClient.educationRegistration.findFirst({
+    where: adminVisibleRegistrationWhere({ id: Number(id) }),
+    select: { id: true }
   });
 }
 
@@ -468,23 +480,26 @@ async function safeEducationRegistrationCount() {
   if (!hasEducationRegistrationModel()) return 0;
 
   try {
-    return await prisma.educationRegistration.count();
+    return await prisma.educationRegistration.count({
+      where: adminVisibleRegistrationWhere()
+    });
   } catch (error) {
     if (isMissingTableError(error)) return 0;
     throw error;
   }
 }
 
-async function safeEducationRegistrationsList(req, where) {
+async function safeEducationRegistrationsList(req, where, visibilityWhere = adminVisibleRegistrationWhere) {
   if (!hasEducationRegistrationModel()) {
     return { registrations: [], totalCount: 0, pagination: createPagination(req, 0, paginationRequest(req)), tableReady: false };
   }
 
   try {
-    const totalCount = await prisma.educationRegistration.count({ where });
+    const scopedWhere = visibilityWhere(where);
+    const totalCount = await prisma.educationRegistration.count({ where: scopedWhere });
     const pagination = createPagination(req, totalCount, paginationRequest(req));
     const registrations = await prisma.educationRegistration.findMany({
-        where,
+        where: scopedWhere,
         include: { advisor: true, member: true, product: true, payments: true },
         orderBy: { createdAt: 'desc' },
         skip: pagination.skip,
@@ -701,20 +716,20 @@ function getProductPricing(product) {
 }
 
 function getRegistrationFinance(registration) {
-  const payableAmount = registrationPayableAmount(registration);
-  const totalAmount = payableAmount == null ? 0 : Number(payableAmount);
-  const paidAmount = (registration.payments || []).reduce((sum, payment) => {
-    return sum + Number(payment.amount || 0);
-  }, 0);
-  const remainingAmount = Math.max(totalAmount - paidAmount, 0);
+  const amounts = registrationFinanceAmounts(registration);
 
   return {
-    totalAmount,
-    paidAmount,
-    remainingAmount,
-    totalAmountText: formatMoney(totalAmount),
-    paidAmountText: formatMoney(paidAmount),
-    remainingAmountText: formatMoney(remainingAmount)
+    ...amounts,
+    totalAmount: amounts.payableAmount,
+    courseAmountText: formatMoney(amounts.courseAmount),
+    couponDiscountText: formatMoney(amounts.couponDiscount),
+    couponAdjustedAmountText: formatMoney(amounts.couponAdjustedAmount),
+    bankTransferDiscountText: formatMoney(amounts.bankTransferDiscount),
+    totalAmountText: formatMoney(amounts.payableAmount),
+    settlementPayableAmountText: formatMoney(amounts.settlementPayableAmount),
+    paidAmountText: formatMoney(amounts.paidAmount),
+    remainingAmountText: formatMoney(amounts.remainingAmount),
+    settlementRemainingAmountText: formatMoney(amounts.settlementRemainingAmount)
   };
 }
 
@@ -731,7 +746,7 @@ async function syncRegistrationPaymentStatus(tx, registrationId, authorName) {
   const finance = getRegistrationFinance(registration);
   const paymentStatus = finance.paidAmount <= 0
     ? 'PENDING'
-    : finance.remainingAmount <= 0
+    : finance.settlementRemainingAmount <= 0
       ? 'PAID'
       : 'PARTIAL';
 
@@ -1394,25 +1409,36 @@ router.get('/', requireAdmin, async (req, res, next) => {
       hasMemberModel() ? prisma.member.count({ where: { createdAt: { gte: monthStart } } }) : 0,
       safeEducationRegistrationCount(),
       hasEducationRegistrationModel()
-        ? prisma.educationRegistration.count({ where: { status: { in: ['NEW', 'CONTACTED', 'CONFIRMED'] } } })
+        ? prisma.educationRegistration.count({
+            where: adminVisibleRegistrationWhere({ status: { in: ['NEW', 'CONTACTED', 'CONFIRMED'] } })
+          })
         : 0,
       hasEducationRegistrationModel()
-        ? prisma.educationRegistration.count({ where: { paymentStatus: { in: ['PENDING', 'PARTIAL'] } } })
+        ? prisma.educationRegistration.count({
+            where: adminVisibleRegistrationWhere({ paymentStatus: { in: ['PENDING', 'PARTIAL'] } })
+          })
         : 0,
       hasEducationRegistrationModel()
-        ? prisma.educationRegistration.count({ where: { status: 'CONFIRMED' } })
+        ? prisma.educationRegistration.count({
+            where: adminVisibleRegistrationWhere({ status: 'CONFIRMED' })
+          })
         : 0,
       prisma.lead.count({ where: { nextFollowUpAt: { gte: todayStart, lte: todayEnd } } }),
       prisma.lead.count({ where: { nextFollowUpAt: { lt: todayStart } } }),
       hasEducationRegistrationModel()
-        ? prisma.educationRegistration.count({ where: { nextFollowUpAt: { gte: todayStart, lte: todayEnd } } })
+        ? prisma.educationRegistration.count({
+            where: adminVisibleRegistrationWhere({ nextFollowUpAt: { gte: todayStart, lte: todayEnd } })
+          })
         : 0,
       hasEducationRegistrationModel()
-        ? prisma.educationRegistration.count({ where: { nextFollowUpAt: { lt: todayStart } } })
+        ? prisma.educationRegistration.count({
+            where: adminVisibleRegistrationWhere({ nextFollowUpAt: { lt: todayStart } })
+          })
         : 0,
       prisma.lead.findMany({ orderBy: { createdAt: 'desc' }, take: 6 }),
       hasEducationRegistrationModel()
         ? prisma.educationRegistration.findMany({
+            where: adminVisibleRegistrationWhere(),
             include: { member: true, product: true },
             orderBy: { createdAt: 'desc' },
             take: 6
@@ -1420,7 +1446,7 @@ router.get('/', requireAdmin, async (req, res, next) => {
         : [],
       hasEducationRegistrationModel()
         ? prisma.educationRegistration.findMany({
-            where: { paymentStatus: { in: ['PENDING', 'PARTIAL'] } },
+            where: adminVisibleRegistrationWhere({ paymentStatus: { in: ['PENDING', 'PARTIAL'] } }),
             include: { product: true },
             orderBy: { updatedAt: 'desc' },
             take: 6
@@ -1428,7 +1454,7 @@ router.get('/', requireAdmin, async (req, res, next) => {
         : [],
       hasEducationRegistrationModel()
         ? prisma.educationRegistration.findMany({
-            where: { createdAt: { gte: chartStart } },
+            where: adminVisibleRegistrationWhere({ createdAt: { gte: chartStart } }),
             select: { createdAt: true },
             orderBy: { createdAt: 'asc' }
           })
@@ -1553,7 +1579,7 @@ router.get('/crm', requireAdmin, async (req, res, next) => {
       }),
       hasEducationRegistrationModel()
         ? prisma.educationRegistration.findMany({
-            where: registrationWhere,
+            where: adminVisibleRegistrationWhere(registrationWhere),
             include: { advisor: true, product: true },
             orderBy: [{ nextFollowUpAt: 'asc' }, { createdAt: 'desc' }],
             take: 50
@@ -1563,13 +1589,28 @@ router.get('/crm', requireAdmin, async (req, res, next) => {
       prisma.lead.count({ where: { ...(selectedAdvisorId ? { advisorId: selectedAdvisorId } : {}), nextFollowUpAt: { lt: todayStart } } }),
       prisma.lead.count({ where: { ...(selectedAdvisorId ? { advisorId: selectedAdvisorId } : {}), nextFollowUpAt: { not: null } } }),
       hasEducationRegistrationModel()
-        ? prisma.educationRegistration.count({ where: { ...(selectedAdvisorId ? { advisorId: selectedAdvisorId } : {}), nextFollowUpAt: { gte: todayStart, lte: todayEnd } } })
+        ? prisma.educationRegistration.count({
+            where: adminVisibleRegistrationWhere({
+              ...(selectedAdvisorId ? { advisorId: selectedAdvisorId } : {}),
+              nextFollowUpAt: { gte: todayStart, lte: todayEnd }
+            })
+          })
         : 0,
       hasEducationRegistrationModel()
-        ? prisma.educationRegistration.count({ where: { ...(selectedAdvisorId ? { advisorId: selectedAdvisorId } : {}), nextFollowUpAt: { lt: todayStart } } })
+        ? prisma.educationRegistration.count({
+            where: adminVisibleRegistrationWhere({
+              ...(selectedAdvisorId ? { advisorId: selectedAdvisorId } : {}),
+              nextFollowUpAt: { lt: todayStart }
+            })
+          })
         : 0,
       hasEducationRegistrationModel()
-        ? prisma.educationRegistration.count({ where: { ...(selectedAdvisorId ? { advisorId: selectedAdvisorId } : {}), nextFollowUpAt: { not: null } } })
+        ? prisma.educationRegistration.count({
+            where: adminVisibleRegistrationWhere({
+              ...(selectedAdvisorId ? { advisorId: selectedAdvisorId } : {}),
+              nextFollowUpAt: { not: null }
+            })
+          })
         : 0
     ]);
 
@@ -2982,6 +3023,7 @@ router.get('/members/:id', requireAdmin, async (req, res, next) => {
           orderBy: { createdAt: 'desc' }
         },
         educationRegistrations: {
+          where: adminVisibleRegistrationWhere(),
           include: { product: true },
           orderBy: { createdAt: 'desc' }
         }
@@ -3077,7 +3119,11 @@ router.post('/members/:id/notes', requireAdmin, async (req, res, next) => {
         include: {
           notes: { orderBy: { createdAt: 'desc' } },
           courseInterests: { include: { product: true }, orderBy: { createdAt: 'desc' } },
-          educationRegistrations: { include: { product: true }, orderBy: { createdAt: 'desc' } }
+          educationRegistrations: {
+            where: adminVisibleRegistrationWhere(),
+            include: { product: true },
+            orderBy: { createdAt: 'desc' }
+          }
         }
       });
       const products = await prisma.product.findMany({ orderBy: [{ title: 'asc' }], take: 250 });
@@ -3162,6 +3208,97 @@ router.post('/members/:id/interests/:interestId/delete', requireAdmin, async (re
   }
 });
 
+router.get('/pending-checkouts', requireAdmin, async (req, res, next) => {
+  try {
+    const q = String(req.query.q || '').trim();
+    const productId = String(req.query.productId || '').trim();
+    const createdFrom = String(req.query.createdFrom || '').trim();
+    const createdTo = String(req.query.createdTo || '').trim();
+    const createdFromDate = parseOptionalDate(createdFrom);
+    const createdToDate = endOfDay(parseOptionalDate(createdTo));
+    const where = {};
+
+    const selectedProductId = Number(productId);
+    if (productId && Number.isInteger(selectedProductId)) {
+      where.productId = selectedProductId;
+    }
+
+    if (createdFromDate || createdToDate) {
+      where.createdAt = {};
+      if (createdFromDate) where.createdAt.gte = createdFromDate;
+      if (createdToDate) where.createdAt.lte = createdToDate;
+    }
+
+    if (q) {
+      where.OR = [
+        { courseTitle: { contains: q, mode: 'insensitive' } },
+        { product: { is: { code: { contains: q, mode: 'insensitive' } } } },
+        { name: { contains: q, mode: 'insensitive' } },
+        { surname: { contains: q, mode: 'insensitive' } },
+        { email: { contains: q, mode: 'insensitive' } },
+        { phone: { contains: q, mode: 'insensitive' } }
+      ];
+    }
+
+    const { registrations, totalCount, pagination, tableReady } = await safeEducationRegistrationsList(
+      req,
+      where,
+      pendingCheckoutWhere
+    );
+    const products = await prisma.product.findMany({
+      orderBy: { title: 'asc' },
+      select: { id: true, code: true, title: true }
+    });
+
+    setPrivateNoStore(res);
+    return res.render('admin/pending-checkouts/index', {
+      registrations: registrations.map(withoutEncryptedRegistrationPii),
+      totalCount,
+      pagination,
+      q,
+      productId,
+      createdFrom,
+      createdTo,
+      products,
+      warning: tableReady
+        ? null
+        : 'Eğitim kayıt tablosu henüz oluşturulmadı. Migration çalıştırıldıktan sonra kayıtlar burada görünecek.'
+    });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+router.get('/pending-checkouts/:id(\\d+)', requireAdmin, async (req, res, next) => {
+  try {
+    const registration = await prisma.educationRegistration.findFirst({
+      where: pendingCheckoutWhere({ id: Number(req.params.id) }),
+      select: {
+        id: true,
+        courseTitle: true,
+        name: true,
+        surname: true,
+        email: true,
+        phone: true,
+        totalAmount: true,
+        createdAt: true,
+        updatedAt: true,
+        member: { select: { id: true, status: true } },
+        product: { select: { id: true, code: true, title: true } }
+      }
+    });
+
+    if (!registration) {
+      return res.status(404).send('Yarım kalan ödeme bulunamadı');
+    }
+
+    setPrivateNoStore(res);
+    return res.render('admin/pending-checkouts/show', { registration });
+  } catch (error) {
+    return next(error);
+  }
+});
+
 router.get('/registrations', requireAdmin, async (req, res, next) => {
   try {
     const q = String(req.query.q || '').trim();
@@ -3236,6 +3373,7 @@ router.get('/registrations', requireAdmin, async (req, res, next) => {
       }),
       tableReady
         ? prisma.educationRegistration.findMany({
+            where: adminVisibleRegistrationWhere(),
             distinct: ['source'],
             orderBy: { source: 'asc' },
             select: { source: true }
@@ -3246,7 +3384,10 @@ router.get('/registrations', requireAdmin, async (req, res, next) => {
 
     setPrivateNoStore(res);
     res.render('admin/registrations/index', {
-      registrations: registrations.map(withoutEncryptedRegistrationPii),
+      registrations: registrations.map((registration) => ({
+        ...withoutEncryptedRegistrationPii(registration),
+        finance: getRegistrationFinance(registration)
+      })),
       totalCount,
       pagination,
       q,
@@ -3333,8 +3474,8 @@ router.get('/registrations/:id/edit', requireAdmin, async (req, res, next) => {
       return res.redirect('/admin/registrations');
     }
 
-    const registration = await prisma.educationRegistration.findUnique({
-      where: { id: Number(req.params.id) },
+    const registration = await prisma.educationRegistration.findFirst({
+      where: adminVisibleRegistrationWhere({ id: Number(req.params.id) }),
       include: { product: true }
     });
 
@@ -3369,8 +3510,8 @@ router.post('/registrations/:id', requireAdmin, async (req, res, next) => {
     }
 
     const registrationId = Number(req.params.id);
-    const registrationExists = await prisma.educationRegistration.findUnique({
-      where: { id: registrationId }
+    const registrationExists = await prisma.educationRegistration.findFirst({
+      where: adminVisibleRegistrationWhere({ id: registrationId })
     });
 
     if (!registrationExists) {
@@ -3411,7 +3552,7 @@ router.post('/registrations/:id', requireAdmin, async (req, res, next) => {
         where: { id: registrationId }
       });
 
-      if (!currentRegistration) {
+      if (!isAdminVisibleRegistration(currentRegistration)) {
         return false;
       }
 
@@ -3480,6 +3621,11 @@ router.post('/registrations/:id/status', requireAdmin, async (req, res, next) =>
     const nextStatus = normalizeRegistrationStatus(req.body.status);
     const nextPaymentStatus = normalizePaymentStatus(req.body.paymentStatus);
     const financeError = validateRegistrationFinanceFields(req.body);
+    const visibleRegistration = await adminVisibleRegistrationExists(prisma, registrationId);
+
+    if (!visibleRegistration) {
+      return res.status(404).send('Eğitim kaydı bulunamadı');
+    }
 
     if (financeError) {
       const registration = await getRegistrationDetail(req.params.id);
@@ -3494,7 +3640,7 @@ router.post('/registrations/:id/status', requireAdmin, async (req, res, next) =>
         where: { id: registrationId }
       });
 
-      if (!currentRegistration) {
+      if (!isAdminVisibleRegistration(currentRegistration)) {
         return false;
       }
 
@@ -3550,22 +3696,38 @@ router.post('/registrations/:id/notes', requireAdmin, async (req, res, next) => 
     }
 
     const note = String(req.body.note || '').trim();
-    if (!note) {
-      const registration = await getRegistrationDetail(req.params.id);
+    const registration = await getRegistrationDetail(req.params.id);
 
+    if (!registration) {
+      return res.status(404).send('Eğitim kaydı bulunamadı');
+    }
+
+    if (!note) {
       return renderRegistrationDetail(res, registration, {
         statusCode: 400,
         error: 'Not alanı boş olamaz.'
       });
     }
 
-    await prisma.educationRegistrationNote.create({
-      data: {
-        registrationId: Number(req.params.id),
-        note,
-        authorName: currentAdminName(req)
-      }
+    const registrationId = Number(req.params.id);
+    const created = await prisma.$transaction(async (tx) => {
+      const visibleRegistration = await adminVisibleRegistrationExists(tx, registrationId);
+      if (!visibleRegistration) return false;
+
+      await tx.educationRegistrationNote.create({
+        data: {
+          registrationId,
+          note,
+          authorName: currentAdminName(req)
+        }
+      });
+
+      return true;
     });
+
+    if (!created) {
+      return res.status(404).send('Eğitim kaydı bulunamadı');
+    }
 
     res.redirect(`/admin/registrations/${req.params.id}`);
   } catch (error) {
@@ -3584,6 +3746,10 @@ router.post('/registrations/:id/payments', requireAdmin, async (req, res, next) 
 
     if (!amount || Number(amount) <= 0) {
       const registration = await getRegistrationDetail(req.params.id);
+      if (!registration) {
+        return res.status(404).send('Eğitim kaydı bulunamadı');
+      }
+
       return renderRegistrationDetail(res, registration, {
         statusCode: 400,
         error: 'Ödeme tutarı geçerli pozitif sayı olmalıdır.'
@@ -3591,10 +3757,7 @@ router.post('/registrations/:id/payments', requireAdmin, async (req, res, next) 
     }
 
     const created = await prisma.$transaction(async (tx) => {
-      const registration = await tx.educationRegistration.findUnique({
-        where: { id: registrationId },
-        select: { id: true }
-      });
+      const registration = await adminVisibleRegistrationExists(tx, registrationId);
 
       if (!registration) {
         return false;
@@ -3637,6 +3800,10 @@ router.post('/registrations/:id/installments', requireAdmin, async (req, res, ne
 
     if (!amount || Number(amount) <= 0 || !dueDate) {
       const registration = await getRegistrationDetail(req.params.id);
+      if (!registration) {
+        return res.status(404).send('Eğitim kaydı bulunamadı');
+      }
+
       return renderRegistrationDetail(res, registration, {
         statusCode: 400,
         error: 'Taksit tutarı ve vade tarihi zorunludur.'
@@ -3644,10 +3811,7 @@ router.post('/registrations/:id/installments', requireAdmin, async (req, res, ne
     }
 
     const created = await prisma.$transaction(async (tx) => {
-      const registration = await tx.educationRegistration.findUnique({
-        where: { id: registrationId },
-        select: { id: true }
-      });
+      const registration = await adminVisibleRegistrationExists(tx, registrationId);
 
       if (!registration) {
         return false;
@@ -3681,12 +3845,17 @@ router.post('/registrations/:registrationId/installments/:installmentId/status',
   try {
     const registrationId = Number(req.params.registrationId);
     const installmentId = Number(req.params.installmentId);
-    const result = await prisma.educationInstallment.updateMany({
-      where: {
-        id: installmentId,
-        registrationId
-      },
-      data: { status: normalizeInstallmentStatus(req.body.status) }
+    const result = await prisma.$transaction(async (tx) => {
+      const registration = await adminVisibleRegistrationExists(tx, registrationId);
+      if (!registration) return { count: 0 };
+
+      return tx.educationInstallment.updateMany({
+        where: {
+          id: installmentId,
+          registrationId
+        },
+        data: { status: normalizeInstallmentStatus(req.body.status) }
+      });
     });
 
     if (result.count === 0) {

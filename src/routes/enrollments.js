@@ -10,6 +10,11 @@ const {
   encryptRegistrationPii
 } = require('../services/registration-pii');
 const { validateRegistrationProfile } = require('../services/registration-profile');
+const {
+  LocationDataError,
+  LocationSelectionError,
+  getLocationService
+} = require('../services/locations');
 
 const router = express.Router();
 const enrollmentRateLimiter = createIpRateLimiter({
@@ -168,7 +173,31 @@ router.post('/', requirePublicCsrf, (req, res, next) => {
       return loginRequired(res, product);
     }
 
-    const profileResult = validateRegistrationProfile(req.body || {});
+    let location;
+    try {
+      location = getLocationService().resolveHierarchy({
+        country: req.body.country,
+        city: req.body.city,
+        district: req.body.district
+      });
+    } catch (error) {
+      if (error instanceof LocationSelectionError) {
+        return res.status(422).json({
+          status: 'failure',
+          code: 'REGISTRATION_PROFILE_INVALID',
+          message: 'Ödemeye geçmek için zorunlu alanları eksiksiz ve doğru doldurunuz.',
+          errors: { [error.field]: error.message }
+        });
+      }
+      throw error;
+    }
+
+    const profileResult = validateRegistrationProfile({
+      ...(req.body || {}),
+      country: location.country.name,
+      city: location.subdivision.name,
+      district: location.locality.name
+    });
     if (!profileResult.isValid) {
       return res.status(422).json({
         status: 'failure',
@@ -187,12 +216,18 @@ router.post('/', requirePublicCsrf, (req, res, next) => {
       });
     }
 
-    const encryptedPii = encryptRegistrationPii(profileResult.profile);
+    const canonicalProfile = {
+      ...profileResult.profile,
+      countryCode: location.country.code,
+      subdivisionCode: location.subdivision.code,
+      localityCode: location.locality.code
+    };
+    const encryptedPii = encryptRegistrationPii(canonicalProfile);
     const result = await createEnrollment(prisma, {
       member,
       product,
       totalAmount,
-      profile: profileResult.profile,
+      profile: canonicalProfile,
       encryptedPii
     });
 
@@ -218,6 +253,15 @@ router.post('/', requirePublicCsrf, (req, res, next) => {
       paymentUrl: paymentUrl(result.registration.id)
     });
   } catch (error) {
+    if (error instanceof LocationDataError) {
+      console.error('[enrollment] Location dataset configuration error:', error.message);
+      return res.status(503).json({
+        status: 'failure',
+        code: 'LOCATION_DATA_UNAVAILABLE',
+        message: 'Konum bilgileri şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin.'
+      });
+    }
+
     if (error instanceof RegistrationPiiConfigurationError) {
       console.error('[enrollment] PII encryption configuration error:', error.message);
       return res.status(503).json({

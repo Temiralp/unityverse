@@ -215,24 +215,6 @@
       </div>
     </section>
 
-    <section class="wide product-outcomes" data-learning-outcomes>
-      <div class="product-content-builder__head">
-        <div>
-          <h2>Ne Öğreneceksiniz</h2>
-          <p>Kısa ve ölçülebilir kazanımları ayrı maddeler halinde ekleyin.</p>
-        </div>
-        <button type="button" class="button button-secondary" data-add-outcome>Madde Ekle</button>
-      </div>
-      <div data-outcome-list>
-        <% learningOutcomes.forEach((outcome, index) => { %>
-          <div class="product-outcome-row" data-outcome-row>
-            <input name="learningOutcomes[<%= index %>][text]" value="<%= outcome.text || '' %>" aria-label="Öğrenme kazanımı">
-            <button type="button" class="button button-danger" data-remove-outcome aria-label="Maddeyi sil">Sil</button>
-          </div>
-        <% }) %>
-      </div>
-    </section>
-
     <button type="submit"><%= submitLabel %></button>
   </form>
 </section>
@@ -257,13 +239,6 @@
       <textarea data-field="content" rows="14" data-product-editor></textarea>
     </label>
   </section>
-</template>
-
-<template id="product-outcome-template">
-  <div class="product-outcome-row" data-outcome-row>
-    <input data-field="text" aria-label="Öğrenme kazanımı">
-    <button type="button" class="button button-danger" data-remove-outcome aria-label="Maddeyi sil">Sil</button>
-  </div>
 </template>
 
 <template id="product-duration-template">
@@ -300,5 +275,5 @@
 </template>
 
 <script src="/vendor/jodit/jodit.min.js"></script>
-<script src="/public/tema10/js/admin-product-editor.js?v=20260804-2"></script>
+<script src="/public/tema10/js/admin-product-editor.js?v=20260810-1"></script>
 <%- include('../partials/footer') %>

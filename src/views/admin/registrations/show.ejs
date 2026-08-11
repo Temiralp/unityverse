@@ -56,11 +56,26 @@
         </dd>
       </div>
       <div><dt>Fatura</dt><dd><%= invoiceStatusLabels[registration.invoiceStatus] || registration.invoiceStatus || '-' %></dd></div>
-      <div><dt>Tutar</dt><dd><%= finance.totalAmountText %> TL</dd></div>
-      <% if (registration.paymentMethod === 'BANK_TRANSFER' && registration.totalAmount != null) { %>
-        <div><dt>Kart Fiyatı</dt><dd><%= Number(registration.totalAmount).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> TL</dd></div>
+      <div><dt>Kurs Fiyatı</dt><dd><%= finance.courseAmountText %> TL</dd></div>
+      <% if (finance.hasCoupon) { %>
+        <div><dt>Kupon</dt><dd><%= registration.couponCode %></dd></div>
+        <div><dt>Kupon İndirimi</dt><dd>-<%= finance.couponDiscountText %> TL</dd></div>
       <% } %>
-      <div><dt>Kalan</dt><dd><%= finance.remainingAmountText %> TL</dd></div>
+      <% if (finance.hasCoupon && registration.paymentMethod === 'BANK_TRANSFER') { %>
+        <div><dt>Kupon Sonrası Tutar</dt><dd><%= finance.couponAdjustedAmountText %> TL</dd></div>
+      <% } %>
+      <% if (finance.hasBankTransferDiscount) { %>
+        <div><dt>Havale İndirimi</dt><dd>%<%= finance.bankTransferDiscountRate %> · -<%= finance.bankTransferDiscountText %> TL</dd></div>
+      <% } %>
+      <div><dt><%= finance.hasSettlementMismatch ? 'İndirimlerle Ödenecek Tutar' : 'Ödenecek Tutar' %></dt><dd><%= finance.totalAmountText %> TL</dd></div>
+      <% if (finance.hasSettlementMismatch) { %>
+        <div><dt>Kayıtlı Havale Tutarı</dt><dd><%= finance.settlementPayableAmountText %> TL</dd></div>
+      <% } %>
+      <div><dt>Ödenen Tutar</dt><dd><%= finance.paidAmountText %> TL</dd></div>
+      <div><dt><%= finance.hasSettlementMismatch ? 'İndirimli Kalan' : 'Kalan' %></dt><dd><%= finance.remainingAmountText %> TL</dd></div>
+      <% if (finance.hasSettlementMismatch) { %>
+        <div><dt>Kayıtlı Kalan</dt><dd><%= finance.settlementRemainingAmountText %> TL</dd></div>
+      <% } %>
       <div><dt>Başlangıç</dt><dd><%= registration.startsAt ? registration.startsAt.toLocaleDateString('tr-TR') : '-' %></dd></div>
       <div><dt>Üye</dt><dd><%= registration.member ? [registration.member.name, registration.member.surname].filter(Boolean).join(' ') : '-' %></dd></div>
       <div><dt>Kurs Kaydı</dt><dd><%= registration.product ? registration.product.title : '-' %></dd></div>
@@ -184,20 +199,53 @@
 
   <div class="metric-grid payment-summary-grid">
     <article class="metric-card">
-      <div class="metric-top"><span>Toplam Tutar</span></div>
+      <div class="metric-top"><span>Kurs Fiyatı</span></div>
+      <strong><%= finance.courseAmountText %></strong>
+      <p>TL · İndirim öncesi</p>
+    </article>
+    <% if (finance.hasCoupon) { %>
+      <article class="metric-card">
+        <div class="metric-top"><span>Kupon İndirimi</span></div>
+        <strong>-<%= finance.couponDiscountText %></strong>
+        <p><%= registration.couponCode %></p>
+      </article>
+    <% } %>
+    <% if (finance.hasBankTransferDiscount) { %>
+      <article class="metric-card">
+        <div class="metric-top"><span>Havale İndirimi</span></div>
+        <strong>-<%= finance.bankTransferDiscountText %></strong>
+        <p>%<%= finance.bankTransferDiscountRate %></p>
+      </article>
+    <% } %>
+    <article class="metric-card">
+      <div class="metric-top"><span><%= finance.hasSettlementMismatch ? 'İndirimlerle Ödenecek' : 'Ödenecek Tutar' %></span></div>
       <strong><%= finance.totalAmountText %></strong>
       <p>TL</p>
     </article>
+    <% if (finance.hasSettlementMismatch) { %>
+      <article class="metric-card">
+        <div class="metric-top"><span>Kayıtlı Havale Tutarı</span></div>
+        <strong><%= finance.settlementPayableAmountText %></strong>
+        <p>TL · Tahsilat durumu için esas</p>
+      </article>
+    <% } %>
     <article class="metric-card">
       <div class="metric-top"><span>Ödenen</span></div>
       <strong><%= finance.paidAmountText %></strong>
       <p>TL</p>
     </article>
     <article class="metric-card">
-      <div class="metric-top"><span>Kalan</span></div>
+      <div class="metric-top"><span><%= finance.hasSettlementMismatch ? 'İndirimli Kalan' : 'Kalan' %></span></div>
       <strong><%= finance.remainingAmountText %></strong>
       <p>TL</p>
     </article>
+    <% if (finance.hasSettlementMismatch) { %>
+      <article class="metric-card">
+        <div class="metric-top"><span>Kayıtlı Kalan</span></div>
+        <strong><%= finance.settlementRemainingAmountText %></strong>
+        <p>TL · Tahsilat durumu için esas</p>
+      </article>
+    <% } %>
     <article class="metric-card">
       <div class="metric-top"><span>Fatura</span></div>
       <strong><%= invoiceStatusLabels[registration.invoiceStatus] || '-' %></strong>

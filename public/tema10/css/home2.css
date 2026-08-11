@@ -2833,6 +2833,11 @@ body.uv-legacy-profile-completion-open {
     resize: vertical;
 }
 
+.uv-legacy-profile-completion__form select:disabled {
+    cursor: not-allowed;
+    opacity: .68;
+}
+
 .uv-legacy-profile-completion__form input:focus,
 .uv-legacy-profile-completion__form select:focus,
 .uv-legacy-profile-completion__form textarea:focus {
@@ -2863,10 +2868,23 @@ body.uv-legacy-profile-completion-open {
 
 .uv-legacy-profile-completion__wide,
 .uv-legacy-profile-completion__warning,
+.uv-legacy-profile-completion__location-status,
 .uv-legacy-profile-completion__privacy,
 .uv-legacy-profile-completion__status,
-.uv-legacy-profile-completion__submit {
+.uv-legacy-profile-completion__actions {
     grid-column: 1 / -1;
+}
+
+.uv-legacy-profile-completion__location-status {
+    min-height: 20px;
+    margin: 0;
+    color: #4b5563;
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.uv-legacy-profile-completion__location-status.is-error {
+    color: #c7352d;
 }
 
 .uv-legacy-profile-completion__privacy {
@@ -2910,23 +2928,40 @@ body.uv-legacy-profile-completion-open {
     color: #c7352d;
 }
 
-.uv-legacy-profile-completion__submit {
+.uv-legacy-profile-completion__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.uv-legacy-profile-completion__submit,
+.uv-legacy-profile-completion__cancel {
     min-height: 48px;
-    border: 0;
     border-radius: 8px;
-    background: #17106b;
-    color: #fff;
     font-size: 15px;
     font-weight: 700;
 }
 
+.uv-legacy-profile-completion__submit {
+    border: 0;
+    background: #17106b;
+    color: #fff;
+}
+
+.uv-legacy-profile-completion__cancel {
+    border: 1px solid #d7dce5;
+    background: #fff;
+    color: #17106b;
+}
+
 .uv-legacy-profile-completion__submit:disabled,
+.uv-legacy-profile-completion__cancel:disabled,
 .uv-legacy-profile-completion__close:disabled {
     cursor: wait;
     opacity: .65;
 }
 
-@media (max-width:575px) {
+@media (max-width:640px) {
     .uv-legacy-profile-completion {
         padding: 14px;
     }
@@ -2945,10 +2980,20 @@ body.uv-legacy-profile-completion-open {
 
     .uv-legacy-profile-completion__wide,
     .uv-legacy-profile-completion__warning,
+    .uv-legacy-profile-completion__location-status,
     .uv-legacy-profile-completion__privacy,
     .uv-legacy-profile-completion__status,
-    .uv-legacy-profile-completion__submit {
+    .uv-legacy-profile-completion__actions {
         grid-column: auto;
+    }
+
+    .uv-legacy-profile-completion__actions {
+        flex-direction: column-reverse;
+    }
+
+    .uv-legacy-profile-completion__submit,
+    .uv-legacy-profile-completion__cancel {
+        width: 100%;
     }
 }
 

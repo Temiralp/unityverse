@@ -522,8 +522,12 @@ router.get(['/urun/:slug', '/urun/:slug/'], async (req, res, next) => {
     res.render('catalog/product', {
       activeNav: activeNavForProduct(product),
       pageTitle: `${product.title} | Unityverse Academy`,
-      extraStyles: ['/public/tema10/css/product-detail.css?v=20260804-1'],
-      extraScripts: ['/public/tema10/js/courses.js', '/public/tema10/js/product-detail.js?v=20260804-1'],
+      extraStyles: ['/public/tema10/css/product-detail.css?v=20260811-1'],
+      extraScripts: [
+        '/public/tema10/js/courses.js',
+        '/public/tema10/js/enrollment-location.js?v=20260811-1',
+        '/public/tema10/js/product-detail.js?v=20260811-1'
+      ],
       product: {
         ...product,
         displayPrice: productPrice(product)

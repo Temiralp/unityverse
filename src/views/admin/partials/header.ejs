@@ -4,9 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Unityverse Admin</title>
-  <link rel="stylesheet" href="/admin.css?v=20260722-2">
+  <link rel="stylesheet" href="/admin.css?v=20260810-1">
   <% if (currentPath && (currentPath.startsWith('/admin/blog') || currentPath.startsWith('/admin/products'))) { %>
     <link rel="stylesheet" href="/vendor/jodit/jodit.min.css">
+  <% } %>
+  <% if (adminUser) { %>
+    <script src="/public/tema10/js/admin-navigation.js?v=20260810-1" defer></script>
   <% } %>
 </head>
 <body>
@@ -18,28 +21,51 @@
       { href: '/admin/blog', label: 'Blog' },
       { href: '/admin/members', label: 'Üyeler' },
       { href: '/admin/registrations', label: 'Eğitim Kayıtları' },
+      { href: '/admin/pending-checkouts', label: 'Yarım Kalan Ödemeler' },
       { href: '/admin/crm', label: 'CRM Takip' },
       { href: '/admin/coupons', label: 'Kuponlar' },
       { href: '/admin/leads', label: 'Başvurular' }
     ]; %>
-    <a class="brand" href="/admin" aria-label="Unityverse Admin ana panel">
+    <a class="brand" href="/admin" aria-label="Unityverse Admin ana panel" data-admin-brand>
       <span class="brand-mark">U</span>
       <span>Unityverse Admin</span>
     </a>
     <% if (adminUser) { %>
-      <nav class="admin-nav" aria-label="Admin navigasyon">
-        <% navItems.forEach((item) => { %>
-          <a href="<%= item.href %>" class="<%= currentPath && currentPath.startsWith(item.href) ? 'is-active' : '' %>">
-            <%= item.label %>
-          </a>
-        <% }) %>
-      </nav>
-      <div class="admin-account">
-        <span><%= adminUser.name || adminUser.email %></span>
-        <form action="/admin/logout" method="post">
-          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-          <button type="submit" class="logout-button">Çıkış</button>
-        </form>
+      <button
+        class="admin-nav-toggle"
+        type="button"
+        aria-controls="admin-menu"
+        aria-expanded="false"
+        aria-label="Admin menüsünü aç"
+        data-admin-nav-toggle
+        hidden
+      >
+        <span class="admin-nav-toggle__icon" aria-hidden="true">
+          <span></span>
+          <span></span>
+          <span></span>
+        </span>
+        <span class="admin-sr-only">Menü</span>
+      </button>
+      <div class="admin-menu" id="admin-menu" data-admin-menu>
+        <nav class="admin-nav" aria-label="Admin navigasyon">
+          <% navItems.forEach((item) => { const isActive = currentPath && currentPath.startsWith(item.href); %>
+            <a
+              href="<%= item.href %>"
+              class="<%= isActive ? 'is-active' : '' %>"
+              <% if (isActive) { %>aria-current="page"<% } %>
+            >
+              <%= item.label %>
+            </a>
+          <% }) %>
+        </nav>
+        <div class="admin-account">
+          <span><%= adminUser.name || adminUser.email %></span>
+          <form action="/admin/logout" method="post">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <button type="submit" class="logout-button">Çıkış</button>
+          </form>
+        </div>
       </div>
     <% } %>
   </header>

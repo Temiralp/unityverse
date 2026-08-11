@@ -314,17 +314,23 @@
           </label>
           <label>
             Ülke
-            <input name="country" type="text" autocomplete="country-name" maxlength="100" required aria-describedby="enrollment-error-country">
+            <select name="country" autocomplete="country-name" required aria-describedby="enrollment-error-country enrollment-location-status" data-enrollment-country>
+              <option value="">Ülke seçin</option>
+            </select>
             <span class="uv-enrollment-field-error" id="enrollment-error-country" data-enrollment-error="country"></span>
           </label>
           <label>
-            Şehir
-            <input name="city" type="text" autocomplete="address-level1" maxlength="100" required aria-describedby="enrollment-error-city">
+            İl / Bölge
+            <select name="city" autocomplete="address-level1" required disabled aria-describedby="enrollment-error-city enrollment-location-status" data-enrollment-subdivision>
+              <option value="">Önce ülke seçin</option>
+            </select>
             <span class="uv-enrollment-field-error" id="enrollment-error-city" data-enrollment-error="city"></span>
           </label>
           <label>
-            İlçe
-            <input name="district" type="text" autocomplete="address-level2" maxlength="100" required aria-describedby="enrollment-error-district">
+            İlçe / Şehir
+            <select name="district" autocomplete="address-level2" required disabled aria-describedby="enrollment-error-district enrollment-location-status" data-enrollment-locality>
+              <option value="">Önce şehir seçin</option>
+            </select>
             <span class="uv-enrollment-field-error" id="enrollment-error-district" data-enrollment-error="district"></span>
           </label>
           <label>
@@ -337,6 +343,7 @@
             <textarea name="addressLine" autocomplete="street-address" maxlength="500" rows="3" required aria-describedby="enrollment-error-addressLine"></textarea>
             <span class="uv-enrollment-field-error" id="enrollment-error-addressLine" data-enrollment-error="addressLine"></span>
           </label>
+          <p class="uv-enrollment-location-status uv-enrollment-member__wide" id="enrollment-location-status" role="status" aria-live="polite" data-enrollment-location-status></p>
         </div>
 
         <div class="uv-form-trap" aria-hidden="true">
@@ -346,6 +353,10 @@
         <p class="uv-enrollment-privacy">
           Bilgileriniz eğitim kaydı ve ödeme işlemleri için güvenli olarak işlenir.
           <a href="/sayfa/uyelik-sozlesmesi-ve-gizlilik-politikasi-27/" target="_blank" rel="noopener">Gizlilik politikasını inceleyin</a>.
+          Konum verisi
+          <a href="https://github.com/dr5hn/countries-states-cities-database" target="_blank" rel="noopener">Countries States Cities Database</a>
+          tarafından <a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noopener">ODbL 1.0</a> ile sağlanır.
+          <a href="/api/locations/dataset/v1.json" download>Uyarlanmış konum verisini indirin</a>.
         </p>
 
         <p class="uv-enrollment-status" role="status" aria-live="polite" data-enrollment-status></p>

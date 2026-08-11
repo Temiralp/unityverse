@@ -9,6 +9,7 @@ const editor = fs.readFileSync(path.join(root, 'public/tema10/js/admin-product-e
 const styles = fs.readFileSync(path.join(root, 'admin.css'), 'utf8');
 const adminRoutes = fs.readFileSync(path.join(root, 'src/routes/admin.js'), 'utf8');
 const ejs = require('ejs');
+const { replaceProductContentStructure } = require('../src/services/product-tabs');
 
 ejs.compile(form, { filename: path.join(root, 'src/views/admin/products/form.ejs') });
 ejs.compile(list, { filename: path.join(root, 'src/views/admin/products/index.ejs') });
@@ -36,6 +37,7 @@ assert.doesNotMatch(form, /data-variant-search|variant-candidates-url|Bağlı Ku
 assert.match(form, /if \(productImagePreviewUrl\)/);
 assert.match(form, /src="<%= productImagePreviewUrl %>"/);
 assert.doesNotMatch(form, /<img src="<%= product\.image %>"/);
+assert.doesNotMatch(form, /Ne Öğreneceksiniz|data-learning-outcomes|data-add-outcome|product-outcome-template/);
 
 assert.match(editor, /\['id', 'variantProductId', 'label', 'price', 'status', 'sortOrder', 'isActivePresent', 'isActive'\]/);
 assert.match(editor, /durationList\.appendChild\(durationTemplate\.content\.cloneNode\(true\)\)/);
@@ -45,6 +47,7 @@ assert.match(editor, /form\.dataset\.managedVariantGroup === 'true'/);
 assert.match(editor, /form\.querySelectorAll\('\[data-duration-row\]'\)\.length > 1/);
 assert.match(editor, /data-remove-duration/);
 assert.doesNotMatch(editor, /refreshVariantCandidates|candidateMatchesSearch|data-variant-search/);
+assert.doesNotMatch(editor, /learningOutcomes|data-outcome|outcomeTemplate|outcomeList/);
 
 assert.match(styles, /\.product-duration-row\s*\{/);
 assert.match(styles, /@media \(max-width: 760px\)[\s\S]*?\.product-duration-row/);
@@ -70,4 +73,28 @@ assert.match(list, /action="\/admin\/products\/<%= product\.id %>\/status"/);
 assert.match(list, /Yayında süre olmadığı için katalogda görünmüyor/);
 assert.match(styles, /\.admin-duration-summary\s*\{/);
 
-console.log('Admin product duration form tests passed.');
+async function learningOutcomePreservationTest() {
+  let outcomeDeleteCalls = 0;
+  let outcomeCreateCalls = 0;
+  const tx = {
+    productTab: {
+      async deleteMany() {},
+      async createMany() {}
+    },
+    productLearningOutcome: {
+      async deleteMany() { outcomeDeleteCalls += 1; },
+      async createMany() { outcomeCreateCalls += 1; }
+    }
+  };
+
+  await replaceProductContentStructure(tx, 1, [], undefined);
+  assert.equal(outcomeDeleteCalls, 0);
+  assert.equal(outcomeCreateCalls, 0);
+}
+
+learningOutcomePreservationTest()
+  .then(() => console.log('Admin product duration form tests passed.'))
+  .catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+  });

@@ -122,6 +122,9 @@ function encryptRegistrationPii(profile) {
     country: profile.country,
     city: profile.city,
     district: profile.district,
+    countryCode: profile.countryCode || '',
+    subdivisionCode: profile.subdivisionCode || '',
+    localityCode: profile.localityCode || '',
     postalCode: profile.postalCode || '',
     addressLine: profile.addressLine
   };
@@ -144,6 +147,9 @@ function decryptRegistrationPii(registration) {
     country: '',
     city: '',
     district: '',
+    countryCode: '',
+    subdivisionCode: '',
+    localityCode: '',
     postalCode: '',
     addressLine: ''
   };
@@ -180,6 +186,9 @@ function decryptRegistrationPii(registration) {
     country: String(address.country || ''),
     city: String(address.city || ''),
     district: String(address.district || ''),
+    countryCode: String(address.countryCode || ''),
+    subdivisionCode: String(address.subdivisionCode || ''),
+    localityCode: String(address.localityCode || ''),
     postalCode: String(address.postalCode || ''),
     addressLine: String(address.addressLine || '')
   };

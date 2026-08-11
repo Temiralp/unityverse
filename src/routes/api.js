@@ -3,8 +3,11 @@ const express = require('express');
 const prisma = require('../db');
 const { createFormToken } = require('../security/form-protection');
 const { bankTransferQuote } = require('../services/bank-transfer-pricing');
+const locationRoutes = require('./locations');
 
 const router = express.Router();
+
+router.use('/locations', locationRoutes);
 
 router.get('/csrf-token', (req, res) => {
   res.set('Cache-Control', 'no-store');

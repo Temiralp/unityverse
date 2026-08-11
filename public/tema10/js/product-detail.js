@@ -5,6 +5,8 @@
     'a[href]',
     'button:not([disabled])',
     'input:not([disabled])',
+    'select:not([disabled])',
+    'textarea:not([disabled])',
     '[tabindex]:not([tabindex="-1"])'
   ].join(',');
 
@@ -263,15 +265,9 @@
     ) {
       errors.birthDate = 'Geçerli ve geçmiş bir doğum tarihi giriniz.';
     }
-    ['country', 'city', 'district'].forEach(function(field) {
-      if (values[field].length < 2 || values[field].length > 100) {
-        errors[field] = field === 'country'
-          ? 'Ülke alanını eksiksiz giriniz.'
-          : field === 'city'
-            ? 'Şehir alanını eksiksiz giriniz.'
-            : 'İlçe alanını eksiksiz giriniz.';
-      }
-    });
+    if (!values.country) errors.country = 'Ülke seçiniz.';
+    if (!values.city) errors.city = 'Şehir seçiniz.';
+    if (!values.district) errors.district = 'İlçe seçiniz.';
     if (values.postalCode && (values.postalCode.length > 20 || !/^[\p{L}\p{N}\s-]+$/u.test(values.postalCode))) {
       errors.postalCode = 'Posta kodu en fazla 20 harf, rakam, boşluk veya tire içerebilir.';
     }
@@ -317,6 +313,9 @@
     var lastFocus = null;
     var protection = null;
     var isSubmitting = false;
+    var locationController = window.UnityverseEnrollmentLocations
+      ? window.UnityverseEnrollmentLocations.init(form)
+      : null;
 
     function setStatus(message, type) {
       statusNode.textContent = message || '';
@@ -329,6 +328,9 @@
       submitButton.classList.toggle('is-loading', loading);
       submitButton.setAttribute('aria-busy', String(loading));
       submitLabel.textContent = label;
+      closeButtons.forEach(function(button) {
+        button.disabled = loading;
+      });
     }
 
     function enrollmentValues() {
@@ -586,15 +588,18 @@
     });
     fields.identityDocumentType.addEventListener('change', syncDocumentType);
     fieldNames.forEach(function(name) {
-      fields[name].addEventListener('input', function() {
+      function handleFieldUpdate() {
         clearFieldError(name);
         if (!modal.querySelector('[aria-invalid="true"]')) warningNode.hidden = true;
-      });
+      }
+      fields[name].addEventListener('input', handleFieldUpdate);
+      fields[name].addEventListener('change', handleFieldUpdate);
     });
     syncDocumentType();
-    modal.addEventListener('click', function(event) {
-      if (event.target === modal) closeModal();
-    });
+
+    if (!locationController) {
+      setStatus('Konum seçimi hazırlanamadı. Lütfen sayfayı yenileyip tekrar deneyin.', 'error');
+    }
 
     document.addEventListener('keydown', function(event) {
       if (modal.hidden) return;

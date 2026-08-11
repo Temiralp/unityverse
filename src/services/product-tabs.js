@@ -83,11 +83,8 @@ function normalizeProductTabSubmission(tabs) {
 
 async function replaceProductContentStructure(tx, productId, tabs, outcomes) {
   const normalizedTabs = normalizeProductTabSubmission(tabs);
-  const normalizedOutcomes = buildProductFormOutcomes(outcomes);
 
   await tx.productTab.deleteMany({ where: { productId } });
-  await tx.productLearningOutcome.deleteMany({ where: { productId } });
-
   await tx.productTab.createMany({
     data: normalizedTabs.map((tab, index) => ({
       productId,
@@ -97,6 +94,11 @@ async function replaceProductContentStructure(tx, productId, tabs, outcomes) {
       sortOrder: tab.sortOrder || ((index + 1) * 10)
     }))
   });
+
+  if (outcomes === undefined) return;
+
+  const normalizedOutcomes = buildProductFormOutcomes(outcomes);
+  await tx.productLearningOutcome.deleteMany({ where: { productId } });
 
   if (normalizedOutcomes.length) {
     await tx.productLearningOutcome.createMany({

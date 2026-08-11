@@ -657,6 +657,24 @@
   resize: vertical;
 }
 
+.uv-enrollment-member select:disabled {
+  cursor: not-allowed;
+  opacity: 0.68;
+}
+
+.uv-enrollment-location-status {
+  min-height: 20px;
+  margin: 0;
+  color: var(--uv-color-text-muted);
+  font-size: var(--uv-font-size-sm);
+  font-weight: var(--uv-font-weight-bold);
+  line-height: var(--uv-line-height-copy);
+}
+
+.uv-enrollment-location-status.is-error {
+  color: #c7352d;
+}
+
 .uv-enrollment-member [hidden] {
   display: none !important;
 }

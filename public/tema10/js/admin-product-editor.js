@@ -84,11 +84,6 @@
       if (content) content.setAttribute('name', 'tabs[' + index + '][content]');
     });
 
-    form.querySelectorAll('[data-outcome-row]').forEach(function (row, index) {
-      row.querySelector('[data-field="text"], input[name$="[text]"]')
-        .setAttribute('name', 'learningOutcomes[' + index + '][text]');
-    });
-
     var durationRows = Array.prototype.slice.call(form.querySelectorAll('[data-duration-row]'));
     var parentStatus = form.querySelector('[data-parent-product-status]');
     var hasManagedVariantGroup = form.dataset.managedVariantGroup === 'true'
@@ -150,11 +145,9 @@
 
   function initForm(form) {
     var tabList = form.querySelector('[data-tab-list]');
-    var outcomeList = form.querySelector('[data-outcome-list]');
     var durationList = form.querySelector('[data-duration-list]');
     var durationStatusMessage = form.querySelector('[data-duration-status-message]');
     var tabTemplate = document.getElementById('product-tab-template');
-    var outcomeTemplate = document.getElementById('product-outcome-template');
     var durationTemplate = document.getElementById('product-duration-template');
 
     form.querySelectorAll('[data-product-editor]').forEach(initEditor);
@@ -176,12 +169,6 @@
       refreshNames(form);
       initEditor(tab.querySelector('[data-product-editor]'));
       tab.querySelector('[data-field="title"]').focus();
-    });
-
-    form.querySelector('[data-add-outcome]').addEventListener('click', function () {
-      outcomeList.appendChild(outcomeTemplate.content.cloneNode(true));
-      refreshNames(form);
-      outcomeList.lastElementChild.querySelector('[data-field="text"]').focus();
     });
 
     form.querySelector('[data-add-duration]').addEventListener('click', function () {
@@ -233,13 +220,6 @@
       var moveTab = event.target.closest('[data-move-tab]');
       if (moveTab) {
         moveCustomTab(form, moveTab.closest('[data-tab-editor]'), moveTab.dataset.moveTab);
-        return;
-      }
-
-      var removeOutcome = event.target.closest('[data-remove-outcome]');
-      if (removeOutcome) {
-        removeOutcome.closest('[data-outcome-row]').remove();
-        refreshNames(form);
         return;
       }
 

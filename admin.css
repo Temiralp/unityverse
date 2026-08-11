@@ -14,6 +14,10 @@
   box-sizing: border-box;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 body {
   margin: 0;
   background: var(--bg);
@@ -32,9 +36,17 @@ a {
   color: #fff;
   display: grid;
   gap: 18px;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr);
   min-height: 64px;
   padding: 0 24px;
+}
+
+.admin-menu {
+  align-items: center;
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  min-width: 0;
 }
 
 .brand {
@@ -48,6 +60,14 @@ a {
 
 .brand:hover {
   color: #fff;
+}
+
+.brand:focus-visible,
+.admin-nav a:focus-visible,
+.logout-button:focus-visible,
+.admin-nav-toggle:focus-visible {
+  outline: 3px solid #a99fff;
+  outline-offset: 3px;
 }
 
 .brand-mark {
@@ -76,6 +96,34 @@ a {
   color: #e5e7eb;
   cursor: pointer;
   font: inherit;
+}
+
+.admin-nav-toggle {
+  align-items: center;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  color: #fff;
+  display: none;
+  height: 44px;
+  padding: 0;
+  width: 44px;
+}
+
+.admin-nav-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.admin-nav-toggle__icon {
+  display: grid;
+  gap: 5px;
+}
+
+.admin-nav-toggle__icon span {
+  background: currentColor;
+  border-radius: 999px;
+  display: block;
+  height: 2px;
+  width: 22px;
 }
 
 .admin-nav a {
@@ -1429,11 +1477,87 @@ html.has-corporate-reference-modal {
   width: auto;
 }
 
+@media (max-width: 1180px) {
+  .topbar {
+    align-items: center;
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding: 12px 18px;
+  }
+
+  .admin-nav-toggle {
+    display: inline-flex;
+  }
+
+  .admin-menu {
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
+    gap: 14px;
+    grid-column: 1 / -1;
+    grid-template-columns: 1fr;
+    padding-top: 14px;
+  }
+
+  .admin-nav {
+    align-items: stretch;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-content: stretch;
+  }
+
+  .admin-nav a {
+    align-items: center;
+    display: flex;
+    min-height: 44px;
+    white-space: normal;
+  }
+
+  .admin-account {
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
+    padding-top: 14px;
+  }
+
+  .panel {
+    min-width: 0;
+    overflow-x: auto;
+  }
+
+  .search-form,
+  .lead-filter-form,
+  .member-filter-form,
+  .education-filter-form,
+  .coupon-filter-form,
+  .product-filter-form,
+  .category-filter-form,
+  .crm-filter-form,
+  .registration-search-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-width: 100%;
+  }
+
+  .filter-field,
+  .grid-form > *,
+  .product-tab-editor__content,
+  input,
+  select,
+  textarea {
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+
 @media (max-width: 760px) {
   .topbar {
-    align-items: stretch;
-    grid-template-columns: 1fr;
-    padding: 14px 16px;
+    align-items: center;
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding: 12px 14px;
+  }
+
+  .brand {
+    min-width: 0;
+  }
+
+  .brand > span:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .admin-nav,
@@ -1458,6 +1582,38 @@ html.has-corporate-reference-modal {
     justify-content: space-between;
   }
 
+  .admin-account span {
+    max-width: min(65vw, 240px);
+  }
+
+  .page {
+    padding: 18px 12px;
+  }
+
+  .page-head,
+  .panel-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .page-head .button,
+  .panel-head .button,
+  .panel-head a {
+    width: 100%;
+  }
+
+  button,
+  .button,
+  .table-action {
+    align-items: center;
+    min-height: 44px;
+  }
+
+  .auth-panel {
+    margin: 32px auto;
+    padding: 20px;
+  }
+
   .metric-grid,
   .grid-form {
     grid-template-columns: 1fr;
@@ -1473,6 +1629,12 @@ html.has-corporate-reference-modal {
 
   .panel {
     overflow-x: auto;
+  }
+
+  .metric-card p {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
   }
 
   .list-toolbar,
@@ -1571,6 +1733,23 @@ html.has-corporate-reference-modal {
 
   .product-duration-row {
     display: flex;
+  }
+
+  .blog-editor-field .jodit-container,
+  .product-tab-editor .jodit-container {
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .blog-editor-field .jodit-toolbar__box,
+  .product-tab-editor .jodit-toolbar__box {
+    overflow-x: auto;
+  }
+
+  .blog-editor-field .jodit-toolbar-editor-collection,
+  .product-tab-editor .jodit-toolbar-editor-collection {
+    flex-wrap: nowrap;
+    min-width: max-content;
   }
 }
 

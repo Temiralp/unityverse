@@ -176,7 +176,7 @@ async function main() {
     console.log(JSON.stringify(enrollment.body, null, 2));
 
     if (enrollment.response.status === 201) {
-      console.log('\nSonuç: kayıt başarıyla oluşturuldu ve /admin/registrations listesinde görünür.');
+      console.log('\nSonuç: checkout kaydı oluşturuldu; ödeme tamamlanana kadar Yarım Kalan Ödemeler panelinde görünür.');
       return;
     }
 
