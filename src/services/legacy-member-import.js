@@ -28,6 +28,22 @@ function normalizeEmail(value) {
   return cleanCell(value).toLowerCase();
 }
 
+function splitLegacyFullName(value) {
+  const parts = compactText(value).split(' ').filter(Boolean);
+
+  if (parts.length <= 1) {
+    return {
+      name: parts[0] || '',
+      surname: null
+    };
+  }
+
+  return {
+    name: parts.slice(0, -1).join(' '),
+    surname: parts.at(-1)
+  };
+}
+
 function parseSemicolonCsv(content) {
   const text = String(content ?? '');
   const rows = [];
@@ -114,7 +130,7 @@ function legacyStatus(value) {
 }
 
 function memberRow(row, indexes, rowNumber) {
-  const name = compactText(row[indexes['Adı Soyadı']]);
+  const { name, surname } = splitLegacyFullName(row[indexes['Adı Soyadı']]);
   const email = normalizeEmail(row[indexes['Mail Adresi']]);
   const mailList = legacyBoolean(row[indexes['Mail Listesi']]);
   const smsList = legacyBoolean(row[indexes['Sms Listesi']]);
@@ -135,7 +151,7 @@ function memberRow(row, indexes, rowNumber) {
   return {
     member: {
       name,
-      surname: null,
+      surname,
       email,
       phone: cleanCell(row[indexes['Cep Telefonu']]) || null,
       gender: null,
@@ -224,5 +240,6 @@ module.exports = {
   buildLegacyMemberImport,
   buildLegacyOrderAudit,
   normalizeEmail,
-  parseSemicolonCsv
+  parseSemicolonCsv,
+  splitLegacyFullName
 };
