@@ -1,14 +1,17 @@
 #!/usr/bin/env node
 
 const assert = require('assert');
+const fs = require('fs');
 const http = require('http');
+const path = require('path');
 const cheerio = require('cheerio');
 const express = require('express');
 
+const lootjamSlug = 'dijital-oyun-tasarimi-bolumu-bilgiyi-ticarilestirme-merkezi-is-birligiyle-lootjam-gerceklestirdi-314';
 const posts = [
   {
     id: 1,
-    slug: 'explicit-gallery',
+    slug: lootjamSlug,
     title: 'Açık Galeri Testi',
     excerpt: 'Galeri testi',
     image: '/uploads/blog/hero.jpg',
@@ -71,6 +74,7 @@ async function main() {
   delete require.cache[routePath];
 
   const app = express();
+  app.use(require('../src/middleware/legacy-redirects')());
   app.use(require('../src/routes/legacy-catalog'));
   const server = http.createServer(app);
 
@@ -85,8 +89,12 @@ async function main() {
   }
 
   try {
-    const explicit = await get('explicit-gallery');
+    const explicit = await get(lootjamSlug);
     assert.strictEqual(explicit.$('.uv-blog-detail-hero__image[width="1600"][height="720"]').length, 1);
+    assert.strictEqual(
+      explicit.$('link[rel="canonical"]').attr('href'),
+      `https://unityverseacademy.com/blog-detay/${lootjamSlug}/`
+    );
     assert.strictEqual(explicit.$('.uv-blog-gallery').length, 1);
     assert.strictEqual(explicit.$('.uv-blog-gallery .swiper-slide').length, 3);
     assert.strictEqual(explicit.$('.uv-blog-gallery__title').text().trim(), 'Etkinlikten Kareler');
@@ -94,7 +102,10 @@ async function main() {
     assert.strictEqual(explicit.$('.uv-blog-content-image[src="/uploads/blog/standalone.jpg"]').length, 1);
     assert.match(explicit.$('.blog-icerik').text(), /Giriş metni/);
     assert.match(explicit.$('.blog-icerik').text(), /Sonuç metni/);
-    assert.strictEqual(explicit.$('link[href*="blog-detail-gallery.css"]').length, 1);
+    assert.strictEqual(
+      explicit.$('link[href="/public/tema10/css/blog-detail-gallery.css?v=1.0.1"]').length,
+      1
+    );
     assert.strictEqual(explicit.$('script[src*="blog-detail-gallery.js"]').length, 1);
 
     const automatic = await get('automatic-gallery');
@@ -107,6 +118,19 @@ async function main() {
     assert.strictEqual(single.$('.uv-blog-gallery').length, 0);
     assert.strictEqual(single.$('.uv-blog-content-image[src="/uploads/blog/single.jpg"]').length, 1);
     assert.strictEqual(single.$('.uv-blog-content-image').attr('loading'), 'lazy');
+
+    const missing = await fetch(`${baseUrl}/blog-detay/missing-post/`, { redirect: 'manual' });
+    assert.strictEqual(missing.status, 404);
+    assert.strictEqual(missing.headers.get('location'), null);
+
+    const galleryCss = fs.readFileSync(
+      path.join(__dirname, '../public/tema10/css/blog-detail-gallery.css'),
+      'utf8'
+    );
+    assert.match(
+      galleryCss,
+      /\.uv-blog-detail-hero__image\s*\{[^}]*object-fit:\s*contain;/s
+    );
 
     console.log('Legacy blog detail hero and gallery tests passed.');
   } finally {

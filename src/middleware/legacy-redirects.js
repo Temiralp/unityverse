@@ -119,7 +119,7 @@ function createLegacyRedirectsMiddleware() {
         const section = pathParts[0].toLowerCase();
         const fullFolder = path.join(rootDir, pathParts[0], requestedSubPath);
         if (!fs.existsSync(fullFolder)) {
-          if (section === 'blog-detay') return res.redirect(301, `/blog/${query}`);
+          if (section === 'blog-detay') return next();
           if (section === 'kategori') return res.redirect(301, `/tum-urunler/${query}`);
           if (section === 'os') return res.redirect(301, `/${query}`);
         }
