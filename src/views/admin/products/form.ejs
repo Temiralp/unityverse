@@ -2,7 +2,7 @@
 
 <div class="page-head">
   <h1><%= pageTitle %></h1>
-  <a class="button button-secondary" href="/admin/products">Geri Dön</a>
+  <a class="button button-secondary" href="<%= returnTo %>">Geri Dön</a>
 </div>
 
 <section class="panel">
@@ -21,6 +21,7 @@
   %>
   <form method="post" action="<%= action %>" class="form grid-form" enctype="multipart/form-data" data-product-form data-managed-variant-group="<%= hasManagedVariantGroup ? 'true' : 'false' %>">
     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <input type="hidden" name="returnTo" value="<%= returnTo %>">
     <input type="hidden" name="managedVariantGroup" value="<%= hasManagedVariantGroup ? '1' : '0' %>">
     <label class="wide">
       Başlık

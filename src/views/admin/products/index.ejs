@@ -135,9 +135,10 @@
           </td>
           <td>
             <div class="row-actions">
-              <a class="table-action" href="/admin/products/<%= product.id %>/edit"><%= hasDurationVariants ? 'Süreleri Yönet' : 'Düzenle' %></a>
+              <a class="table-action" href="/admin/products/<%= product.id %>/edit?returnTo=<%= encodeURIComponent(listUrl) %>"><%= hasDurationVariants ? 'Süreleri Yönet' : 'Düzenle' %></a>
               <form method="post" action="/admin/products/<%= product.id %>/status" class="inline-form">
                 <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <input type="hidden" name="returnTo" value="<%= listUrl %>">
                 <input type="hidden" name="status" value="<%= product.status === 'PUBLISHED' ? 'DRAFT' : 'PUBLISHED' %>">
                 <button type="submit" class="button-secondary">
                   <%= product.status === 'PUBLISHED' ? 'Yayından Al' : 'Yayınla' %>
@@ -146,6 +147,7 @@
               <% if (!hasDurationVariants) { %>
                 <form method="post" action="/admin/products/<%= product.id %>/delete" class="inline-form" onsubmit="return confirm('Bu kursu silmek istediğinize emin misiniz?');">
                   <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <input type="hidden" name="returnTo" value="<%= listUrl %>">
                   <button type="submit" class="button-danger">Sil</button>
                 </form>
               <% } %>

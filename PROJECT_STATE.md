@@ -1,10 +1,10 @@
 # PROJECT_STATE.md — canlı durum günlüğü
 
 > Her çember (circle) bittiğinde güncellenir. Yeni oturum/agent buradan başlar. Tarihler mutlak (YYYY-MM-DD).
-> Son güncelleme: **2026-09-15** — Çember #6b (şifre formu UX: yeşil başarı mesajı, istemci tarafı ön kontrol, pasif buton) tamamlandı.
+> Son güncelleme: **2026-09-15** — Çember #7 (admin kurs listesi: Güncelle/Geri Dön/Durum/Sil sonrası filtreli listeye dönüş) tamamlandı.
 
 ## Nerede kaldık
-- Kod: `main` — Çember #0…#6 Mimar tarafından commit/deploy edildi ve canlıda doğrulandı (2026-09-15). **Commit bekleyen:** Çember #6b.
+- Kod: `main` — Çember #0…#6b Mimar tarafından commit/deploy edildi ve canlıda doğrulandı (2026-09-15). **Commit bekleyen:** Çember #7.
 - **Aktif çember:** yok.
 - Yerelde `uploads/products/1789467*.jpg` (3 dosya, 2026-09-15 yerel admin testi) izlenmiyor — commit'e eklenmemeli.
 - Sonraki çemberi Mimar seçer (Backlog).
@@ -47,6 +47,7 @@ Onaylanana kadar teslim paketlerinde sunucu adımları "DEPLOYMENT.md §12'ye uy
 - `clear-site-data` ile 301 önbellek kırma denemesi revert edildi (`9afe7b57`). Tekrarlama.
 - Varyant sayfalarının canonical'ı ana ürüne yönelmeli (`2cb9fa14`) — kurs/varyant işinde koru.
 - Cache-busting: CSS/JS değişince HTML'lerdeki `?v=` parametresi güncellenir (`bcc0911a`), aksi halde kullanıcılar eski dosyayı görür.
+- Admin liste → düzenle → geri dönüş: sabit `res.redirect('/admin/products')` yerine `productListReturnTo(req)`; yeni bölümlere eklerken aynı deseni (link `?returnTo=`, hidden input, `safeReturnTo` prefiks) kullan.
 - `admin.css` içinde aynı özgüllükteki kural sırası önemlidir: `.alert-success` gibi varyantlar `.alert`'ten sonra tanımlanmalı (aksi halde temel kural kazanır).
 - Admin şifresi değiştirildikten sonra `npm run seed` çalıştırmak şifreyi `.env ADMIN_PASSWORD` değerine geri döndürür — kurtarma dışında asla.
 - Statik dosyası olmayan kurslar `legacy-product-detail.js` ile Python kursu şablonundan render edilir; şablondan gelen her meta/JSON-LD alanı `renderPage`'de açıkça değiştirilmelidir, aksi halde Python verisi sızar.
@@ -61,6 +62,7 @@ Onaylanana kadar teslim paketlerinde sunucu adımları "DEPLOYMENT.md §12'ye uy
 | 2026-09-15 | Git/deploy işlemlerini yalnızca Mimar yürütür | Mimar'ın çalışma kuralı |
 | 2026-09-15 | Dil: sohbet AZ, kod yorumu ve .md TR, commit EN/TR | Mimar'ın kuralı |
 | 2026-09-15 | Kurs görseli için DB tek doğruluk kaynağı; statik detay sayfasında görsel DB ile aynıysa HTML'e dokunulmaz, farklıysa slider tek slayt olarak yeniden yazılır; og:image/itemprop/JSON-LD/paylaşım linki de güncellenir | 431/431 statik sayfa bugün DB ile aynı → sıfır görsel regresyon; liste sayfası zaten DB'den |
+| 2026-09-15 | Admin listelerinde "olduğum sayfada kal": `returnTo` URL/form ile taşınır, `safeReturnTo` (`src/services/admin-return-to.js`) yalnızca `/admin/products` altındaki göreli yolu kabul eder (open-redirect koruması); diğer bölümler için aynı servis yeniden kullanılır | Durumsuz, sunucu belleği yok, prefiks-kapalı |
 | 2026-09-15 | Admin şifre hash'i JSON dosyada değil DB'de kalır (`AdminUser.passwordHash`, bcrypt cost 12 = 60 karakter); rate-limit sayaçları `RateLimitEntry` (DB); başarılı değişiklikte diğer oturumlar iptal | Tek doğruluk kaynağı DB, deploy/restart'ta dosya kaybı riski yok, kalıcılık ilkesi; Mimar seçti |
 | 2026-09-15 | Dinamik kurs head meta'ları tek tablodan (`pageMetaTags`) yönetilir; JSON-LD `Product` DB'den yeniden üretilir (`priceValidUntil` yıl sonu hesaplanır, `<` kaçışı); statik sayfalarda og:image/itemprop image her zaman mutlak URL (origin `res.locals`'tan) | Kalıcılık ilkesi: durumsuz, tek doğruluk kaynağı DB, yeni meta = 1 satır; OG spesifikasyonu mutlak URL ister |
 | 2026-09-15 | Yan panel kategori sayaçları: statik 22 dosya/inject scripti değil, listeleme route'larında `withLegacyCategoryCounts` (tek `findMany`, `legacyCategoryCandidateSlugs` ile sayım = kategori sayfasının gösterdiği sayı) | Görünen liste `.legacy-static-filter-fallback`'tır (CSS `#filterPnl`'i gizler); tek doğruluk kaynağı DB |
@@ -73,6 +75,7 @@ Onaylanana kadar teslim paketlerinde sunucu adımları "DEPLOYMENT.md §12'ye uy
 |---|---|---|---|
 | 0 | 2026-09-15 | Proje araştırması + CLAUDE.md sistemi | 5 doküman; 12 unit test baseline PASS; R1 güvenlik bulgusu |
 | 1b | 2026-09-15 | Belgeler Türkçeye çevrildi (`CLAUDE.md`, `.claude/rules/*`) | 4 dosya, kod değişikliği yok |
+| 7 | 2026-09-15 | Kurs listesi returnTo (Güncelle, Geri Dön, Durum, Sil; varyant yönlendirmesi query'yi korur) | 7 dosya (+2 yeni), ~120 satır; 8/8 test; yerel e2e: filtreli listeye 302, evil/`//` → `/admin/products` |
 | 6b | 2026-09-15 | Şifre formu UX: `.alert-success` sırası düzeltildi (yeşil), `admin-change-password.js` ile anlık politika/eşleşme uyarıları ve pasif buton | 5 dosya (+1 yeni), ~90 satır; sunucu doğrulaması değişmedi |
 | 6 | 2026-09-15 | Admin şifre değiştirme (`/admin/change-password`, politika, 2 rate-limit, oturum iptali) | 7 dosya (+3 yeni), ~330 satır (120'si test); 22/22 test; yerel e2e 14 senaryo (politika, yanlış şifre, 401/429, eski şifre reddi, ikinci oturum düşmesi) |
 | 5 | 2026-09-15 | R10: dinamik kurs head meta + JSON-LD; statik og:image mutlak | 7 dosya (+1 yeni), ~200 satır (95'i test); 28/28 test; yerel e2e: dinamik sayfada 0 Python meta, statik nisbi sayfada yalnız 2 meta değişti |

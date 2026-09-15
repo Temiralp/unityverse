@@ -58,8 +58,8 @@ assert.match(adminRoutes, /productVariants:\s*\{\s*some:\s*\{\s*isArchived: fals
 assert.match(adminRoutes, /variantProduct: \{ is: \{ price: priceFilter \} \}/);
 assert.match(adminRoutes, /productVariants:\s*\{\s*where: \{ isArchived: false \},\s*include: \{ variantProduct: true \}/);
 assert.match(adminRoutes, /where: \{ variantProductId: requestedProductId \}/);
-assert.match(adminRoutes, /res\.redirect\(302, `\/admin\/products\/\$\{parentLink\.parentProductId\}\/edit`\)/);
-assert.match(adminRoutes, /res\.redirect\(303, `\/admin\/products\/\$\{parentLink\.parentProductId\}\/edit`\)/);
+assert.match(adminRoutes, /res\.redirect\(302, `\/admin\/products\/\$\{parentLink\.parentProductId\}\/edit\$\{returnToQuery\(req\)\}`\)/);
+assert.match(adminRoutes, /res\.redirect\(303, `\/admin\/products\/\$\{parentLink\.parentProductId\}\/edit\$\{returnToQuery\(req\)\}`\)/);
 assert.match(adminRoutes, /status: normalizePublishStatus\(body\.status\)/);
 assert.match(adminRoutes, /setParentProductStatus\(tx, productId, data\.status/);
 assert.match(adminRoutes, /cascadeDraft: currentProduct\.status === 'PUBLISHED' && data\.status === 'DRAFT'/);

@@ -38,6 +38,7 @@ const {
   validatePasswordChange
 } = require('../services/admin-password');
 const { normalizeProductImageSource } = require('../services/product-content');
+const { safeReturnTo } = require('../services/admin-return-to');
 const {
   hasAnyRegistrationProfileInput,
   validateRegistrationProfile
@@ -920,6 +921,19 @@ async function saveUploadedProductImage(req) {
   return req.savedProductImagePath;
 }
 
+// Kurs listesine donus adresi: liste filtreleri (q, status, ...) korunur; yalnizca /admin/products altina izin verilir.
+function productListReturnTo(req) {
+  return safeReturnTo(req.body?.returnTo ?? req.query?.returnTo, {
+    fallback: '/admin/products',
+    allowedPrefix: '/admin/products'
+  });
+}
+
+function returnToQuery(req) {
+  const returnTo = productListReturnTo(req);
+  return returnTo === '/admin/products' ? '' : `?returnTo=${encodeURIComponent(returnTo)}`;
+}
+
 async function renderProductForm(req, res, options) {
   const [categories, variantCandidates] = await Promise.all([
     prisma.category.findMany({ orderBy: { name: 'asc' } }),
@@ -952,6 +966,7 @@ async function renderProductForm(req, res, options) {
     variantCandidates,
     categories,
     action: options.action || '/admin/products',
+    returnTo: productListReturnTo(req),
     pageTitle: options.pageTitle || 'Yeni Kurs',
     submitLabel: options.submitLabel || 'Kaydet',
     error: options.error || null
@@ -2535,6 +2550,7 @@ router.get('/products', requireAdmin, async (req, res, next) => {
     ]);
 
     res.render('admin/products/index', {
+      listUrl: req.originalUrl,
       products: products.map((product) => ({
         ...product,
         pricing: getProductPricing(product)
@@ -2650,7 +2666,7 @@ router.get('/products/:id/edit', requireAdmin, async (req, res, next) => {
       select: { parentProductId: true }
     });
     if (parentLink) {
-      return res.redirect(302, `/admin/products/${parentLink.parentProductId}/edit`);
+      return res.redirect(302, `/admin/products/${parentLink.parentProductId}/edit${returnToQuery(req)}`);
     }
 
     const product = await prisma.product.findUnique({
@@ -2691,7 +2707,7 @@ router.post('/products/:id', requireAdmin, handleProductImageUpload, requireMult
       select: { parentProductId: true }
     });
     if (parentLink) {
-      return res.redirect(303, `/admin/products/${parentLink.parentProductId}/edit`);
+      return res.redirect(303, `/admin/products/${parentLink.parentProductId}/edit${returnToQuery(req)}`);
     }
 
     currentProduct = await prisma.product.findUnique({ where: { id: productId } });
@@ -2739,7 +2755,7 @@ router.post('/products/:id', requireAdmin, handleProductImageUpload, requireMult
       });
     });
 
-    res.redirect('/admin/products');
+    res.redirect(productListReturnTo(req));
   } catch (error) {
     if (error.code === 'P2002') {
       return renderProductForm(req, res, {
@@ -2783,7 +2799,7 @@ router.post('/products/:id/status', requireAdmin, async (req, res, next) => {
       });
     });
 
-    res.redirect('/admin/products');
+    res.redirect(productListReturnTo(req));
   } catch (error) {
     next(error);
   }
@@ -2806,7 +2822,7 @@ router.post('/products/:id/delete', requireAdmin, async (req, res, next) => {
         + 'Süreyi ana kursun düzenleme ekranından kaldırın veya taslak yapın.'
       );
     }
-    res.redirect('/admin/products');
+    res.redirect(productListReturnTo(req));
   } catch (error) {
     if (error.code === 'P2003') {
       return res.status(409).send('Bu kurs eğitim kayıtlarıyla bağlı olduğu için silinemez. Önce yayından alın.');
