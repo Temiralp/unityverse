@@ -9,6 +9,7 @@ const { ensureLegacyAssetVersions } = require('../services/legacy-assets');
 const { ensureLegacyHeaderLayout } = require('../services/legacy-header-layout');
 const { ensureLegacyHomepageLocalAssets } = require('../services/legacy-homepage');
 const { ensureLegacyWhatsappButton } = require('../services/legacy-whatsapp');
+const { synchronizeLegacyProductDetailImage } = require('../services/legacy-product-image');
 const { synchronizeLegacyProductTabs } = require('../services/legacy-product-tabs');
 const { removeLegacyRelatedProducts } = require('../services/legacy-related-products');
 const {
@@ -44,7 +45,8 @@ function enhanceLegacyHtml(
   productPageOrigin = null,
   corporateReferences = [],
   productVariantContext = null,
-  canonicalUrl = null
+  canonicalUrl = null,
+  productImage = null
 ) {
   const withVisibleProducts = filterLegacyDraftProductCards(html, draftProducts);
   const withCurrentProductTitles = synchronizeLegacyProductCardTitles(
@@ -55,8 +57,12 @@ function enhanceLegacyHtml(
     withCurrentProductTitles,
     productDetailTitle
   );
-  const withCurrentProductTabs = synchronizeLegacyProductTabs(
+  const withCurrentDetailImage = synchronizeLegacyProductDetailImage(
     withCurrentDetailTitle,
+    productImage
+  );
+  const withCurrentProductTabs = synchronizeLegacyProductTabs(
+    withCurrentDetailImage,
     productTabs,
     productPageOrigin
   );
@@ -95,7 +101,8 @@ function injectLegacyWhatsappIntoHtmlResponses(req, res, next) {
         res.locals.legacyProductPageOrigin,
         res.locals.legacyCorporateReferences,
         res.locals.legacyProductVariantContext,
-        res.locals.legacyCanonicalUrl
+        res.locals.legacyCanonicalUrl,
+        res.locals.legacyProductImage
       ));
     }
 
@@ -110,7 +117,8 @@ function injectLegacyWhatsappIntoHtmlResponses(req, res, next) {
         res.locals.legacyProductPageOrigin,
         res.locals.legacyCorporateReferences,
         res.locals.legacyProductVariantContext,
-        res.locals.legacyCanonicalUrl
+        res.locals.legacyCanonicalUrl,
+        res.locals.legacyProductImage
       );
       return send(transformed === source ? body : Buffer.from(transformed));
     }
@@ -184,7 +192,8 @@ function serveLegacyHtmlWithWhatsapp(staticRoot, setHeaders) {
         res.locals.legacyProductPageOrigin,
         res.locals.legacyCorporateReferences,
         res.locals.legacyProductVariantContext,
-        res.locals.legacyCanonicalUrl
+        res.locals.legacyCanonicalUrl,
+        res.locals.legacyProductImage
       ));
     } catch (error) {
       return next(error);

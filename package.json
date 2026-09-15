@@ -23,6 +23,7 @@
     "test:legacy-homepage": "node scripts/test-legacy-homepage-responsive.js",
     "test:legacy-product-visibility": "node scripts/test-legacy-product-visibility.js",
     "test:legacy-product-tabs": "node scripts/test-legacy-product-tabs.js",
+    "test:legacy-product-image": "node scripts/test-legacy-product-image.js",
     "test:legacy-related-products": "node scripts/test-legacy-related-products.js",
     "test:legacy-public-catalog": "node scripts/test-legacy-public-catalog.js",
     "test:legacy-variant-navigation": "node scripts/test-legacy-variant-navigation.js",

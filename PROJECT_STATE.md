@@ -1,55 +1,62 @@
-# PROJECT_STATE.md — canlı vəziyyət jurnalı
+# PROJECT_STATE.md — canlı durum günlüğü
 
-> Hər dairə bitəndə yenilənir. Yeni sessiya/agent buradan başlayır. Tarixlər mütləq (YYYY-MM-DD).
-> Son yeniləmə: **2026-09-15** — CLAUDE.md sistemi quruldu (dairə #0).
+> Her çember (circle) bittiğinde güncellenir. Yeni oturum/agent buradan başlar. Tarihler mutlak (YYYY-MM-DD).
+> Son güncelleme: **2026-09-15** — Çember #1 tamamlandı (kurs görseli senkronu + admin görsel kontrolleri).
 
-## Harda qalmışıq
-- Kod: `main` @ `e85d36fa` (2026-08-26, "fix: show full blog images and open dynamic details"). Working tree təmiz.
-- Son işlənən sahələr (git log 2026-08-10…26): legacy üzv importu (`import-legacy-members`), admin üzv idarəsi, qeydiyyat/kurs qiymət axını, blog şəkilləri, responsive navbar, Google OAuth yönləndirməsi.
-- **Aktiv dairə:** yoxdur. Növbəti dairəni Arxitekt seçir (Backlog-a bax).
+## Nerede kaldık
+- Kod: `main` @ `e85d36fa` (2026-08-26) + **commit bekleyen** Çember #0 (dokümantasyon) ve Çember #1 (kod) değişiklikleri.
+- **Aktif çember:** yok. Çember #1 teslim paketi Mimar'a verildi; commit/push/deploy ve canlı test Mimar'da.
+- Sonraki çemberi Mimar seçer (Backlog).
 
-## Server (Google Cloud) — TƏSDİQ GÖZLƏYİR
-Repo-da "gcloud"/"Compute Engine" izi yoxdur; `DEPLOYMENT.md` ümumi Ubuntu + Nginx + PM2 + PostgreSQL 16 sxemini təsvir edir. Arxitektdən təsdiqlənməli:
-- [ ] App qovluğu serverdə (məs. `/var/www/unityverse/current` və ya birbaşa clone?)
+## Sunucu (Google Cloud) — ONAY BEKLİYOR
+Repoda "gcloud"/"Compute Engine" izi yok; `DEPLOYMENT.md` genel Ubuntu + Nginx + PM2 + PostgreSQL 16 şemasını anlatır. Mimar'dan onaylanacak:
+- [ ] Sunucudaki uygulama klasörü (ör. `/var/www/unityverse/current` mi, doğrudan clone mu?)
 - [ ] Process manager: PM2 (`pm2 restart unityverse`) / systemd / docker?
-- [ ] Deploy üsulu: `git pull` birbaşa `main`-dən? (DEPLOYMENT.md release/symlink təklif edir, real üsul bilinmir)
-- [ ] PostgreSQL: VM-də lokal / Cloud SQL?
-- [ ] `uploads/` persistent yeri və backup cron mövcuddurmu?
-Təsdiqlənənə qədər təhvil paketlərində server addımları "DEPLOYMENT.md §12-yə uyğun" fərziyyəsi ilə yazılır və bu qeyd olunur.
+- [ ] Deploy yöntemi: doğrudan `main`'den `git pull` mı? (DEPLOYMENT.md release/symlink önerir, gerçek yöntem bilinmiyor)
+- [ ] PostgreSQL: VM'de yerel mi / Cloud SQL mi?
+- [ ] `uploads/` kalıcı yeri ve yedek cron'u var mı?
+Onaylanana kadar teslim paketlerinde sunucu adımları "DEPLOYMENT.md §12'ye uygun" varsayımıyla yazılır ve bu not düşülür.
 
-## Açıq risklər (prioritetlə)
-| # | Risk | Sübut | Təklif | Status |
+## Açık riskler (öncelik sırasıyla)
+| # | Risk | Kanıt | Öneri | Durum |
 |---|---|---|---|---|
-| R1 | **Açıq SMTP parolu git-də** | `local_server.js:14` `pass:` sahəsi, fayl git-də izlənir, heç yerdən `require` olunmur | Yandex-də parolu dəyiş → `git rm local_server.js` → `.gitignore`-a əlavə. Tarixçədən silmək istənirsə `git filter-repo` (ayrı qərar) | Arxitekt qərarı gözləyir |
-| R2 | `REGISTRATION_PII_ENCRYPTION_KEYS`, `REGISTRATION_PII_ACTIVE_KEY_ID`, `WHATSAPP_PHONE`, `BLOG_BASE_URL`, `LEGACY_ENROLLMENT_STRICT_PRODUCT_MATCH` kodda istifadə olunur, **`.env.example`-da yoxdur** | `src/services/registration-pii.js:35-36` və s. | `.env.example`-a açar+şərh əlavə et (dəyərsiz) — kiçik dairə | Backlog |
-| R3 | `src/routes/admin.js` 4122 sətir, 72 route — dəyişiklik riski yüksək | fayl ölçüsü | Refactor **etmə**; yeni məntiq services-ə. Böyük refactor yalnız ayrıca plan ilə | Qəbul edilmiş |
-| R4 | `npm test` yoxdur, testlər əl ilə seçilir → regressiya qaçırıla bilər | `package.json` | Kiçik dairə: `scripts/run-unit-tests.js` + `npm test` alias (12 unit test). Dependency tələb etmir | Backlog |
-| R5 | Repo-da lazımsız izlənən fayllar (`2026.07.30.13.50.44/` 433 CSV, `test_output.html` 241KB, `ınternal_all.csv` 383KB, `Captcha`, `ajax_*.txt`, `analyze_csv.ps1`, `download_missing.py`) | `git ls-files` | Silmə/`.gitignore` — Arxitekt qərarı | Backlog |
-| R6 | `docker-compose.yml` default `postgres/postgres` — yalnız lokal üçün | fayl | Production-da istifadə edilmir (təsdiqlənməli) | Məlumat |
-| R7 | `BACKEND_SETUP.md` default admin `ChangeMe123!` sənəddə — production-da dəyişdirilib? | `prisma/seed.js` fallback | Arxitekt təsdiq etsin | Sual |
+| R1 | **Açık SMTP parolası git'te** | `local_server.js:14` `pass:` alanı; dosya git'te izleniyor, hiçbir yerden `require` edilmiyor | Yandex'te parolayı değiştir → `git rm local_server.js` → `.gitignore`. Geçmişten silme istenirse `git filter-repo` (ayrı karar) | Mimar kararı bekliyor |
+| R2 | `REGISTRATION_PII_ENCRYPTION_KEYS`, `REGISTRATION_PII_ACTIVE_KEY_ID`, `WHATSAPP_PHONE`, `BLOG_BASE_URL`, `LEGACY_ENROLLMENT_STRICT_PRODUCT_MATCH` kodda kullanılıyor, **`.env.example`'da yok** | `src/services/registration-pii.js:35-36` vb. | `.env.example`'a anahtar+açıklama ekle (değersiz) — küçük çember | Backlog |
+| R3 | `src/routes/admin.js` 4122 satır, 72 route — değişiklik riski yüksek | dosya boyutu | Refactor **yapma**; yeni mantık services'e. Büyük refactor yalnızca ayrı planla | Kabul edildi |
+| R4 | `npm test` yok, testler elle seçiliyor → regresyon kaçabilir | `package.json` | Küçük çember: `scripts/run-unit-tests.js` + `npm test` (bağımlılık gerekmez) | Backlog |
+| R5 | Repoda gereksiz izlenen dosyalar (`2026.07.30.13.50.44/` 433 CSV, `test_output.html`, `ınternal_all.csv`, `Captcha`, `ajax_*.txt`, `analyze_csv.ps1`, `download_missing.py`) | `git ls-files` | Silme/`.gitignore` — Mimar kararı | Backlog |
+| R6 | `docker-compose.yml` varsayılan `postgres/postgres` — yalnızca yerel | dosya | Production'da kullanılmıyor (onaylanmalı) | Bilgi |
+| R7 | `BACKEND_SETUP.md` varsayılan admin `ChangeMe123!` — production'da değiştirildi mi? | `prisma/seed.js` fallback | Mimar onaylasın | Soru |
+| R8 | Ana kurs görseli değiştirilen üründe statik sayfadaki çoklu galeri (9 sayfa) tek görsele iner | Çember #1 tasarım kararı | Admin tek görsel yönetir; kabul edilen davranış | Kabul edildi |
 
-## Backlog (Arxitekt sıralayır)
-- [ ] R1 — `local_server.js` sirr təmizliyi (təhlükəsizlik, yüksək)
-- [ ] R2 — `.env.example` tamamlanması (docs, kiçik)
-- [ ] R4 — `npm test` toplu unit runner (test infrastrukturu, kiçik)
-- [ ] R5 — lazımsız faylların repo-dan çıxarılması (chore)
-- [ ] Server məlumatlarının bu fayla yazılması (§Server)
-- [ ] `PRODUCTION_CHECKLIST.md` §1 "kritik yeni fayllar" bəndi köhnəlib (fayllar artıq commit-dədir) — yenilənməli
+## Backlog (Mimar sıralar)
+- [ ] R1 — `local_server.js` sır temizliği (güvenlik, yüksek)
+- [ ] R2 — `.env.example` tamamlama (docs, küçük)
+- [ ] R4 — `npm test` toplu unit runner (test altyapısı, küçük)
+- [ ] R5 — gereksiz dosyaların repodan çıkarılması (chore)
+- [ ] Sunucu bilgilerinin bu dosyaya yazılması (§Sunucu)
+- [ ] `PRODUCTION_CHECKLIST.md` §1 "kritik yeni dosyalar" maddesi eski (dosyalar zaten commit'te) — güncellenmeli
+- [ ] `CLAUDE.md` ve `.claude/rules/*.md` Azerbaycanca → Türkçe çevirisi (dil kuralı 2026-09-15)
 
-## Etməməli (öyrənilmiş dərslər — git tarixçəsindən)
-- Dinamik/statik route rejimini dəyişmək SEO-nu pozub (commit `5287f615`, `85147477`, `202d63de` revert-lər). `LEGACY_FRONTEND_MODE` və route sırası dəyişikliyi = yüksək risk, ayrıca plan.
-- `clear-site-data` ilə 301 keş sındırma cəhdi revert olunub (`9afe7b57`). Təkrar etmə.
-- Varyant səhifələrinin canonical-ı ana məhsula yönəlməlidir (`2cb9fa14`) — kurs/varyant işində qoru.
-- Cache-busting: CSS/JS dəyişəndə HTML-lərdəki `?v=` parametri yenilənir (`bcc0911a`), əks halda istifadəçilər köhnə faylı görür.
+## Yapılmaması gerekenler (git geçmişinden öğrenilen dersler)
+- Dinamik/statik route modunu değiştirmek SEO'yu bozdu (`5287f615`, `85147477`, `202d63de` revert'leri). `LEGACY_FRONTEND_MODE` ve route sırası değişikliği = yüksek risk, ayrı plan.
+- `clear-site-data` ile 301 önbellek kırma denemesi revert edildi (`9afe7b57`). Tekrarlama.
+- Varyant sayfalarının canonical'ı ana ürüne yönelmeli (`2cb9fa14`) — kurs/varyant işinde koru.
+- Cache-busting: CSS/JS değişince HTML'lerdeki `?v=` parametresi güncellenir (`bcc0911a`), aksi halde kullanıcılar eski dosyayı görür.
+- Statik kurs sayfası (`urun/<slug>/index.html`) varsa dinamik route çalışmaz; DB→sayfa senkronu `enhanceLegacyHtml` zincirine eklenir (`src/middleware/legacy-whatsapp.js`). Yeni bir alan senkronlanacaksa aynı desen: visibility middleware `res.locals` → `enhanceLegacyHtml` parametresi → `src/services/legacy-*.js` saf fonksiyon.
 
-## Qərar jurnalı (ADR-mini)
-| Tarix | Qərar | Səbəb |
+## Karar günlüğü (ADR-mini)
+| Tarih | Karar | Gerekçe |
 |---|---|---|
-| 2026-09-15 | CLAUDE.md bölünmüş struktur: kök CLAUDE.md + `.claude/rules/{workflow,security,testing}.md` + `PROJECT_STATE.md` (@import) | Rəsmi sənəd 200 sətir limitini tövsiyə edir; qaydalar və vəziyyət ayrı yenilənir |
-| 2026-09-15 | Dairə metodu, >3 fayl/>100 sətir üçün plan+təsdiq, TDD məcburi | Arxitektin iş qaydası |
-| 2026-09-15 | Git/deploy əməliyyatlarını yalnız Arxitekt icra edir | Arxitektin iş qaydası |
+| 2026-09-15 | CLAUDE.md bölünmüş yapı: kök CLAUDE.md + `.claude/rules/{workflow,security,testing}.md` + `PROJECT_STATE.md` (@import) | Resmi doküman 200 satır sınırı önerir; kurallar ve durum ayrı güncellenir |
+| 2026-09-15 | Çember yöntemi, >3 dosya/>100 satır için plan+onay, TDD zorunlu | Mimar'ın çalışma kuralı |
+| 2026-09-15 | Git/deploy işlemlerini yalnızca Mimar yürütür | Mimar'ın çalışma kuralı |
+| 2026-09-15 | Dil: sohbet AZ, kod yorumu ve .md TR, commit EN/TR | Mimar'ın kuralı |
+| 2026-09-15 | Kurs görseli için DB tek doğruluk kaynağı; statik detay sayfasında görsel DB ile aynıysa HTML'e dokunulmaz, farklıysa slider tek slayt olarak yeniden yazılır; og:image/itemprop/JSON-LD/paylaşım linki de güncellenir | 431/431 statik sayfa bugün DB ile aynı → sıfır görsel regresyon; liste sayfası zaten DB'den |
+| 2026-09-15 | "Görseli Kaldır" = DB referansını boşaltır, fiziksel dosya silinmez; kayıt "Güncelle" ile | id 208 ve 209 aynı dosyayı paylaşıyor → fiziksel silme başka kursu bozar; yeni route/migration yok |
 
-## Dairə tarixçəsi
-| # | Tarix | Dairə | Nəticə |
+## Çember geçmişi
+| # | Tarih | Çember | Sonuç |
 |---|---|---|---|
-| 0 | 2026-09-15 | Layihə araşdırması + CLAUDE.md sistemi | 5 sənəd faylı yazıldı; 12 unit test baseline PASS; R1 təhlükəsizlik tapıntısı |
+| 0 | 2026-09-15 | Proje araştırması + CLAUDE.md sistemi | 5 doküman; 12 unit test baseline PASS; R1 güvenlik bulgusu |
+| 1 | 2026-09-15 | Kurs görseli: statik detay senkronu + admin "Görseli Kaldır" + tam boyut linki | 9 dosya (+2 yeni), ~220 satır (119'u test); yeni test + 23 regresyon = 24/24 PASS; yerel HTTP e2e doğrulandı; `test-legacy-product-visibility` (2cb9fa14'ten beri kırık) onarıldı |

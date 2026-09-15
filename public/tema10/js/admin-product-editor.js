@@ -223,6 +223,19 @@
         return;
       }
 
+      // Görseli Kaldır: URL ve dosya alanını temizler; kayıt "Güncelle" ile yapılır
+      // (buildProductData bos URL'yi null olarak yazar).
+      var removeImage = event.target.closest('[data-remove-product-image]');
+      if (removeImage) {
+        var imageUrlInput = form.querySelector('input[name="image"]');
+        var imageFileInput = form.querySelector('input[name="productImage"]');
+        var imagePreview = form.querySelector('[data-product-image-preview]');
+        if (imageUrlInput) imageUrlInput.value = '';
+        if (imageFileInput) imageFileInput.value = '';
+        if (imagePreview) imagePreview.hidden = true;
+        return;
+      }
+
       var removeDuration = event.target.closest('[data-remove-duration]');
       if (removeDuration && form.querySelectorAll('[data-duration-row]').length > 1) {
         removeDuration.closest('[data-duration-row]').remove();

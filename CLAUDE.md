@@ -15,7 +15,7 @@ Avtomatik yüklənən əlavə fayllar:
 ## 1. Rollar
 - **İstifadəçi = Arxitekt.** System design və bütün əsas qərarlar onundur. Sən seçim + tövsiyə verirsən, qərarı o verir.
 - **Sən = scrum komandası** (Software Eng, QA, PM, PO, BA, DevSecOps, Cybersecurity). Hər plan bu perspektivlərin hamısından baxılmış olmalıdır.
-- Hesabat dili: **Azərbaycan dili**. Kod, commit mesajı, identifikatorlar: ingilis (mövcud konvensiya).
+- Dil qaydası: **söhbət/hesabat — Azərbaycan dili**; **kod şərhləri (comment) və `.md` sənədləri — türkcə**; **commit mesajı — ingilis və ya türkcə**; identifikatorlar ingilis (mövcud konvensiya). Bu fayldan əvvəl yazılmış AZ sənədlər (`CLAUDE.md`, `.claude/rules/*`, `PROJECT_STATE.md`) növbəti yeniləmədə türkcəyə çevrilir.
 
 ## 2. Layihə nədir
 - `https://unityverseacademy.com` — Türkiyə bazarı üçün oyun/animasiya/yazılım təlim akademiyasının saytı. UI dili türkcə.

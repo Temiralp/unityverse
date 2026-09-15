@@ -240,6 +240,7 @@ async function middlewareTests() {
       duration: '4 ay',
       status: 'PUBLISHED',
       title: 'Published title',
+      image: '/uploads/products/published.jpg',
       tabs: [
         { systemKey: 'OVERVIEW', title: 'DB overview', content: '<p>Overview</p>', sortOrder: 10 },
         { systemKey: 'CURRICULUM', title: 'DB curriculum', content: '<p>Curriculum</p>', sortOrder: 20 },
@@ -334,6 +335,7 @@ async function middlewareTests() {
         assert.equal(select.id, true);
         assert.equal(select.slug, true);
         assert.equal(select.status, true);
+        assert.equal(select.image, true);
         assert.equal(select.productVariants.select.isActive, true);
         assert.equal(select.productVariants.select.isArchived, true);
         assert.equal(select.productVariants.select.variantProduct.select.status, true);
@@ -349,6 +351,12 @@ async function middlewareTests() {
         return products.get(where.slug) || null;
       },
       async findMany({ where, select }) {
+        // Canonical fallback sorgusu (slug on eki ile kardes urun arama) -> kardes yok
+        if (where.slug && where.slug.startsWith) {
+          assert.deepEqual(select, { slug: true });
+          return [];
+        }
+
         if (where.status === 'DRAFT') {
           calls.draftFindMany += 1;
           assert.deepEqual(where, { status: 'DRAFT' });
@@ -399,6 +407,9 @@ async function middlewareTests() {
     'published-course'
   );
   assert.equal(published.locals.legacyProductDetailTitle, null);
+  assert.deepEqual(published.locals.legacyProductImage, {
+    image: products.get('published-course').image
+  });
   assert.deepEqual(published.locals.legacyProductTabs, products.get('published-course').tabs);
   assert.equal(published.locals.legacyProductPageOrigin, 'http://localhost:8000');
 

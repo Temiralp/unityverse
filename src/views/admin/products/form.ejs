@@ -168,10 +168,14 @@
       <input name="sortOrder" type="number" value="<%= product ? product.sortOrder || 0 : 0 %>">
     </label>
     <% if (productImagePreviewUrl) { %>
-      <div class="wide product-image-preview">
+      <div class="wide product-image-preview" data-product-image-preview>
         <span>Mevcut kurs görseli</span>
-        <img src="<%= productImagePreviewUrl %>" alt="" width="320" height="180">
-        <small>Yeni dosya seçmezseniz mevcut görsel korunur.</small>
+        <a href="<%= productImagePreviewUrl %>" target="_blank" rel="noopener" title="Görseli tam boyutta aç">
+          <img src="<%= productImagePreviewUrl %>" alt="" width="320" height="180">
+        </a>
+        <small>Yeni dosya seçmezseniz mevcut görsel korunur. Görsele tıklayarak tam boyutta görebilirsiniz.</small>
+        <button type="button" class="button button-secondary" data-remove-product-image>Görseli Kaldır</button>
+        <small>Kaldırma işlemi "Güncelle" düğmesine bastığınızda kaydedilir.</small>
       </div>
     <% } %>
     <section class="wide product-content-builder" data-product-tabs>
@@ -275,5 +279,5 @@
 </template>
 
 <script src="/vendor/jodit/jodit.min.js"></script>
-<script src="/public/tema10/js/admin-product-editor.js?v=20260810-1"></script>
+<script src="/public/tema10/js/admin-product-editor.js?v=20260915-1"></script>
 <%- include('../partials/footer') %>
