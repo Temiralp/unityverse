@@ -2599,6 +2599,137 @@ html.uv-tum-urunler .uv-course-search-empty {
     text-align: center;
 }
 
+/* Kategori sayfalari: /tum-urunler/ ile ayni arama kutusu; h1 gorunur kalir (SEO). */
+html.uv-kategori .category-page-title--with-search {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(240px, 380px) auto;
+    align-items: center;
+    gap: 16px 24px;
+    padding-bottom: 10px;
+}
+
+html.uv-kategori .category-page-title--with-search h1.modtitle {
+    margin: 0;
+    min-width: 0;
+}
+
+html.uv-kategori .category-page-title--with-search #search_result {
+    white-space: nowrap;
+}
+
+html.uv-kategori .category-page-search {
+    min-width: 0;
+}
+
+html.uv-kategori .course-search-form {
+    margin: 0;
+    width: 100%;
+}
+
+html.uv-kategori .course-search-control {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 42px;
+}
+
+html.uv-kategori .course-search-control .fa {
+    position: absolute;
+    left: 14px;
+    color: #6f6a86;
+    font-size: 14px;
+    pointer-events: none;
+}
+
+html.uv-kategori .course-search-control input {
+    width: 100%;
+    height: 42px;
+    border: 1px solid #dedbea;
+    border-radius: 4px;
+    background: #ffffff;
+    color: #202020;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 0 70px 0 40px;
+    transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+html.uv-kategori .course-search-control input::placeholder {
+    color: #8c889b;
+    font-weight: 400;
+}
+
+html.uv-kategori .course-search-control input:focus {
+    border-color: var(--renk1, #0b075f);
+    box-shadow: 0 0 0 3px rgba(11, 7, 95, .09);
+}
+
+html.uv-kategori .course-search-control button {
+    position: absolute;
+    right: 5px;
+    height: 32px;
+    min-width: 56px;
+    border: 0;
+    border-radius: 4px;
+    background: var(--renk1, #0b075f);
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    padding: 0 13px;
+}
+
+html.uv-kategori .course-search-control button:hover,
+html.uv-kategori .course-search-control button:focus {
+    background: var(--renk2, #202020);
+}
+
+html.uv-kategori .uv-product-card-area-4 .uv-product-card-item[hidden] {
+    display: none !important;
+}
+
+html.uv-kategori .uv-course-search-empty {
+    margin: 20px 0;
+    text-align: center;
+}
+
+@media (max-width: 991.98px) {
+    html.uv-kategori .category-page-title--with-search {
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    html.uv-kategori .category-page-title--with-search .category-page-search {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 575.98px) {
+    html.uv-kategori .category-page-title--with-search {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 8px;
+    }
+
+    html.uv-kategori .category-page-title--with-search #search_result {
+        justify-self: end;
+    }
+
+    html.uv-kategori .course-search-control {
+        height: 40px;
+    }
+
+    html.uv-kategori .course-search-control input {
+        height: 40px;
+        font-size: 13px;
+        padding-right: 62px;
+    }
+
+    html.uv-kategori .course-search-control button {
+        min-width: 50px;
+        padding: 0 10px;
+    }
+}
+
 @media (max-width: 767.98px) {
     html.uv-tum-urunler .category-page-title--with-search {
         grid-template-columns: minmax(0, 1fr);

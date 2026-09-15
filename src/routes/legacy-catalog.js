@@ -2,6 +2,7 @@ const fs = require('fs/promises');
 const path = require('path');
 const express = require('express');
 const prisma = require('../db');
+const { ensureLegacyCategorySearch } = require('../services/legacy-category-search');
 const { normalizeLegacyBlogDetailContent } = require('../services/legacy-blog-detail');
 const { ensureLegacyWhatsappButton } = require('../services/legacy-whatsapp');
 const { publicCatalogProductWhere } = require('../services/public-catalog');
@@ -639,7 +640,10 @@ router.get(['/kategori/:legacySlug', '/kategori/:legacySlug/'], async (req, res,
     const query = String(req.query.q || '').trim();
     const products = (await publishedProductsForLegacyCategory(prisma, legacySlug))
       .filter((product) => shouldIncludeProduct(product, query, ''));
-    const html = renderLegacyProductListing(template, products);
+    const html = ensureLegacyCategorySearch(
+      renderLegacyProductListing(template, products),
+      req.path
+    );
 
     res.setHeader('Cache-Control', 'no-cache');
     return res.send(html);
