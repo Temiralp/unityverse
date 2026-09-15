@@ -1,11 +1,11 @@
 # PROJECT_STATE.md — canlı durum günlüğü
 
 > Her çember (circle) bittiğinde güncellenir. Yeni oturum/agent buradan başlar. Tarihler mutlak (YYYY-MM-DD).
-> Son güncelleme: **2026-09-15** — Çember #6 (admin şifre değiştirme `/admin/change-password`) tamamlandı.
+> Son güncelleme: **2026-09-15** — Çember #6b (şifre formu UX: yeşil başarı mesajı, istemci tarafı ön kontrol, pasif buton) tamamlandı.
 
 ## Nerede kaldık
-- Kod: `main` — Çember #0…#5 Mimar tarafından commit/deploy edildi ve canlıda doğrulandı (2026-09-15). **Commit bekleyen:** Çember #6.
-- **Aktif çember:** yok. Çember #6 teslim paketi Mimar'a verildi.
+- Kod: `main` — Çember #0…#6 Mimar tarafından commit/deploy edildi ve canlıda doğrulandı (2026-09-15). **Commit bekleyen:** Çember #6b.
+- **Aktif çember:** yok.
 - Yerelde `uploads/products/1789467*.jpg` (3 dosya, 2026-09-15 yerel admin testi) izlenmiyor — commit'e eklenmemeli.
 - Sonraki çemberi Mimar seçer (Backlog).
 
@@ -47,6 +47,7 @@ Onaylanana kadar teslim paketlerinde sunucu adımları "DEPLOYMENT.md §12'ye uy
 - `clear-site-data` ile 301 önbellek kırma denemesi revert edildi (`9afe7b57`). Tekrarlama.
 - Varyant sayfalarının canonical'ı ana ürüne yönelmeli (`2cb9fa14`) — kurs/varyant işinde koru.
 - Cache-busting: CSS/JS değişince HTML'lerdeki `?v=` parametresi güncellenir (`bcc0911a`), aksi halde kullanıcılar eski dosyayı görür.
+- `admin.css` içinde aynı özgüllükteki kural sırası önemlidir: `.alert-success` gibi varyantlar `.alert`'ten sonra tanımlanmalı (aksi halde temel kural kazanır).
 - Admin şifresi değiştirildikten sonra `npm run seed` çalıştırmak şifreyi `.env ADMIN_PASSWORD` değerine geri döndürür — kurtarma dışında asla.
 - Statik dosyası olmayan kurslar `legacy-product-detail.js` ile Python kursu şablonundan render edilir; şablondan gelen her meta/JSON-LD alanı `renderPage`'de açıkça değiştirilmelidir, aksi halde Python verisi sızar.
 - Kategori sayfaları (`/kategori/:slug`) statik şablon + DB grid'dir (`legacy-catalog.js:633`); sayfaya yeni UI eklemek için 21 dosyayı değil, route'taki `ensureLegacy*` servis zincirini kullan.
@@ -72,6 +73,7 @@ Onaylanana kadar teslim paketlerinde sunucu adımları "DEPLOYMENT.md §12'ye uy
 |---|---|---|---|
 | 0 | 2026-09-15 | Proje araştırması + CLAUDE.md sistemi | 5 doküman; 12 unit test baseline PASS; R1 güvenlik bulgusu |
 | 1b | 2026-09-15 | Belgeler Türkçeye çevrildi (`CLAUDE.md`, `.claude/rules/*`) | 4 dosya, kod değişikliği yok |
+| 6b | 2026-09-15 | Şifre formu UX: `.alert-success` sırası düzeltildi (yeşil), `admin-change-password.js` ile anlık politika/eşleşme uyarıları ve pasif buton | 5 dosya (+1 yeni), ~90 satır; sunucu doğrulaması değişmedi |
 | 6 | 2026-09-15 | Admin şifre değiştirme (`/admin/change-password`, politika, 2 rate-limit, oturum iptali) | 7 dosya (+3 yeni), ~330 satır (120'si test); 22/22 test; yerel e2e 14 senaryo (politika, yanlış şifre, 401/429, eski şifre reddi, ikinci oturum düşmesi) |
 | 5 | 2026-09-15 | R10: dinamik kurs head meta + JSON-LD; statik og:image mutlak | 7 dosya (+1 yeni), ~200 satır (95'i test); 28/28 test; yerel e2e: dinamik sayfada 0 Python meta, statik nisbi sayfada yalnız 2 meta değişti |
 | 4 | 2026-09-15 | Yan panel kategori sayaçları DB'den (22 listeleme sayfası) | 3 dosya (+2 yeni), ~180 satır (95'i test); 27/27 test; yerel e2e sayaç = kategori sayfası sayısı |

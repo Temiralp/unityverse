@@ -123,6 +123,29 @@ assert.equal(validatePasswordChange({ currentPassword: CURRENT, newPassword: 'Ş
   const header = fs.readFileSync(path.join(root, 'src/views/admin/partials/header.ejs'), 'utf8');
   assert.match(header, /href="\/admin\/change-password"/);
 
+  // 5) Basari mesaji yesil: .alert-success kurali .alert'ten SONRA gelmeli (ayni ozgulluk)
+  const css = fs.readFileSync(path.join(root, 'admin.css'), 'utf8');
+  assert.ok(css.indexOf('.alert-success {') > css.indexOf('.alert {'), '.alert-success .alert kuralindan sonra tanimlanmali');
+  assert.match(css, /\.alert-success \{[^}]*color: var\(--success\)/);
+  assert.match(css, /\.admin-password-hint\[hidden\]/);
+  assert.match(view, /alert alert-success/);
+  assert.match(view, /class="alert" role="alert"/);
+
+  // 6) Istemci tarafi: sifreler eslesmeden buton pasif, politika ihlali kirmizi uyari
+  assert.match(view, /<form[^>]*data-change-password-form/);
+  assert.match(view, /<button type="submit" data-change-password-submit disabled>/);
+  assert.match(view, /<p class="alert admin-password-hint" role="alert" data-password-policy-hint hidden><\/p>/);
+  assert.match(view, /<p class="alert admin-password-hint" role="alert" data-password-match-hint hidden><\/p>/);
+  assert.match(view, /admin-change-password\.js\?v=2026091[5-9]/);
+  const script = fs.readFileSync(path.join(root, 'public/tema10/js/admin-change-password.js'), 'utf8');
+  assert.match(script, /data-change-password-form/);
+  assert.match(script, /minLength|MIN_LENGTH = 10/);
+  assert.match(script, /\\p\{Lu\}/);
+  assert.match(script, /\\p\{Ll\}/);
+  assert.match(script, /\\p\{Nd\}/);
+  assert.match(script, /submit\.disabled = /);
+  assert.match(script, /Yeni şifreler eşleşmiyor/);
+
   console.log('admin password change OK');
 })().catch((error) => {
   console.error(error);

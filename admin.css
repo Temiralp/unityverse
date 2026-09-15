@@ -163,12 +163,6 @@ a {
   color: #ffffff;
 }
 
-.alert-success {
-  background: #dcfce7;
-  border-color: #bbf7d0;
-  color: var(--success);
-}
-
 .admin-account span {
   color: #cbd5e1;
   font-size: 14px;
@@ -1190,6 +1184,21 @@ button:hover,
   border-radius: 6px;
   color: var(--danger);
   padding: 10px 12px;
+}
+
+.alert-success {
+  background: #dcfce7;
+  border-color: #bbf7d0;
+  color: var(--success);
+}
+
+.admin-password-hint {
+  font-size: 13px;
+  margin: 6px 0 0;
+}
+
+.admin-password-hint[hidden] {
+  display: none;
 }
 
 table {
