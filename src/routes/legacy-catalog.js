@@ -2,6 +2,11 @@ const fs = require('fs/promises');
 const path = require('path');
 const express = require('express');
 const prisma = require('../db');
+const {
+  loadLegacyCategoryCounts,
+  synchronizeLegacyCategoryCounts,
+  extractLegacyCategorySlugs
+} = require('../services/legacy-category-counts');
 const { ensureLegacyCategorySearch } = require('../services/legacy-category-search');
 const { normalizeLegacyBlogDetailContent } = require('../services/legacy-blog-detail');
 const { ensureLegacyWhatsappButton } = require('../services/legacy-whatsapp');
@@ -236,6 +241,16 @@ function renderLegacyProductListing(template, products) {
   return template
     .replace(productGridPattern, renderLegacyProductGrid(products))
     .replace(productCountPattern, `<span id="search_result">${products.length} ürün bulundu</span>`);
+}
+
+// Yan paneldeki statik kategori sayaclarini DB'deki yayinlanmis kurs sayisiyla degistirir.
+async function withLegacyCategoryCounts(html) {
+  const counts = await loadLegacyCategoryCounts(
+    prisma,
+    extractLegacyCategorySlugs(html),
+    legacyCategoryCandidateSlugs
+  );
+  return synchronizeLegacyCategoryCounts(html, counts);
 }
 
 async function loadLegacyCategoryTemplate(legacySlug) {
@@ -640,10 +655,10 @@ router.get(['/kategori/:legacySlug', '/kategori/:legacySlug/'], async (req, res,
     const query = String(req.query.q || '').trim();
     const products = (await publishedProductsForLegacyCategory(prisma, legacySlug))
       .filter((product) => shouldIncludeProduct(product, query, ''));
-    const html = ensureLegacyCategorySearch(
+    const html = await withLegacyCategoryCounts(ensureLegacyCategorySearch(
       renderLegacyProductListing(template, products),
       req.path
-    );
+    ));
 
     res.setHeader('Cache-Control', 'no-cache');
     return res.send(html);
@@ -662,7 +677,9 @@ router.get(['/tum-urunler', '/tum-urunler/'], async (req, res, next) => {
     const categorySlug = String(req.query.kategori || req.query.category || '').trim();
     const visibleProducts = products
       .filter((product) => shouldIncludeProduct(product, query, categorySlug));
-    const html = renderLegacyProductListing(template, visibleProducts);
+    const html = await withLegacyCategoryCounts(
+      renderLegacyProductListing(template, visibleProducts)
+    );
 
     res.setHeader('Cache-Control', 'no-cache');
     res.send(html);
