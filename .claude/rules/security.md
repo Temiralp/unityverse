@@ -11,6 +11,7 @@
 - `SESSION_SECRET` ≥64 karakter zorunlu, aksi halde app kalkmaz (`src/config/session.js`).
 - `TRUST_PROXY` yalnızca açık IP/CIDR (`127.0.0.1`); `true`/`*` app'i çökertir (`src/config/trust-proxy.js`). Rate-limit ve PayTR IP allowlist buna dayanır.
 - Üye parolaları bcrypt (cost 12). Google OAuth: `src/services/social-oauth.js`.
+- Admin şifre değişikliği: `/admin/change-password` (`src/services/admin-password.js`) — politika ≥10 karakter + büyük/küçük/rakam/özel; hatalı mevcut şifre 5/60 dk, başarılı değişiklik 2/3 saat (DB-backed `RateLimitEntry`); başarıda oturum yenilenir ve aynı adminin diğer `user_sessions` satırları silinir. **Şifre değişince `.env ADMIN_PASSWORD` eskimiştir; `npm run seed` asla çalıştırılmaz** (upsert ile eski şifreyi geri yazar). Şifre unutulursa kurtarma yolu: Mimar sunucuda `.env`'e yeni `ADMIN_PASSWORD` yazıp bir kez `npm run seed` çalıştırır.
 
 ## CSRF / form koruması
 - Admin formları: `csrfToken` oturumda, multipart için `requireMultipartCsrf`.

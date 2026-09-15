@@ -149,6 +149,26 @@ a {
   min-width: 0;
 }
 
+.admin-account-link {
+  color: #cbd5e1;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  white-space: nowrap;
+}
+
+.admin-account-link:hover,
+.admin-account-link:focus-visible {
+  color: #ffffff;
+}
+
+.alert-success {
+  background: #dcfce7;
+  border-color: #bbf7d0;
+  color: var(--success);
+}
+
 .admin-account span {
   color: #cbd5e1;
   font-size: 14px;

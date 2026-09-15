@@ -31,6 +31,12 @@ const {
   syncManagedProductVariants
 } = require('../services/product-variants');
 const { validateBlogContentImages } = require('../services/blog-images');
+const {
+  PASSWORD_POLICY_TEXT,
+  changeAdminPassword,
+  revokeOtherAdminSessions,
+  validatePasswordChange
+} = require('../services/admin-password');
 const { normalizeProductImageSource } = require('../services/product-content');
 const {
   hasAnyRegistrationProfileInput,
@@ -72,6 +78,13 @@ const LOGIN_RATE_LIMIT_MAX_ATTEMPTS = 5;
 const ADMIN_LOGIN_IP_SCOPE = 'admin-login-ip';
 const ADMIN_LOGIN_IP_LIMIT = 5;
 const ADMIN_LOGIN_IP_WINDOW_MS = 60 * 60 * 1000;
+// Sifre degistirme: hatali mevcut sifre denemeleri (IP+e-posta) ve basarili degisiklik sikligi
+const ADMIN_PASSWORD_ATTEMPT_SCOPE = 'admin-password-attempt';
+const ADMIN_PASSWORD_ATTEMPT_LIMIT = 5;
+const ADMIN_PASSWORD_ATTEMPT_WINDOW_MS = 60 * 60 * 1000;
+const ADMIN_PASSWORD_CHANGE_SCOPE = 'admin-password-change';
+const ADMIN_PASSWORD_CHANGE_LIMIT = 2;
+const ADMIN_PASSWORD_CHANGE_WINDOW_MS = 3 * 60 * 60 * 1000;
 const PAGE_SIZE_OPTIONS = [5, 10, 25, 50, 100];
 const DEFAULT_PAGE_SIZE = 25;
 const MAX_PAGE_SIZE = 100;
@@ -1364,6 +1377,99 @@ router.post('/logout', requireAdmin, (req, res) => {
     res.clearCookie('connect.sid');
     res.redirect('/admin/login');
   });
+});
+
+function renderChangePassword(res, { statusCode = 200, error = null, success = null } = {}) {
+  return res.status(statusCode).render('admin/change-password', {
+    activeNav: null,
+    error,
+    success,
+    passwordPolicyText: PASSWORD_POLICY_TEXT
+  });
+}
+
+router.get('/change-password', requireAdmin, (req, res) => {
+  renderChangePassword(res);
+});
+
+router.post('/change-password', requireAdmin, async (req, res, next) => {
+  try {
+    const adminEmail = req.session.adminUser.email;
+    const limitContext = { req, res, email: adminEmail };
+    const changeLimit = await isLoginBlocked({
+      ...limitContext,
+      scope: ADMIN_PASSWORD_CHANGE_SCOPE,
+      limit: ADMIN_PASSWORD_CHANGE_LIMIT
+    });
+    if (changeLimit.blocked) {
+      return renderChangePassword(res, {
+        statusCode: 429,
+        error: 'Şifre kısa süre içinde çok sık değiştirildi. Lütfen 3 saat sonra tekrar deneyin.'
+      });
+    }
+
+    const attemptLimit = await isLoginBlocked({
+      ...limitContext,
+      scope: ADMIN_PASSWORD_ATTEMPT_SCOPE,
+      limit: ADMIN_PASSWORD_ATTEMPT_LIMIT
+    });
+    if (attemptLimit.blocked) {
+      return renderChangePassword(res, {
+        statusCode: 429,
+        error: 'Çok fazla hatalı deneme yapıldı. Lütfen 60 dakika sonra tekrar deneyin.'
+      });
+    }
+
+    const validation = validatePasswordChange(req.body);
+    if (validation.error) {
+      return renderChangePassword(res, { statusCode: 400, error: validation.error });
+    }
+
+    const result = await changeAdminPassword(prisma, {
+      adminId: req.session.adminUser.id,
+      ...validation.data
+    });
+    if (!result.ok) {
+      await recordLoginFailure({
+        res,
+        scope: ADMIN_PASSWORD_ATTEMPT_SCOPE,
+        identifier: attemptLimit.identifier,
+        limit: ADMIN_PASSWORD_ATTEMPT_LIMIT,
+        windowMs: ADMIN_PASSWORD_ATTEMPT_WINDOW_MS
+      });
+      return renderChangePassword(res, { statusCode: 401, error: 'Mevcut şifre hatalı.' });
+    }
+
+    await Promise.all([
+      clearLoginFailures(ADMIN_PASSWORD_ATTEMPT_SCOPE, attemptLimit.identifier),
+      recordLoginFailure({
+        res,
+        scope: ADMIN_PASSWORD_CHANGE_SCOPE,
+        identifier: changeLimit.identifier,
+        limit: ADMIN_PASSWORD_CHANGE_LIMIT,
+        windowMs: ADMIN_PASSWORD_CHANGE_WINDOW_MS
+      }),
+      revokeOtherAdminSessions(prisma, {
+        adminId: req.session.adminUser.id,
+        currentSid: req.sessionID
+      })
+    ]);
+
+    // Oturum sabitleme korumasi: kimlik bilgisi degisince oturum kimligi yenilenir.
+    const adminUser = req.session.adminUser;
+    return req.session.regenerate((error) => {
+      if (error) return next(error);
+      req.session.adminUser = adminUser;
+      req.session.csrfToken = crypto.randomBytes(32).toString('hex');
+      return req.session.save((saveError) => {
+        if (saveError) return next(saveError);
+        res.locals.csrfToken = req.session.csrfToken;
+        return renderChangePassword(res, { success: 'Şifreniz güncellendi. Diğer cihazlardaki oturumlar kapatıldı.' });
+      });
+    });
+  } catch (error) {
+    return next(error);
+  }
 });
 
 router.get('/', requireAdmin, async (req, res, next) => {

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Unityverse Admin</title>
-  <link rel="stylesheet" href="/admin.css?v=20260810-1">
+  <link rel="stylesheet" href="/admin.css?v=20260915-1">
   <% if (currentPath && (currentPath.startsWith('/admin/blog') || currentPath.startsWith('/admin/products'))) { %>
     <link rel="stylesheet" href="/vendor/jodit/jodit.min.css">
   <% } %>
@@ -61,6 +61,7 @@
         </nav>
         <div class="admin-account">
           <span><%= adminUser.name || adminUser.email %></span>
+          <a class="admin-account-link" href="/admin/change-password">Şifre Değiştir</a>
           <form action="/admin/logout" method="post">
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <button type="submit" class="logout-button">Çıkış</button>

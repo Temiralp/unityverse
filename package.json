@@ -60,6 +60,7 @@
     "test:payment-responsive-navbar": "node scripts/test-payment-responsive-navbar.js",
     "test:legacy-member-import": "node scripts/test-legacy-member-import.js",
     "test:admin-members": "node scripts/test-admin-members.js",
+    "test:admin-password": "node scripts/test-admin-password.js",
     "test:admin-responsive": "node scripts/test-admin-responsive.js",
     "test:registration-visibility": "node scripts/test-registration-visibility.js",
     "import:legacy-members": "node scripts/import-legacy-members.js",
