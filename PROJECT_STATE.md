@@ -1,11 +1,11 @@
 # PROJECT_STATE.md — canlı durum günlüğü
 
 > Her çember (circle) bittiğinde güncellenir. Yeni oturum/agent buradan başlar. Tarihler mutlak (YYYY-MM-DD).
-> Son güncelleme: **2026-09-15** — Çember #2 tamamlandı (kategori sayfalarında kurs araması).
+> Son güncelleme: **2026-09-15** — Çember #3 (dinamik kurs og meta) ve #4 (yan panel kategori sayaçları) tamamlandı.
 
 ## Nerede kaldık
-- Kod: `main` @ `37623c38` (2026-09-15, Çember #1 commit'i; #0 = `dd2402d8`) + **commit bekleyen** Çember #1b (belgeler TR) ve #2 (kategori araması) değişiklikleri.
-- **Aktif çember:** yok. Çember #2 teslim paketi Mimar'a verildi; commit/push/deploy ve canlı test Mimar'da.
+- Kod: `main` — Çember #0 `dd2402d8`, #1 `37623c38`, #1b+#2 Mimar tarafından commit/deploy edildi ve canlıda doğrulandı (2026-09-15). **Commit bekleyen:** Çember #3 ve #4.
+- **Aktif çember:** yok. Çember #3+#4 teslim paketi Mimar'a verildi.
 - Yerelde `uploads/products/1789467*.jpg` (3 dosya, 2026-09-15 yerel admin testi) izlenmiyor — commit'e eklenmemeli.
 - Sonraki çemberi Mimar seçer (Backlog).
 
@@ -29,6 +29,8 @@ Onaylanana kadar teslim paketlerinde sunucu adımları "DEPLOYMENT.md §12'ye uy
 | R6 | `docker-compose.yml` varsayılan `postgres/postgres` — yalnızca yerel | dosya | Production'da kullanılmıyor (onaylanmalı) | Bilgi |
 | R7 | `BACKEND_SETUP.md` varsayılan admin `ChangeMe123!` — production'da değiştirildi mi? | `prisma/seed.js` fallback | Mimar onaylasın | Soru |
 | R9 | `scripts/test-price-visibility-language.js` HEAD'de kırık: `unityverse.css`'de "Fiyatı görmek için giriş yapın" metni yok (commit `9cd9d90d`, 2026-08-07'de temizlik sırasında silinmiş olabilir) | test çıktısı 2026-09-15 | Test mi güncellenecek, CSS mi geri gelecek — Mimar kararı; küçük çember | Backlog |
+| R10 | Dinamik kurs sayfaları (statik dosyası olmayan `/urun/*`) Python şablonundan miras kalan meta'lar: `name="title"`, `name="keywords"`, `og:keywords`, `itemprop="name"`, `itemprop="description"` ve head'deki JSON-LD `Product` bloğu (name/image/description) hâlâ Python verisi | `legacy-product-detail.js` `renderPage`; Çember #3 yalnızca og:image/itemprop image/og:description düzeltti | Aynı fonksiyonda +5 replace + JSON-LD yeniden üretimi; küçük çember, Mimar kararı | Backlog |
+| R11 | `public/tema10/js/filters.js` `legacyFilterFallbackPayload()` içinde sabit kategori sayıları (23, 76…) — yalnızca Vue yokken/ajax düşünce kullanılır ve CSS `#filterPnl`'i zaten gizler → görünmez; `scripts/inject-legacy-filter-fallback.js` de sabit | kod | Dokunulmadı; sunucu tarafı senkron (Çember #4) görünen listeyi düzeltir | Bilgi |
 | R8 | Ana kurs görseli değiştirilen üründe statik sayfadaki çoklu galeri (9 sayfa) tek görsele iner | Çember #1 tasarım kararı | Admin tek görsel yönetir; kabul edilen davranış | Kabul edildi |
 
 ## Backlog (Mimar sıralar)
@@ -37,6 +39,7 @@ Onaylanana kadar teslim paketlerinde sunucu adımları "DEPLOYMENT.md §12'ye uy
 - [ ] R4 — `npm test` toplu unit runner (test altyapısı, küçük)
 - [ ] R5 — gereksiz dosyaların repodan çıkarılması (chore)
 - [ ] R9 — `test-price-visibility-language` kırık test kararı (test vs CSS)
+- [ ] R10 — dinamik kurs sayfası kalan meta + JSON-LD (SEO)
 - [ ] Sunucu bilgilerinin bu dosyaya yazılması (§Sunucu)
 - [ ] `PRODUCTION_CHECKLIST.md` §1 "kritik yeni dosyalar" maddesi eski (dosyalar zaten commit'te) — güncellenmeli
 
@@ -45,6 +48,7 @@ Onaylanana kadar teslim paketlerinde sunucu adımları "DEPLOYMENT.md §12'ye uy
 - `clear-site-data` ile 301 önbellek kırma denemesi revert edildi (`9afe7b57`). Tekrarlama.
 - Varyant sayfalarının canonical'ı ana ürüne yönelmeli (`2cb9fa14`) — kurs/varyant işinde koru.
 - Cache-busting: CSS/JS değişince HTML'lerdeki `?v=` parametresi güncellenir (`bcc0911a`), aksi halde kullanıcılar eski dosyayı görür.
+- Statik dosyası olmayan kurslar `legacy-product-detail.js` ile Python kursu şablonundan render edilir; şablondan gelen her meta/JSON-LD alanı `renderPage`'de açıkça değiştirilmelidir, aksi halde Python verisi sızar.
 - Kategori sayfaları (`/kategori/:slug`) statik şablon + DB grid'dir (`legacy-catalog.js:633`); sayfaya yeni UI eklemek için 21 dosyayı değil, route'taki `ensureLegacy*` servis zincirini kullan.
 - Statik kurs sayfası (`urun/<slug>/index.html`) varsa dinamik route çalışmaz; DB→sayfa senkronu `enhanceLegacyHtml` zincirine eklenir (`src/middleware/legacy-whatsapp.js`). Yeni bir alan senkronlanacaksa aynı desen: visibility middleware `res.locals` → `enhanceLegacyHtml` parametresi → `src/services/legacy-*.js` saf fonksiyon.
 
@@ -56,6 +60,8 @@ Onaylanana kadar teslim paketlerinde sunucu adımları "DEPLOYMENT.md §12'ye uy
 | 2026-09-15 | Git/deploy işlemlerini yalnızca Mimar yürütür | Mimar'ın çalışma kuralı |
 | 2026-09-15 | Dil: sohbet AZ, kod yorumu ve .md TR, commit EN/TR | Mimar'ın kuralı |
 | 2026-09-15 | Kurs görseli için DB tek doğruluk kaynağı; statik detay sayfasında görsel DB ile aynıysa HTML'e dokunulmaz, farklıysa slider tek slayt olarak yeniden yazılır; og:image/itemprop/JSON-LD/paylaşım linki de güncellenir | 431/431 statik sayfa bugün DB ile aynı → sıfır görsel regresyon; liste sayfası zaten DB'den |
+| 2026-09-15 | Yan panel kategori sayaçları: statik 22 dosya/inject scripti değil, listeleme route'larında `withLegacyCategoryCounts` (tek `findMany`, `legacyCategoryCandidateSlugs` ile sayım = kategori sayfasının gösterdiği sayı) | Görünen liste `.legacy-static-filter-fallback`'tır (CSS `#filterPnl`'i gizler); tek doğruluk kaynağı DB |
+| 2026-09-15 | Dinamik kurs og:image/itemprop image/og:description `renderPage`'de kursun verisiyle yazılır; kalan miras meta'lar R10 | WhatsApp/FB önizlemesi bu 3 etiketi kullanır; minimum kapsam Mimar onayı |
 | 2026-09-15 | Kategori araması statik 21 dosyaya değil, `/kategori/:slug` route'unda sunucu tarafı enjeksiyonla (`ensureLegacyCategorySearch`) eklenir; paginasyon /tum-urunler/ gibi 12/sayfa görünür yapılır; kategori h1'i görünür kalır | Tek doğruluk kaynağı, yeni şablonlar otomatik kapsanır, statik dosyalara dokunulmaz; Mimar paginasyon tutarlılığını seçti |
 | 2026-09-15 | "Görseli Kaldır" = DB referansını boşaltır, fiziksel dosya silinmez; kayıt "Güncelle" ile | id 208 ve 209 aynı dosyayı paylaşıyor → fiziksel silme başka kursu bozar; yeni route/migration yok |
 
@@ -64,5 +70,7 @@ Onaylanana kadar teslim paketlerinde sunucu adımları "DEPLOYMENT.md §12'ye uy
 |---|---|---|---|
 | 0 | 2026-09-15 | Proje araştırması + CLAUDE.md sistemi | 5 doküman; 12 unit test baseline PASS; R1 güvenlik bulgusu |
 | 1b | 2026-09-15 | Belgeler Türkçeye çevrildi (`CLAUDE.md`, `.claude/rules/*`) | 4 dosya, kod değişikliği yok |
+| 4 | 2026-09-15 | Yan panel kategori sayaçları DB'den (22 listeleme sayfası) | 3 dosya (+2 yeni), ~180 satır (95'i test); 27/27 test; yerel e2e sayaç = kategori sayfası sayısı |
+| 3 | 2026-09-15 | Dinamik kurs sayfası og:image / itemprop image / og:description | 3 dosya (+1 yeni), ~75 satır (60'ı test); R10 tespit edildi |
 | 2 | 2026-09-15 | Kategori sayfalarında kurs araması (21 sayfa) | 6 dosya (+2 yeni), ~200 satır (95'i test); yeni test + 22 regresyon PASS; 21/21 kategori HTTP e2e; R9 önceden kırık test tespit edildi |
 | 1 | 2026-09-15 | Kurs görseli: statik detay senkronu + admin "Görseli Kaldır" + tam boyut linki | 9 dosya (+2 yeni), ~220 satır (119'u test); yeni test + 23 regresyon = 24/24 PASS; yerel HTTP e2e doğrulandı; `test-legacy-product-visibility` (2cb9fa14'ten beri kırık) onarıldı |

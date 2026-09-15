@@ -345,15 +345,27 @@ async function loadHomeFooterTemplate() {
   return homeFooterTemplate;
 }
 
+// Sosyal onizleme (WhatsApp/Facebook) icin kursun gorselini mutlak URL olarak verir;
+// sablon (Python kursu) gorseli head'de kalmamali.
+function absoluteProductImageUrl(product, pageOrigin) {
+  const assetPath = normalizeLegacyAssetPath(product.image);
+  if (/^(https?:)?\/\//i.test(assetPath) || assetPath.startsWith('data:')) return assetPath;
+  return `${pageOrigin}/${assetPath.replace(/^(\.\.\/)+/, '')}`;
+}
+
 function renderPage(template, footer, product, pageOrigin, variants = []) {
   const title = escapeHtml(product.title);
   const canonicalUrl = `${pageOrigin}/urun/${encodeURIComponent(product.slug)}/`;
   const description = escapeHtml(product.summary || `${product.title} - Unityverse Academy`);
+  const imageUrl = escapeHtml(absoluteProductImageUrl(product, pageOrigin));
   let html = template
     .replace(/<title>[\s\S]*?<\/title>/i, `<title>${title}</title>`)
     .replace(/<link\s+rel=["']canonical["']\s+href=["'][^"']*["']\s*\/?>/i, `<link rel="canonical" href="${canonicalUrl}" />`)
     .replace(/<meta\s+property=["']og:url["']\s+content=["'][^"']*["']\s*\/?>/i, `<meta property="og:url" content="${canonicalUrl}" />`)
     .replace(/<meta\s+property=["']og:title["']\s+content=["'][^"']*["']\s*\/?>/i, `<meta property="og:title" content="${title}" />`)
+    .replace(/<meta\s+property=["']og:description["']\s+content=["'][^"']*["']\s*\/?>/i, `<meta property="og:description" content="${description}" />`)
+    .replace(/<meta\s+property=["']og:image["']\s+content=["'][^"']*["']\s*\/?>/i, `<meta property="og:image" content="${imageUrl}" />`)
+    .replace(/<meta\s+itemprop=["']image["']\s+content=["'][^"']*["']\s*\/?>/i, `<meta itemprop="image" content="${imageUrl}" />`)
     .replace(/<meta\s+name=["']description["']\s+content=["'][^"']*["']\s*\/?>/i, `<meta name="description" content="${description}" />`)
     .replace('</head>', `<link rel="stylesheet" href="../../public/tema10/css/bank-transfer-discount.css?v=${LEGACY_BANK_TRANSFER_CSS_VERSION}"></head>`)
     .replace(breadcrumbPattern, renderBreadcrumb(product))
@@ -393,4 +405,5 @@ module.exports.loadProductVariantContext = loadProductVariantContext;
 module.exports.publicProductVariants = publicProductVariants;
 module.exports.renderEducationOptions = renderEducationOptions;
 module.exports.renderLegacyProductDetails = renderLegacyProductDetails;
+module.exports.renderPage = renderPage;
 module.exports.renderProductVariantOptions = renderProductVariantOptions;
