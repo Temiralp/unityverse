@@ -63,6 +63,7 @@ node scripts/test-<ad>.js   # tek test; npm run test:<ad> alias'ları package.js
 8. Production'a dokunan scriptler (`migrate-*`, `backfill-*`, `import-*`, `--apply`), `prisma migrate dev`, `npm run seed` — production'da yasaktır; yalnızca Mimar, yalnızca yedekten sonra.
 9. Legacy URL'ler ve `nginx_redirects.conf`/`legacy-redirects.js` SEO-kritiktir: URL/slug/canonical değiştiren her işte 301 haritası ve `sitemap.xml` kontrol edilir.
 10. Testler yeşil olmadan "bitti" denmez; test kırmızıysa çıktısıyla birlikte raporlanır.
+11. **Kalıcılık ilkesi (2026-09-15):** her değişiklik yalnızca bugün değil, yarın da çalışmalıdır. Sunucu çöküp yeniden kalktığında site hiç düşmemiş gibi olmalıdır: durum yalnızca DB/dosya sisteminde tutulur (süreç belleğinde tutulan durum yok; bellek içi cache varsa yeniden üretilebilir olmalı), başlangıçta zorunlu dış bağımlılık yok, tek doğruluk kaynağı DB. Değişiklik sistem tasarımını iyileştirmeli, borç eklememelidir (statik dosyaya elle yama yerine route/servis zinciri; kopyala-yapıştır yerine tablo/veri güdümlü mantık). Plan şablonundaki "Kalıcılık" maddesi zorunludur.
 
 ## 7. Her iş bittiğinde teslim paketi (Mimar'a verilir)
 Değişen dosya listesi · test sonuçları (komut + çıktı) · `git status/add/commit/push/log` adımları · sunucuda `git pull` + restart adımları · **manuel canlı test rehberi** (URL, adım, beklenen sonuç) · rollback adımı · `PROJECT_STATE.md` güncellemesi. Şablon: `.claude/rules/workflow.md` §Teslim.

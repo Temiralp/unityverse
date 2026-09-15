@@ -408,7 +408,8 @@ async function middlewareTests() {
   );
   assert.equal(published.locals.legacyProductDetailTitle, null);
   assert.deepEqual(published.locals.legacyProductImage, {
-    image: products.get('published-course').image
+    image: products.get('published-course').image,
+    origin: 'http://localhost:8000'
   });
   assert.deepEqual(published.locals.legacyProductTabs, products.get('published-course').tabs);
   assert.equal(published.locals.legacyProductPageOrigin, 'http://localhost:8000');

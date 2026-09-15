@@ -80,6 +80,27 @@ const updatedExternal = synchronizeLegacyProductDetailImage(absoluteMetaHtml, { 
 assert.ok(updatedExternal.includes(`<meta property="og:image" content="${externalImage}" />`));
 assert.equal(updatedExternal.includes('unityverseacademy.com/https://'), false);
 
+// 3c) origin verilirse og:image / itemprop image her durumda mutlak URL olur
+//     (gorsel degismemis olsa bile; OG spesifikasyonu mutlak URL ister)
+const ORIGIN = 'https://unityverseacademy.com';
+const unchangedAbsolute = synchronizeLegacyProductDetailImage(staticDetailHtml, { image: LEGACY_IMAGE, origin: ORIGIN });
+assert.notEqual(unchangedAbsolute, staticDetailHtml);
+assert.ok(unchangedAbsolute.includes(`<meta property="og:image" content="${ORIGIN}/uploads/p/p/full-stack-development-canli-online-egitim_1.jpg?v=1726224678" />`));
+assert.ok(unchangedAbsolute.includes(`<meta itemprop="image" content="${ORIGIN}/uploads/p/p/full-stack-development-canli-online-egitim_1.jpg?v=1726224678" />`));
+// Slider ve sayfanin geri kalani degismez (yalnizca 2 meta)
+assert.equal(unchangedAbsolute.replace(/<meta (property="og:image"|itemprop="image") content="[^"]*" \/>/g, ''), staticDetailHtml.replace(/<meta (property="og:image"|itemprop="image") content="[^"]*" \/>/g, ''));
+// Idempotent
+assert.equal(synchronizeLegacyProductDetailImage(unchangedAbsolute, { image: LEGACY_IMAGE, origin: ORIGIN }), unchangedAbsolute);
+// Gorsel degisince de mutlak
+const changedAbsolute = synchronizeLegacyProductDetailImage(staticDetailHtml, { image: NEW_IMAGE, origin: ORIGIN });
+assert.ok(changedAbsolute.includes(`<meta property="og:image" content="${ORIGIN}${NEW_IMAGE}" />`));
+assert.ok(changedAbsolute.includes(`<meta itemprop="image" content="${ORIGIN}${NEW_IMAGE}" />`));
+// Zaten mutlak olan (1059) origin'i korur, cift origin olmaz
+const alreadyAbsolute = synchronizeLegacyProductDetailImage(absoluteMetaHtml, { image: LEGACY_IMAGE, origin: 'http://127.0.0.1:8765' });
+assert.equal(alreadyAbsolute, absoluteMetaHtml);
+// origin yoksa eski davranis (dokunulmaz)
+assert.equal(synchronizeLegacyProductDetailImage(staticDetailHtml, { image: LEGACY_IMAGE }), staticDetailHtml);
+
 // 4) Gorsel yolu HTML kacisli yazilir
 const escaped = synchronizeLegacyProductDetailImage(staticDetailHtml, { image: '/uploads/products/a"b.jpg' });
 assert.ok(escaped.includes('/uploads/products/a&quot;b.jpg'));

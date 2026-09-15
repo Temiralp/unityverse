@@ -26,6 +26,7 @@
 10. **Kabul kriterleri (Definition of Done)** — doğrulanabilir maddeler.
 11. **Manuel canlı test rehberi** — URL, adımlar, beklenen sonuç (Mimar canlıda tekrarlayacak).
 12. **Rollback planı** — kod (git revert / önceki commit), DB (yedek + `pg_restore`), env/Nginx.
+13. **Kalıcılık / dayanıklılık** — değişiklik restart sonrası nasıl davranır (süreç belleğine bağımlılık var mı? yeniden üretilebilir mi?), yeni veri/şablon eklenince otomatik kapsanır mı, 1 yıl sonra bakım yükü nedir, sistem tasarımına etkisi (+/−).
 
 ## TDD sırası (değişmez)
 1. Test yaz → çalıştır → **kırmızı** olduğunu göster (çıktıyla). Kırmızı değilse test hatalıdır, devam etme.

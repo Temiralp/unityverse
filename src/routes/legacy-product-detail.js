@@ -10,6 +10,7 @@ const {
 } = require('../services/product-variants');
 const { prepareLegacyTabContent } = require('../services/youtube-embeds');
 const { LEGACY_BANK_TRANSFER_CSS_VERSION } = require('../services/legacy-assets');
+const { plainText, replaceProductJsonLd } = require('../services/product-structured-data');
 
 const router = express.Router();
 const rootDir = path.resolve(__dirname, '../..');
@@ -353,20 +354,53 @@ function absoluteProductImageUrl(product, pageOrigin) {
   return `${pageOrigin}/${assetPath.replace(/^(\.\.\/)+/, '')}`;
 }
 
+// Sablondaki <meta attr="name" content="..."> etiketini kursun degeriyle degistirir.
+function replaceMetaTag(html, attribute, name, content) {
+  const pattern = new RegExp(`<meta\\s+${attribute}=["']${name}["']\\s+content=["'][^"']*["']\\s*/?>`, 'i');
+  return html.replace(pattern, `<meta ${attribute}="${name}" content="${content}" />`);
+}
+
+// Sablondan (Python kursu) miras kalan tum head meta'lari tek tablodan yonetilir;
+// yeni bir etiket gerekirse buraya bir satir eklenir.
+function pageMetaTags(product, { title, description, canonicalUrl, imageUrl }) {
+  const keywords = escapeHtml([product.title, product.category?.name, 'Unityverse Academy']
+    .filter(Boolean)
+    .join(', '));
+
+  return [
+    ['name', 'title', title],
+    ['name', 'keywords', keywords],
+    ['name', 'description', description],
+    ['property', 'og:title', title],
+    ['property', 'og:keywords', keywords],
+    ['property', 'og:description', description],
+    ['property', 'og:url', canonicalUrl],
+    ['property', 'og:image', imageUrl],
+    ['itemprop', 'name', title],
+    ['itemprop', 'description', description],
+    ['itemprop', 'image', imageUrl]
+  ];
+}
+
 function renderPage(template, footer, product, pageOrigin, variants = []) {
   const title = escapeHtml(product.title);
   const canonicalUrl = `${pageOrigin}/urun/${encodeURIComponent(product.slug)}/`;
-  const description = escapeHtml(product.summary || `${product.title} - Unityverse Academy`);
-  const imageUrl = escapeHtml(absoluteProductImageUrl(product, pageOrigin));
-  let html = template
-    .replace(/<title>[\s\S]*?<\/title>/i, `<title>${title}</title>`)
-    .replace(/<link\s+rel=["']canonical["']\s+href=["'][^"']*["']\s*\/?>/i, `<link rel="canonical" href="${canonicalUrl}" />`)
-    .replace(/<meta\s+property=["']og:url["']\s+content=["'][^"']*["']\s*\/?>/i, `<meta property="og:url" content="${canonicalUrl}" />`)
-    .replace(/<meta\s+property=["']og:title["']\s+content=["'][^"']*["']\s*\/?>/i, `<meta property="og:title" content="${title}" />`)
-    .replace(/<meta\s+property=["']og:description["']\s+content=["'][^"']*["']\s*\/?>/i, `<meta property="og:description" content="${description}" />`)
-    .replace(/<meta\s+property=["']og:image["']\s+content=["'][^"']*["']\s*\/?>/i, `<meta property="og:image" content="${imageUrl}" />`)
-    .replace(/<meta\s+itemprop=["']image["']\s+content=["'][^"']*["']\s*\/?>/i, `<meta itemprop="image" content="${imageUrl}" />`)
-    .replace(/<meta\s+name=["']description["']\s+content=["'][^"']*["']\s*\/?>/i, `<meta name="description" content="${description}" />`)
+  const descriptionText = plainText(product.summary) || `${product.title} - Unityverse Academy`;
+  const description = escapeHtml(descriptionText);
+  const rawImageUrl = absoluteProductImageUrl(product, pageOrigin);
+  const imageUrl = escapeHtml(rawImageUrl);
+  let html = pageMetaTags(product, { title, description, canonicalUrl, imageUrl }).reduce(
+    (current, [attribute, name, content]) => replaceMetaTag(current, attribute, name, content),
+    template
+      .replace(/<title>[\s\S]*?<\/title>/i, `<title>${title}</title>`)
+      .replace(/<link\s+rel=["']canonical["']\s+href=["'][^"']*["']\s*\/?>/i, `<link rel="canonical" href="${canonicalUrl}" />`)
+  );
+  html = replaceProductJsonLd(html, product, {
+    canonicalUrl,
+    imageUrl: rawImageUrl,
+    description: descriptionText
+  });
+  html = html
     .replace('</head>', `<link rel="stylesheet" href="../../public/tema10/css/bank-transfer-discount.css?v=${LEGACY_BANK_TRANSFER_CSS_VERSION}"></head>`)
     .replace(breadcrumbPattern, renderBreadcrumb(product))
     .replace(productDetailsPattern, renderLegacyProductDetails(product, pageOrigin, variants));

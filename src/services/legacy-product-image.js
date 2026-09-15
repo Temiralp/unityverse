@@ -13,6 +13,8 @@ const IMAGE_TITLE_PATTERN = /<img\b[^>]*\btitle=(["'])([^"']*)\1/i;
 // Meta/JSON-LD icinde kacis gerektirmeyen, attribute ve JSON'da aynen yazilabilen yol.
 const PLAIN_ASSET_PATH_PATTERN = /^[\w\-./:%?=+@~]+$/;
 const ABSOLUTE_URL_PATTERN = /^(https?:)?\/\//i;
+// og:image / itemprop="image" meta'lari (OG spesifikasyonu mutlak URL ister)
+const IMAGE_META_PATTERN = /(<meta (?:property="og:image"|itemprop="image") content=")([^"]*)(")/g;
 
 function escapeHtml(value) {
   return String(value || '')
@@ -62,6 +64,19 @@ function replaceLegacyImageReferences(html, currentSrc, targetImage) {
   ));
 }
 
+// Goreli ("../../uploads/x.jpg", "/uploads/x.jpg") gorsel meta'larini origin ile mutlak yazar;
+// zaten mutlak olanlara ve data: URL'lere dokunmaz.
+function ensureAbsoluteImageMeta(html, origin) {
+  const base = String(origin || '').trim().replace(/\/+$/, '');
+  if (!base) return html;
+
+  return html.replace(IMAGE_META_PATTERN, (match, open, content, close) => {
+    const value = String(content || '').trim();
+    if (!value || ABSOLUTE_URL_PATTERN.test(value) || value.startsWith('data:')) return match;
+    return `${open}${base}${publicImagePath(value)}${close}`;
+  });
+}
+
 function renderSlides(image, title) {
   const safeImage = escapeHtml(image);
   const safeTitle = escapeHtml(title);
@@ -80,7 +95,9 @@ function synchronizeLegacyProductDetailImage(html, imageContext) {
 
   const currentSrc = (mainMatch[2].match(IMAGE_SRC_PATTERN) || [])[2] || '';
   const targetImage = String(imageContext.image || '').trim() || PLACEHOLDER_IMAGE;
-  if (comparableImagePath(currentSrc) === comparableImagePath(targetImage)) return source;
+  if (comparableImagePath(currentSrc) === comparableImagePath(targetImage)) {
+    return ensureAbsoluteImageMeta(source, imageContext.origin);
+  }
 
   const title = (mainMatch[2].match(IMAGE_TITLE_PATTERN) || [])[2] || '';
   const slides = renderSlides(targetImage, title);
@@ -90,8 +107,10 @@ function synchronizeLegacyProductDetailImage(html, imageContext) {
 
   // og:image, itemprop="image", JSON-LD ve paylasim linkleri de eski ana gorseli
   // icerir; yeni yol guvenli karakterlerden olusuyorsa hepsini yeni gorselle degistir.
-  if (!PLAIN_ASSET_PATH_PATTERN.test(targetImage)) return withSliders;
-  return replaceLegacyImageReferences(withSliders, currentSrc, targetImage);
+  const withReferences = PLAIN_ASSET_PATH_PATTERN.test(targetImage)
+    ? replaceLegacyImageReferences(withSliders, currentSrc, targetImage)
+    : withSliders;
+  return ensureAbsoluteImageMeta(withReferences, imageContext.origin);
 }
 
 module.exports = {

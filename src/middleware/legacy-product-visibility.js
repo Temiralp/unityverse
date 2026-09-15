@@ -251,9 +251,12 @@ function createLegacyProductVisibility(prisma) {
           routeDecision
         );
         res.locals.legacyProductTabs = routeDecision.group?.parent?.tabs || product?.tabs || null;
-        // Statik detay sayfasinin ana gorseli DB (admin) degeriyle senkronlanir; DB kaydi yoksa dokunulmaz.
-        res.locals.legacyProductImage = product ? { image: product.image } : null;
         res.locals.legacyProductPageOrigin = `${req.protocol}://${req.get('host')}`;
+        // Statik detay sayfasinin ana gorseli DB (admin) degeriyle senkronlanir; DB kaydi yoksa dokunulmaz.
+        // origin: og:image / itemprop image meta'larinin mutlak URL yazilmasi icin.
+        res.locals.legacyProductImage = product
+          ? { image: product.image, origin: res.locals.legacyProductPageOrigin }
+          : null;
         if (routeDecision.group && Number(routeDecision.group.parent.id) !== Number(product.id)) {
           res.locals.legacyCanonicalUrl = `${req.protocol}://${req.get('host')}/urun/${encodeURIComponent(routeDecision.group.parent.slug)}/`;
         }
