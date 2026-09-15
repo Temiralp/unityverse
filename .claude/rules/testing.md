@@ -1,34 +1,36 @@
-# Test konvensiyaları — hər sessiyada yüklənir
+# Test kuralları — her oturumda yüklenir
 
-## Mövcud infrastruktur (framework yoxdur)
-- Hər test = müstəqil Node skripti `scripts/test-<mövzu>.js`; `assert/strict` istifadə edir; uğursuzluq = exception → exit 1; uğur = sakit çıxış və ya `console.log('... OK')`.
-- `package.json` → `"test:<ad>": "node scripts/test-<ad>.js"` alias əlavə olunur (mövcud siyahını izlə).
-- Prisma real DB ilə deyil, **fake obyekt** ilə əvəz olunur (nümunə: `scripts/test-rate-limit.js` `fakePrisma`, `scripts/test-admin-members.js`). Service funksiyaları prisma-nı parametr olaraq alır.
-- Bəzi testlər **fayl məzmununu** oxuyub `assert.match` ilə route/view-un tələb olunan hissəni ehtiva etdiyini yoxlayır (EJS/statik HTML üçün qəbul olunmuş üsul).
-- Brauzer smoke testləri `scripts/*-browser-smoke.js` — Chrome CDP (`*_DEBUG_PORT`) + işləyən server (`*_BASE_URL`) tələb edir. Yalnız Arxitekt tələb edəndə işlədilir.
+## Mevcut altyapı (framework yok)
+- Her test = bağımsız Node scripti `scripts/test-<konu>.js`; `assert/strict` kullanır; başarısızlık = exception → exit 1; başarı = sessiz çıkış veya `console.log('... OK')`.
+- `package.json` → `"test:<ad>": "node scripts/test-<ad>.js"` alias'ı eklenir (mevcut listeyi izle).
+- Prisma gerçek DB ile değil, **fake nesne** ile değiştirilir (örnek: `scripts/test-rate-limit.js` `fakePrisma`, `scripts/test-admin-members.js`). Service fonksiyonları prisma'yı parametre olarak alır.
+- Bazı testler **dosya içeriğini** okuyup `assert.match` ile route/view'ın gerekli parçayı içerdiğini doğrular (EJS/statik HTML için kabul edilen yöntem). Statik HTML fixture'ı olarak gerçek `urun/<slug>/index.html` dosyaları kullanılabilir (örnek: `scripts/test-legacy-product-image.js`).
+- Tarayıcı smoke testleri `scripts/*-browser-smoke.js` — Chrome CDP (`*_DEBUG_PORT`) + çalışan sunucu (`*_BASE_URL`) gerektirir. Yalnızca Mimar isteyince çalıştırılır.
 
-## Üç kateqoriya
-| Kateqoriya | Tələb | Nümunə | Kim işlədir |
+## Üç kategori
+| Kategori | Gereklilik | Örnek | Kim çalıştırır |
 |---|---|---|---|
-| Unit (DB-siz) | heç nə | `test-rate-limit`, `test-admin-members`, `test-course-duration`, `test-registration-pii`, `test-member-registration`, `test-legacy-member-import`, `test-product-variants`, `test-blog-categories`, `test-bank-transfer-discount`, `test-registration-visibility`, `test-social-oauth`, `test-profile-completion` | Sən, hər dairədə |
-| Server/DB | `npm run dev` + PostgreSQL + `.env` | `test-enrollment`, `test-paytr-token`, `test-paytr-callback`, `catalog-admin-sync-smoke` | Arxitekt lokalda / staging |
-| Brauzer | Chrome `--remote-debugging-port` | `csp-browser-smoke`, `enrollment-frontend-browser-smoke`, `paytr-iframe-browser-smoke` | Arxitekt |
+| Unit (DB'siz) | hiçbir şey | `test-rate-limit`, `test-admin-members`, `test-course-duration`, `test-registration-pii`, `test-member-registration`, `test-legacy-member-import`, `test-product-variants`, `test-blog-categories`, `test-bank-transfer-discount`, `test-registration-visibility`, `test-social-oauth`, `test-profile-completion`, `test-legacy-product-image` | Sen, her çemberde |
+| Sunucu/DB | `npm run dev` + PostgreSQL + `.env` | `test-enrollment`, `test-paytr-token`, `test-paytr-callback`, `catalog-admin-sync-smoke` | Mimar yerelde / staging |
+| Tarayıcı | Chrome `--remote-debugging-port` | `csp-browser-smoke`, `enrollment-frontend-browser-smoke`, `paytr-iframe-browser-smoke` | Mimar |
 
-Baseline (2026-09-15): yuxarıdakı 12 unit test **12/12 PASS** (`node scripts/<ad>.js`).
+Baseline (2026-09-15): yukarıdaki unit testler **PASS** (`node scripts/<ad>.js`).
 
-## Hər dairədə məcburi
-1. Yeni davranış üçün **əvvəlcə** test skripti (və ya mövcuda case) yazılır → qırmızı çıxış göstərilir.
-2. Implementasiya → yaşıl çıxış göstərilir.
-3. Regressiya: dəyişən service/route-a toxunan bütün `test-*.js` (grep ilə tap: `grep -l "<service-adı>" scripts/test-*.js`) + 12 unit test baseline → hamısı PASS.
-4. Nəticələr təhvil paketində əmr + PASS/FAIL ilə yazılır. Uydurma nəticə yazmaq qadağandır — işlətmədinsə "işlədilmədi" yaz.
+## Her çemberde zorunlu
+1. Yeni davranış için **önce** test scripti (veya mevcuda case) yazılır → kırmızı çıktı gösterilir.
+2. Implementasyon → yeşil çıktı gösterilir.
+3. Regresyon: değişen service/route'a dokunan tüm `test-*.js` (grep ile bul: `grep -l "<service-adı>" scripts/test-*.js`) + unit baseline → hepsi PASS.
+4. Sonuçlar teslim paketinde komut + PASS/FAIL ile yazılır. Uydurma sonuç yazmak yasaktır — çalıştırmadıysan "çalıştırılmadı" yaz.
+5. Yerel HTTP e2e mümkünse (Docker PostgreSQL ayakta): `PORT=8765 node src/server.js` ile ayrı portta kaldır, `curl` ile doğrula, DB'de geçici değişiklik yaptıysan **aynı değerle geri al** ve sayfanın önceki haliyle bayt-bayt eşleştiğini `cmp` ile göster.
 
-## Toplu işlətmə (macOS, `timeout` yoxdur)
+## Toplu çalıştırma (macOS, `timeout` yok)
 ```bash
 for s in test-rate-limit test-admin-members test-course-duration test-registration-pii \
   test-member-registration test-legacy-member-import test-product-variants test-blog-categories \
-  test-bank-transfer-discount test-registration-visibility test-social-oauth test-profile-completion; do
+  test-bank-transfer-discount test-registration-visibility test-social-oauth test-profile-completion \
+  test-legacy-product-image; do
   node scripts/$s.js >/dev/null 2>&1 && echo "PASS $s" || echo "FAIL $s"; done
 ```
 
-## Manual canlı test bələdçisi (hər təhvildə)
-Format: `N. URL → hərəkət → gözlənilən nəticə`. Minimum əhatə: dəyişən səhifə(lər) desktop+mobil, admin tərəfi (varsa), 1 mənfi hal (səhv giriş), SEO-kritik dəyişiklikdə `curl -I` ilə status/redirect. `PRODUCTION_CHECKLIST.md` §8-9 tam siyahıdır.
+## Manuel canlı test rehberi (her teslimde)
+Biçim: `N. URL → hareket → beklenen sonuç`. Minimum kapsam: değişen sayfa(lar) masaüstü+mobil, admin tarafı (varsa), 1 olumsuz durum (hatalı giriş), SEO-kritik değişiklikte `curl -I` ile durum/redirect. `PRODUCTION_CHECKLIST.md` §8-9 tam listedir.

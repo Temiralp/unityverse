@@ -1,75 +1,75 @@
-# İş metodu (workflow) — hər sessiyada yüklənir
+# Çalışma yöntemi (workflow) — her oturumda yüklenir
 
-## Dairə (circle) metodu
-- Hər iş = bir dairə. Dairənin içi **minimum dəyişikliklə, maksimum dəqiqliklə, kənara sıçratmadan** boyanır.
-- Dairə "bitdi" sayılır ⇔ (1) plan təsdiqlənib, (2) testlər əvvəl qırmızı → sonra yaşıl, (3) implementasiya sonrası **bütün** əlaqəli testlər yaşıl, (4) regressiya yoxlaması keçib, (5) təhvil paketi verilib, (6) `PROJECT_STATE.md` yenilənib.
-- Dairə bitmədən yenisi açılmır (Arxitekt açıq şəkildə demədikcə). Bir dairənin bağlanması yeni xəta/yeni dairə açmamalıdır — bunun sübutu regressiya testləridir.
-- Dairə ortasında yeni problem tapılsa: **düzəltmə**, `PROJECT_STATE.md` → Backlog-a yaz, Arxitektə bildir.
+## Çember (circle) yöntemi
+- Her iş = bir çember. Çemberin içi **minimum değişiklikle, maksimum doğrulukla, dışarı taşırmadan** boyanır.
+- Çember "bitti" sayılır ⇔ (1) plan onaylandı, (2) testler önce kırmızı → sonra yeşil, (3) implementasyon sonrası **tüm** ilgili testler yeşil, (4) regresyon kontrolü geçti, (5) teslim paketi verildi, (6) `PROJECT_STATE.md` güncellendi.
+- Çember bitmeden yenisi açılmaz (Mimar açıkça söylemedikçe). Bir çemberin kapanması yeni hata/yeni çember açmamalıdır — kanıtı regresyon testleridir.
+- Çember ortasında yeni sorun bulunursa: **düzeltme**, `PROJECT_STATE.md` → Backlog'a yaz, Mimar'a bildir.
 
-## Böyüklük həddi və təsdiq
-| Ölçü | Tələb |
+## Büyüklük eşiği ve onay
+| Ölçü | Gereklilik |
 |---|---|
-| ≤3 fayl **və** ≤100 sətir | Qısa niyyət bildir (nə, niyə, hansı fayl), test yaz, et. |
-| >3 fayl **və ya** >100 sətir | Aşağıdakı plan şablonu → Arxitekt "təsdiq" deyənə qədər kod yazma. |
-| Migration / dependency / env / Nginx / infra | Həmişə plan + təsdiq, ölçüdən asılı olmayaraq. |
+| ≤3 dosya **ve** ≤100 satır | Kısa niyet bildir (ne, neden, hangi dosya), test yaz, yap. |
+| >3 dosya **veya** >100 satır | Aşağıdaki plan şablonu → Mimar "onay" diyene kadar kod yazma. |
+| Migration / bağımlılık / env / Nginx / altyapı | Her zaman plan + onay, ölçüden bağımsız. |
 
-## Plan şablonu (böyük işlər üçün məcburi bölmələr)
-1. **Məqsəd** — bir cümlə; hansı istifadəçi/biznes problemi həll olunur.
-2. **Nə ediləcək** — addım-addım, hər addım yoxlanıla bilən.
-3. **Toxunulacaq fayllar** — dəyişəcək / yeni yaranacaq / silinəcək, hər biri üçün səbəb.
-4. **Həcm təxmini** — sətir sayı (real say, fayl-fayl), tələb olunan tool çağırışı/token bahalılığı (aşağı/orta/yüksək), addım sayı. Token qıtlığı var — israf etmə.
-5. **Test planı** — hansı test faylı, hansı halları yoxlayır, **niyə əvvəl qırmızı olacaq** (hansı funksiya/davranış hələ yoxdur) və **hansı dəyişiklik onu yaşıl edəcək**.
-6. **Zərər görə biləcək yerlər** — dəyişən funksiyanı çağıran bütün yerlər (`grep` ilə real siyahı, `fayl:sətir`), paylaşılan util/service-lər, EJS view-lar, statik HTML.
-7. **Blast radius** — dəyişiklik pozulsa nə itir: səhifə? ödəniş? SEO? admin? Kimə görünür (public/admin/ödəniş)? Geri dönüş (rollback) neçə dəqiqə?
-8. **Risklər və üstünlüklər** — cədvəl; risk üçün: ehtimal (aşağı/orta/yüksək), təsir, azaltma tədbiri.
-9. **Xarici faktorlar** — 3-cü tərəf API (PayTR, Google OAuth, SMTP, Nginx, GCloud) varsa: rəsmi sənəd linki/oxunmuş məlumat, versiya, limit. Təxmin qadağandır — oxumadınsa "yoxlanmalıdır" yaz.
-10. **Qəbul meyarları (Definition of Done)** — yoxlanıla bilən maddələr.
-11. **Manual canlı test bələdçisi** — URL, addımlar, gözlənilən nəticə (Arxitekt canlıda təkrarlayacaq).
-12. **Rollback planı** — kod (git revert / əvvəlki commit), DB (backup + `pg_restore`), env/Nginx.
+## Plan şablonu (büyük işler için zorunlu bölümler)
+1. **Amaç** — tek cümle; hangi kullanıcı/iş sorunu çözülüyor.
+2. **Ne yapılacak** — adım adım, her adım doğrulanabilir.
+3. **Dokunulacak dosyalar** — değişecek / yeni oluşacak / silinecek, her biri için gerekçe.
+4. **Hacim tahmini** — satır sayısı (gerçek sayı, dosya dosya), gereken araç çağrısı/token maliyeti (düşük/orta/yüksek), adım sayısı. Token kısıtı var — israf etme.
+5. **Test planı** — hangi test dosyası, hangi durumları doğrular, **neden önce kırmızı olacak** (hangi fonksiyon/davranış henüz yok) ve **hangi değişiklik onu yeşil yapacak**.
+6. **Zarar görebilecek yerler** — değişen fonksiyonu çağıran tüm yerler (`grep` ile gerçek liste, `dosya:satır`), paylaşılan util/service'ler, EJS view'lar, statik HTML.
+7. **Blast radius** — değişiklik bozulursa ne kaybolur: sayfa? ödeme? SEO? admin? Kime görünür (public/admin/ödeme)? Geri dönüş (rollback) kaç dakika?
+8. **Riskler ve avantajlar** — tablo; risk için: olasılık (düşük/orta/yüksek), etki, azaltma önlemi.
+9. **Dış etkenler** — 3. taraf API (PayTR, Google OAuth, SMTP, Nginx, GCloud) varsa: resmi doküman linki/okunmuş bilgi, sürüm, limit. Tahmin yasak — okumadıysan "doğrulanmalı" yaz.
+10. **Kabul kriterleri (Definition of Done)** — doğrulanabilir maddeler.
+11. **Manuel canlı test rehberi** — URL, adımlar, beklenen sonuç (Mimar canlıda tekrarlayacak).
+12. **Rollback planı** — kod (git revert / önceki commit), DB (yedek + `pg_restore`), env/Nginx.
 
-## TDD sırası (dəyişməz)
-1. Test yaz → işlət → **qırmızı** olduğunu göstər (çıxış ilə). Qırmızı deyilsə test səhvdir, davam etmə.
-2. Minimum kod yaz → test **yaşıl**. Səbəbi bir cümlə ilə izah et.
-3. Əlaqəli bütün mövcud testləri işlət (regressiya) → hamısı yaşıl.
-4. Yalnız bundan sonra "implementasiya tamamlandı" de; çıxışları göstər.
-5. Yaşıl olmayana qədər dövr davam edir; 3 cəhddən sonra hələ qırmızıdırsa **dayan, Arxitektə de** (kor-koranə dəyişmə).
+## TDD sırası (değişmez)
+1. Test yaz → çalıştır → **kırmızı** olduğunu göster (çıktıyla). Kırmızı değilse test hatalıdır, devam etme.
+2. Minimum kod yaz → test **yeşil**. Nedenini tek cümleyle açıkla.
+3. İlgili tüm mevcut testleri çalıştır (regresyon) → hepsi yeşil.
+4. Ancak bundan sonra "implementasyon tamamlandı" de; çıktıları göster.
+5. Yeşil olana kadar döngü sürer; 3 denemeden sonra hâlâ kırmızıysa **dur, Mimar'a söyle** (körlemesine değiştirme).
 
-## Clean code qaydaları (bu repo üçün konkret)
-- Yeni biznes məntiqi `src/services/<ad>.js`-də, saf (pure) funksiya kimi — Prisma/`req` parametr olaraq ötürülür ki, fake ilə test olunsun (mövcud nümunə: `src/services/member-admin.js` + `scripts/test-admin-members.js`).
-- Route handler-lər nazik: validasiya → service → render/redirect. `admin.js`-ə yeni uzun funksiya əlavə etmə.
-- Bir funksiya bir iş; təkrar 2 dəfədən çoxdursa util-ə çıxar (yalnız toxunduğun kod üçün).
-- Mövcud üslub: 2 boşluq, tək dırnaq, nöqtəli vergül, `const`, async/await, erkən return. Türkcə istifadəçi mesajları, ingilis identifikatorlar.
-- Sirr, IP, URL kimi dəyərlər koda yazılmır — `process.env` + `.env.example`-a açar adı (dəyərsiz).
+## Clean code kuralları (bu repo için somut)
+- Yeni iş mantığı `src/services/<ad>.js`'de, saf (pure) fonksiyon olarak — Prisma/`req` parametre olarak geçirilir ki fake ile test edilebilsin (mevcut örnek: `src/services/member-admin.js` + `scripts/test-admin-members.js`).
+- Route handler'lar ince: doğrulama → service → render/redirect. `admin.js`'e yeni uzun fonksiyon ekleme.
+- Bir fonksiyon bir iş; tekrar 2'den fazlaysa util'e çıkar (yalnızca dokunduğun kod için).
+- Mevcut üslup: 2 boşluk, tek tırnak, noktalı virgül, `const`, async/await, erken return. Türkçe kullanıcı mesajları, İngilizce tanımlayıcılar, Türkçe yorumlar.
+- Sır, IP, URL gibi değerler koda yazılmaz — `process.env` + `.env.example`'a anahtar adı (değersiz).
 
-## Halüsinasiya və dayanma şərtləri
-- Fayl/funksiya/API haqqında əminliyin <100%-dirsə: oxu; oxuya bilmirsənsə "yoxladım, tapmadım/əmin deyiləm" de.
-- Eyni xəta üçün 3 fərqli düzəliş cəhdi uğursuzdursa → dayan, vəziyyəti xülasə et, Arxitektdən qərar istə.
-- Arxitektin istəyi ilə repo-daki real vəziyyət ziddiyyət təşkil edirsə → əvvəl ziddiyyəti göstər, sonra davam et.
-- Kontekst dolmağa yaxındırsa → `PROJECT_STATE.md`-ni dərhal yenilə ki, növbəti sessiya harda qaldığını bilsin.
+## Halüsinasyon ve durma koşulları
+- Dosya/fonksiyon/API hakkında emin değilsen (<%100): oku; okuyamıyorsan "kontrol ettim, bulamadım/emin değilim" de.
+- Aynı hata için 3 farklı düzeltme denemesi başarısızsa → dur, durumu özetle, Mimar'dan karar iste.
+- Mimar'ın isteği ile repodaki gerçek durum çelişiyorsa → önce çelişkiyi göster, sonra devam et.
+- Bağlam dolmaya yakınsa → `PROJECT_STATE.md`'yi hemen güncelle ki sonraki oturum nerede kaldığını bilsin.
 
-## Təhvil (handoff) şablonu — hər dairənin sonunda, Azərbaycan dilində
+## Teslim (handoff) şablonu — her çemberin sonunda, sohbet dilinde (Azerbaycanca)
 ```
-### Dəyişən fayllar
-- path — nə dəyişdi (1 sətir)
-### Test nəticələri
-- əmr → PASS/FAIL (çıxış xülasəsi)
-### Git addımları (Arxitekt icra edir)
+### Değişen dosyalar
+- path — ne değişti (1 satır)
+### Test sonuçları
+- komut → PASS/FAIL (çıktı özeti)
+### Git adımları (Mimar yürütür)
 git status
-git add <fayllar>            # nöqtə (.) yox — yalnız dəyişən fayllar
+git add <dosyalar>           # nokta (.) yok — yalnızca değişen dosyalar
 git commit -m "<type>(<scope>): <mesaj>"   # type: feat|fix|chore|docs|test|refactor
 git push origin main
 git log --oneline -3
-### Serverdə (Google Cloud VM, Arxitekt icra edir)
-cd <app-qovluğu>             # PROJECT_STATE §Server-də təsdiqlənmiş yol
+### Sunucuda (Google Cloud VM, Mimar yürütür)
+cd <uygulama-klasörü>        # PROJECT_STATE §Sunucu'da onaylanmış yol
 git pull origin main
-npm ci --omit=dev            # yalnız package-lock dəyişibsə
-npx prisma generate          # yalnız schema dəyişibsə
-npx prisma migrate deploy    # yalnız migration varsa (əvvəl pg_dump!)
+npm ci --omit=dev            # yalnızca package-lock değiştiyse
+npx prisma generate          # yalnızca schema değiştiyse
+npx prisma migrate deploy    # yalnızca migration varsa (önce pg_dump!)
 pm2 restart unityverse && pm2 logs unityverse --lines 50
-### Manual canlı test bələdçisi
-1. URL → addım → gözlənilən nəticə
+### Manuel canlı test rehberi
+1. URL → adım → beklenen sonuç
 ### Rollback
-git revert <hash> && git push  (və ya) pm2 restart ilə əvvəlki release
-### PROJECT_STATE.md yeniləndi: bəli/xeyr
+git revert <hash> && git push  (veya) pm2 restart ile önceki release
+### PROJECT_STATE.md güncellendi: evet/hayır
 ```
-Commit mesajı konvensiyası (git log-dan): `feat:`, `fix:`, `fix(admin):`, `chore:` — ingilis, imperativ, ASCII.
+Commit mesajı konvansiyonu (git log'dan): `feat:`, `fix:`, `fix(admin):`, `chore:` — İngilizce/Türkçe, emir kipi, ASCII.

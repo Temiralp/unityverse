@@ -1,40 +1,40 @@
-# Təhlükəsizlik qaydaları — hər sessiyada yüklənir
+# Güvenlik kuralları — her oturumda yüklenir
 
-## Sirr (secret) siyasəti
-- Oxunmur/yazılmır/axtarılmır: `.env`, `.env.*` (`.env.example` istisna), `*.pem`, `*.key`, `*.dump`, `backup*.sql`, `uploads/admin/`.
-- `grep -r` edərkən bu faylları `--exclude` et; tool çıxışında sirr görünsə **təkrar yazma**, "<REDACTED>" de.
-- Yeni env açarı lazımdırsa: `.env.example`-a yalnız açar + şərh yaz, dəyəri Arxitekt `.env`-ə özü əlavə edir (addımları ver).
-- Koda hard-coded parol/token/IP yazılmır. Mövcud pozuntu: `local_server.js` (git-də izlənir, açıq SMTP parolu) — bax PROJECT_STATE risklər.
+## Sır (secret) politikası
+- Okunmaz/yazılmaz/aranmaz: `.env`, `.env.*` (`.env.example` hariç), `*.pem`, `*.key`, `*.dump`, `backup*.sql`, `uploads/admin/`.
+- `grep -r` yaparken bu dosyaları `--exclude` et; araç çıktısında sır görünürse **tekrar yazma**, "<REDACTED>" de.
+- Yeni env anahtarı gerekiyorsa: `.env.example`'a yalnızca anahtar + açıklama yaz, değeri Mimar `.env`'e kendisi ekler (adımları ver).
+- Koda hard-coded parola/token/IP yazılmaz. Bilinen ihlal: `local_server.js` (git'te izleniyor, açık SMTP parolası — parola 2026-09-15'te döndürüldü, dosya hâlâ repoda) — bkz. PROJECT_STATE riskler.
 
-## Autentifikasiya / sessiya
-- Admin: `requireAdmin` (`src/middleware/auth.js`), sessiya DB-də (`user_sessions`), cookie `httpOnly`, `sameSite=lax`, `secure` yalnız production. 8 saat.
-- `SESSION_SECRET` ≥64 simvol məcburidir, əks halda app qalxmır (`src/config/session.js`).
-- `TRUST_PROXY` yalnız açıq IP/CIDR (`127.0.0.1`); `true`/`*` app-i çökdürür (`src/config/trust-proxy.js`). Rate-limit və PayTR IP allowlist buna dayanır.
-- Üzv parolları bcrypt (cost 12). Google OAuth: `src/services/social-oauth.js`.
+## Kimlik doğrulama / oturum
+- Admin: `requireAdmin` (`src/middleware/auth.js`), oturum DB'de (`user_sessions`), cookie `httpOnly`, `sameSite=lax`, `secure` yalnızca production. 8 saat.
+- `SESSION_SECRET` ≥64 karakter zorunlu, aksi halde app kalkmaz (`src/config/session.js`).
+- `TRUST_PROXY` yalnızca açık IP/CIDR (`127.0.0.1`); `true`/`*` app'i çökertir (`src/config/trust-proxy.js`). Rate-limit ve PayTR IP allowlist buna dayanır.
+- Üye parolaları bcrypt (cost 12). Google OAuth: `src/services/social-oauth.js`.
 
-## CSRF / form qoruması
-- Admin formları: `csrfToken` sessiyada, multipart üçün `requireMultipartCsrf`.
-- Public formlar: `src/middleware/public-csrf.js` (`PUBLIC_CSRF_ENFORCED`) + `src/security/form-protection.js` imzalı `_formToken` (`PUBLIC_FORM_TOKEN_ENFORCED`). Token endpoint-ləri: `GET /api/csrf-token`, `GET /api/form-protection-token`.
-- Yeni public POST əlavə edəndə bu iki qorumanı və `rate-limit.js`-i tətbiq et; testlə sübut et.
+## CSRF / form koruması
+- Admin formları: `csrfToken` oturumda, multipart için `requireMultipartCsrf`.
+- Public formlar: `src/middleware/public-csrf.js` (`PUBLIC_CSRF_ENFORCED`) + `src/security/form-protection.js` imzalı `_formToken` (`PUBLIC_FORM_TOKEN_ENFORCED`). Token endpoint'leri: `GET /api/csrf-token`, `GET /api/form-protection-token`.
+- Yeni public POST eklerken bu iki korumayı ve `rate-limit.js`'i uygula; testle kanıtla.
 
 ## CSP
-- `src/config/csp.js`: legacy səhifələr üçün allowlist (GTM, FB, tawk.to, YouTube, maps), EJS səhifələr üçün nonce. PayTR iframe üçün `frame-src` əlavə mənbələr.
-- Yeni xarici script/iframe əlavə ediləndə CSP allowlist yenilənməli, `scripts/csp-browser-smoke.js` ilə yoxlanmalıdır. `/csp-report` pozuntuları `console.warn` ilə loglanır.
+- `src/config/csp.js`: legacy sayfalar için allowlist (GTM, FB, tawk.to, YouTube, maps), EJS sayfalar için nonce. PayTR iframe için `frame-src` ek kaynaklar.
+- Yeni harici script/iframe eklenirken CSP allowlist güncellenmeli, `scripts/csp-browser-smoke.js` ile doğrulanmalı. `/csp-report` ihlalleri `console.warn` ile loglanır.
 
-## Ödəniş (PayTR) — ən yüksək blast radius
-- Callback `POST /odeme/callback`: (1) Nginx IP allowlist (`nginx_paytr_callback.conf`), (2) app səviyyəsində `PAYTR_ALLOWED_IPS`, (3) HMAC hash yoxlaması (`src/services/paytr-callback.js`). Üç qat da qalmalıdır.
-- Callback cavabı mütləq `OK` mətni olmalıdır (PayTR təkrar göndərir). Idempotent olmalıdır (eyni sifariş 2 dəfə gəlsə iki dəfə ödənmiş sayılmasın).
-- Məbləğ hesabı serverdə (`registration-pricing.js`, `coupon-validation.js`, `bank-transfer-pricing.js`), client-dən gələn məbləğə etibar edilmir.
-- Canlı ödəniş dəyişikliyi → əvvəl `PAYTR_TEST_MODE=1` ilə test, sonra Arxitekt `0`-a keçirir.
+## Ödeme (PayTR) — en yüksek blast radius
+- Callback `POST /odeme/callback`: (1) Nginx IP allowlist (`nginx_paytr_callback.conf`), (2) uygulama seviyesinde `PAYTR_ALLOWED_IPS`, (3) HMAC hash doğrulaması (`src/services/paytr-callback.js`). Üç katman da kalmalı.
+- Callback yanıtı mutlaka `OK` metni olmalı (PayTR tekrar gönderir). Idempotent olmalı (aynı sipariş 2 kez gelirse iki kez ödenmiş sayılmasın).
+- Tutar hesabı sunucuda (`registration-pricing.js`, `coupon-validation.js`, `bank-transfer-pricing.js`), istemciden gelen tutara güvenilmez.
+- Canlı ödeme değişikliği → önce `PAYTR_TEST_MODE=1` ile test, sonra Mimar `0`'a geçirir.
 
 ## PII
-- Qeydiyyat PII-si şifrəli (`src/services/registration-pii.js`, `REGISTRATION_PII_ENCRYPTION_KEYS` JSON + `REGISTRATION_PII_ACTIVE_KEY_ID`). Şifrələmə açarı rotasiyası yalnız Arxitekt qərarı ilə.
-- Loglara PII (ad, telefon, TC, e-poçt) yazılmır. Test məlumatları uydurma olmalıdır.
-- Üzv səhifələri `noindex` (`X-Robots-Tag` + meta).
+- Kayıt PII'si şifreli (`src/services/registration-pii.js`, `REGISTRATION_PII_ENCRYPTION_KEYS` JSON + `REGISTRATION_PII_ACTIVE_KEY_ID`). Anahtar rotasyonu yalnızca Mimar kararıyla.
+- Loglara PII (ad, telefon, TC, e-posta) yazılmaz. Test verileri uydurma olmalı.
+- Üye sayfaları `noindex` (`X-Robots-Tag` + meta).
 
-## Yükləmə (upload)
-- multer ilə `uploads/blog`, `uploads/products`, `uploads/corporate-references`; MIME/ölçü yoxlaması mövcud handler-lərdə (`handleBlogImageUpload`, `handleProductImageUpload`). Yeni upload növü əlavə edəndə eyni yoxlamaları tətbiq et. `sanitize-html` zəngin mətn üçün məcburidir.
+## Yükleme (upload)
+- multer ile `uploads/blog`, `uploads/products`, `uploads/corporate-references`; MIME/boyut kontrolü mevcut handler'larda (`handleBlogImageUpload`, `handleProductImageUpload`). Yeni upload türü eklerken aynı kontrolleri uygula. Zengin metin için `sanitize-html` zorunlu.
 
-## Deploy təhlükəsizliyi
-- `prisma migrate deploy` (heç vaxt `migrate dev`), əvvəl `pg_dump`. Detal: `DEPLOYMENT.md` §5, §10.
-- 5432 və 8000 portları internetə bağlı; yalnız 22/80/443.
+## Deploy güvenliği
+- `prisma migrate deploy` (asla `migrate dev`), önce `pg_dump`. Ayrıntı: `DEPLOYMENT.md` §5, §10.
+- 5432 ve 8000 portları internete kapalı; yalnızca 22/80/443.
