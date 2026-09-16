@@ -1,24 +1,21 @@
 # PROJECT_STATE.md — canlı durum günlüğü
 
 > Her çember (circle) bittiğinde güncellenir. Yeni oturum/agent buradan başlar. Tarihler mutlak (YYYY-MM-DD).
-> Son güncelleme: **2026-09-16** — Çember #9 (toplu kurs fiyat güncellemesi: plan dosyası + dry-run/apply/revert scripti) hazır; production dry-run Mimar'da.
+> Son güncelleme: **2026-09-16** — Çember #9 production'da uygulandı (69 kurs fiyatı, doğrulandı, yedek + revert raporu sunucuda).
 
 ## Nerede kaldık
 - Kod: `main` — Çember #0…#7 Mimar tarafından commit/deploy edildi ve canlıda doğrulandı (2026-09-15/16).
-- **Aktif çember: #9 — toplu fiyat güncellemesi.** Kod hazır ve yerelde doğrulandı; **commit bekleyen**. Sıradaki adım: Mimar sunucuda `pg_dump` → `npm run prices:plan scripts/data/price-update-2026-09-16.json` (dry-run) → çıktıyı paylaşır → onay → `--apply --report`. 4 belirsiz Yazılım satırı (siber-guvenlik-1462/1463, it-sistem-1653/1657) Mimar kararıyla **MANUAL/dokunulmaz**.
+- **Aktif çember:** yok. Çember #9 **production'da uygulandı** (2026-09-16 14:03): 69 ürün yazıldı, script DB'den yeniden okuyup 69/69 doğruladı. Yedek: `~/backups/unityverse/pre-prices-20260916_1358.dump` (10.7 MB); geri alma anahtarı: `~/backups/unityverse/prices-report-20260916_1403.json` (`--revert`). Dokunulmayan: 8 "çocuk" istisnası, 4 rejimi belirsiz Yazılım kursu (1462, 1463, 1653, 1657 — Mimar kararı), 10 kurs zaten hedefteydi. Kod **commit bekleyen**.
 - Çember #8a canlıda doğrulandı (2026-09-16). **8b ve sonrası askıda** — Mimar'ın vereceği .md dosyasında planlanacak.
 - Gerçek örnek docx repo dışında: `~/unityverse-private-fixtures/Siber_Guvenlik_Mufredati_AI_Guncellemesi.docx` (WhatsApp tmp klasöründen kopyalandı).
 - Yerelde `uploads/products/1789467*.jpg` (3 dosya, 2026-09-15 yerel admin testi) izlenmiyor — commit'e eklenmemeli.
 - Sonraki çemberi Mimar seçer (Backlog).
 
-## Sunucu (Google Cloud) — ONAY BEKLİYOR
-Repoda "gcloud"/"Compute Engine" izi yok; `DEPLOYMENT.md` genel Ubuntu + Nginx + PM2 + PostgreSQL 16 şemasını anlatır. Mimar'dan onaylanacak:
-- [ ] Sunucudaki uygulama klasörü (ör. `/var/www/unityverse/current` mi, doğrudan clone mu?)
-- [ ] Process manager: PM2 (`pm2 restart unityverse`) / systemd / docker?
-- [ ] Deploy yöntemi: doğrudan `main`'den `git pull` mı? (DEPLOYMENT.md release/symlink önerir, gerçek yöntem bilinmiyor)
-- [ ] PostgreSQL: VM'de yerel mi / Cloud SQL mi?
-- [ ] `uploads/` kalıcı yeri ve yedek cron'u var mı?
-Onaylanana kadar teslim paketlerinde sunucu adımları "DEPLOYMENT.md §12'ye uygun" varsayımıyla yazılır ve bu not düşülür.
+## Sunucu (Google Cloud) — 2026-09-16 terminal çıktısından doğrulandı
+- Uygulama klasörü: **`~/unityverse`** (kullanıcı `kutyuksekteknoloji`, host `sosyal-medya-planlayici`); doğrudan `git pull origin main` ile güncelleniyor (release/symlink yapısı **yok**).
+- Process manager: PM2, süreç adı **`unityverse-backend`** (`pm2 restart unityverse-backend`). Aynı VM'de ikinci bir uygulama daha var: `sosyal-medya-planlayici` (1.6 GB bellek) — ona dokunulmaz.
+- Yedek klasörü: `/var/backups/unityverse` **yazılabilir değil** (Permission denied) → yedekler `~/backups/unityverse/` altına alınır; `pg_dump` bağlantısı `.env`'deki `DATABASE_URL`'den (`?schema=` parametresi atılarak) türetilir.
+- Hâlâ doğrulanmadı: PostgreSQL VM'de mi / Cloud SQL mi; `uploads/` yedek cron'u var mı.
 
 ## Açık riskler (öncelik sırasıyla)
 | # | Risk | Kanıt | Öneri | Durum |
@@ -48,7 +45,7 @@ Onaylanana kadar teslim paketlerinde sunucu adımları "DEPLOYMENT.md §12'ye uy
 - [ ] R4 — `npm test` toplu unit runner (test altyapısı, küçük)
 - [ ] R5 — gereksiz dosyaların repodan çıkarılması (chore)
 - [ ] R9 — `test-price-visibility-language` kırık test kararı (test vs CSS)
-- [ ] Sunucu bilgilerinin bu dosyaya yazılması (§Sunucu)
+- [ ] §Sunucu kalan sorular: DB konumu, uploads yedeği; `DEPLOYMENT.md` gerçek kurulumla (~/unityverse, pm2 unityverse-backend) uyumlu hale getirilmeli
 - [ ] `PRODUCTION_CHECKLIST.md` §1 "kritik yeni dosyalar" maddesi eski (dosyalar zaten commit'te) — güncellenmeli
 
 ## Yapılmaması gerekenler (git geçmişinden öğrenilen dersler)
@@ -56,6 +53,7 @@ Onaylanana kadar teslim paketlerinde sunucu adımları "DEPLOYMENT.md §12'ye uy
 - `clear-site-data` ile 301 önbellek kırma denemesi revert edildi (`9afe7b57`). Tekrarlama.
 - Varyant sayfalarının canonical'ı ana ürüne yönelmeli (`2cb9fa14`) — kurs/varyant işinde koru.
 - Cache-busting: CSS/JS değişince HTML'lerdeki `?v=` parametresi güncellenir (`bcc0911a`), aksi halde kullanıcılar eski dosyayı görür.
+- Kurs fiyatları anonim ziyaretçiye gösterilmez (`/api/member-prices` üye oturumu ister; statik sayfa JSON-LD `price` her zaman "0"). Fiyat değişikliğinin canlı doğrulaması anonim `curl` ile **yapılamaz**; script'in DB yeniden-okuma doğrulaması + Mimar'ın üye/admin görsel kontrolü esastır.
 - Yerel Docker DB **production'ın güncel kopyası değildir** (2026-09-16: 46 kurs yerelde DRAFT, canlıda yayında; 1 slug yerelde yok). Veri işlerinde yerel DB yalnızca mantık/format testi içindir; gerçek etki listesi production dry-run ile alınır.
 - Kurs adında/slug'ında 'online' veya 'yüz yüze' geçmeyen kurslar var ve `lessonType` alanı tüm kurslarda boş → rejim tahmini için güvenilir DB sinyali yok; plan satırında açık `mode` kullan.
 - `sanitizeProductTabContent` `data-*` özniteliklerini siler; akordeon `data-toggle`/ID/ARIA'yı kayıt anında `normalizeCurriculumAccordionContent` üretir. İçerik üreten kod (içe aktarma, AI, script) yalnızca **iskelet** yazmalı, bu öznitelikleri elle eklememelidir.
@@ -92,7 +90,7 @@ Onaylanana kadar teslim paketlerinde sunucu adımları "DEPLOYMENT.md §12'ye uy
 |---|---|---|---|
 | 0 | 2026-09-15 | Proje araştırması + CLAUDE.md sistemi | 5 doküman; 12 unit test baseline PASS; R1 güvenlik bulgusu |
 | 1b | 2026-09-15 | Belgeler Türkçeye çevrildi (`CLAUDE.md`, `.claude/rules/*`) | 4 dosya, kod değişikliği yok |
-| 9 | 2026-09-16 | Toplu fiyat güncellemesi altyapısı (plan JSON 91 satır, servis, CLI dry-run/apply/revert) — production uygulaması Mimar'da | 5 dosya (+4 yeni) + `discountedVariantPrice` export; 8/8 test; yerel tam döngü: 76 yazım yalnız fiyat alanları, idempotent, revert birebir; 6 MANUAL (4 rejim belirsiz — Mimar: dokunulmaz, 1 süre null, 1 slug yok) |
+| 9 | 2026-09-16 | Toplu fiyat güncellemesi: plan JSON 91 satır, servis, CLI dry-run/apply/revert; **production'da uygulandı** (69 UPDATE, 18 SKIP, 4 MANUAL) | 5 dosya (+4 yeni) + `discountedVariantPrice` export; 8/8 test; yerel tam döngü: 76 yazım yalnız fiyat alanları, idempotent, revert birebir; 6 MANUAL (4 rejim belirsiz — Mimar: dokunulmaz, 1 süre null, 1 slug yok) |
 | 8a | 2026-09-16 | docx → blok → bölüm ağacı → tab haritası → tab HTML (3 saf servis), CLI önizleme, anonim fixture, Word şablonu + rehber, `mammoth@1.12.3` | 12 dosya (+10 yeni), ~470 satır kod/test + 2 docx; 20/20 test; gerçek docx: Pille 1, 12 panel, 0 uyarı; PDF reddi; lazy require kanıtlandı |
 | 7 | 2026-09-15 | Kurs listesi returnTo (Güncelle, Geri Dön, Durum, Sil; varyant yönlendirmesi query'yi korur) | 7 dosya (+2 yeni), ~120 satır; 8/8 test; yerel e2e: filtreli listeye 302, evil/`//` → `/admin/products` |
 | 6b | 2026-09-15 | Şifre formu UX: `.alert-success` sırası düzeltildi (yeşil), `admin-change-password.js` ile anlık politika/eşleşme uyarıları ve pasif buton | 5 dosya (+1 yeni), ~90 satır; sunucu doğrulaması değişmedi |

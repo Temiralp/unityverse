@@ -19,7 +19,7 @@ Referans belgeler (gerekince oku, otomatik yüklenmez): `DEPLOYMENT.md` (TR), `P
 
 ## 2. Proje nedir
 - `https://unityverseacademy.com` — Türkiye pazarı için oyun/animasyon/yazılım eğitim akademisinin sitesi. UI dili Türkçe.
-- Repo: `git@github.com:Temiralp/unityverse.git`, branch `main`. Canlı sunucu: **Google Cloud** (VM; Nginx → Node :8000 → PostgreSQL localhost). Sunucu yerleşimi `DEPLOYMENT.md` §3'e göre `/var/www/unityverse/{releases,shared,current}` — **sunucudaki gerçek yol Mimar tarafından onaylanmalı**, bkz. `PROJECT_STATE.md` §"Sunucu".
+- Repo: `git@github.com:Temiralp/unityverse.git`, branch `main`. Canlı sunucu: **Google Cloud** (VM; Nginx → Node :8000 → PostgreSQL localhost). Sunucuda uygulama **`~/unityverse`**, PM2 süreci **`unityverse-backend`**, deploy = `git pull` (2026-09-16 doğrulandı; `DEPLOYMENT.md` §3'teki release/symlink yapısı gerçek kurulumu yansıtmıyor) — bkz. `PROJECT_STATE.md` §"Sunucu".
 - İki katman: (a) eski statik site (HTML/CSS/JS: `index.html`, `urun/`, `blog-detay/`, `kategori/`, `sayfa/`, `public/tema10/`) ve (b) Node backend (`src/`) — admin panel, API, üyelik, kayıt (enrollment), ödeme.
 - `LEGACY_FRONTEND_MODE=true` (production'da böyle): statik sayfalar korunur, ancak kurs listesi/detayı, blog, kategori DB'den render edilir (`src/routes/legacy-*.js`). `false` iken tam EJS katalog (`src/routes/catalog.js`) çalışır.
 

@@ -61,12 +61,12 @@ git commit -m "<type>(<scope>): <mesaj>"   # type: feat|fix|chore|docs|test|refa
 git push origin main
 git log --oneline -3
 ### Sunucuda (Google Cloud VM, Mimar yürütür)
-cd <uygulama-klasörü>        # PROJECT_STATE §Sunucu'da onaylanmış yol
+cd ~/unityverse               # gerçek yol (PROJECT_STATE §Sunucu)
 git pull origin main
 npm ci --omit=dev            # yalnızca package-lock değiştiyse
 npx prisma generate          # yalnızca schema değiştiyse
-npx prisma migrate deploy    # yalnızca migration varsa (önce pg_dump!)
-pm2 restart unityverse && pm2 logs unityverse --lines 50
+npx prisma migrate deploy    # yalnızca migration varsa (önce pg_dump → ~/backups/unityverse/)
+pm2 restart unityverse-backend && pm2 logs unityverse-backend --lines 50
 ### Manuel canlı test rehberi
 1. URL → adım → beklenen sonuç
 ### Rollback
