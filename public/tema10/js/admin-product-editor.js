@@ -245,7 +245,130 @@
     });
   }
 
+  // Word'den içe aktar: docx sunucuda tab HTML'ine çevrilir, önizlenir, seçilen editöre yerleştirilir.
+  // Hiçbir şey kaydedilmez; kayıt formun "Güncelle/Kaydet" düğmesiyle yapılır.
+  function initContentImport(form) {
+    var openButton = form.querySelector('[data-content-import-open]');
+    var fileInput = form.querySelector('[data-content-import-file]');
+    var dialog = document.querySelector('[data-content-import-dialog]');
+    var status = form.querySelector('[data-content-import-status]');
+    if (!openButton || !fileInput || !dialog) return;
+
+    var csrfInput = form.querySelector('input[name="_csrf"]');
+    var result = null;
+
+    function announce(message) {
+      if (status) status.textContent = message;
+    }
+
+    function editorFor(systemKey) {
+      var tab = form.querySelector('[data-tab-editor][data-system-key="' + systemKey + '"]');
+      return tab ? tab.querySelector('[data-product-editor]') : null;
+    }
+
+    function setEditorContent(textarea, html, mode) {
+      var editor = textarea.uvProductEditor;
+      if (editor) {
+        editor.value = mode === 'append' ? editor.value + html : html;
+        if (typeof editor.synchronizeValues === 'function') editor.synchronizeValues();
+      } else {
+        textarea.value = mode === 'append' ? textarea.value + html : html;
+      }
+    }
+
+    function place(key, systemKey) {
+      if (!result || !result.tabs[key]) return false;
+      var textarea = editorFor(systemKey);
+      if (!textarea) return false;
+      var mode = dialog.querySelector('[data-content-import-mode]').value;
+      setEditorContent(textarea, result.tabs[key], mode);
+      return true;
+    }
+
+    function renderResult(data) {
+      result = data;
+      dialog.querySelector('[data-content-import-report]').textContent = 'Rapor: ' + data.report;
+      var warnings = dialog.querySelector('[data-content-import-warnings]');
+      warnings.textContent = '';
+      (data.warnings || []).forEach(function (warning) {
+        var item = document.createElement('li');
+        item.textContent = warning;
+        warnings.appendChild(item);
+      });
+      ['overview', 'curriculum', 'why', 'extra'].forEach(function (key) {
+        var section = dialog.querySelector('[data-content-import-section="' + key + '"]');
+        var preview = dialog.querySelector('[data-content-import-preview="' + key + '"]');
+        var html = data.tabs[key] || '';
+        preview.innerHTML = html; // sunucuda sanitize edilmis HTML
+        section.hidden = !html;
+      });
+      if (typeof dialog.showModal === 'function') dialog.showModal();
+      else dialog.setAttribute('open', '');
+    }
+
+    function importFile(file) {
+      var formData = new FormData();
+      formData.append('_csrf', csrfInput ? csrfInput.value : '');
+      formData.append('contentFile', file);
+      openButton.disabled = true;
+      announce('Word dosyası dönüştürülüyor…');
+
+      fetch('/admin/products/import-content', {
+        method: 'POST',
+        body: formData,
+        credentials: 'same-origin'
+      })
+        .then(function (response) { return response.json().then(function (body) { return { ok: response.ok, body: body }; }); })
+        .then(function (payload) {
+          if (!payload.ok || !payload.body.success) {
+            throw new Error((payload.body && payload.body.message) || 'Word\'den içe aktarma başarısız.');
+          }
+          announce('Dönüştürme tamamlandı; önizlemeyi kontrol edin.');
+          renderResult(payload.body);
+        })
+        .catch(function (error) {
+          announce('Hata: ' + (error.message || 'Word\'den içe aktarma başarısız.'));
+        })
+        .finally(function () {
+          openButton.disabled = false;
+          fileInput.value = '';
+        });
+    }
+
+    openButton.addEventListener('click', function () { fileInput.click(); });
+    fileInput.addEventListener('change', function () {
+      if (fileInput.files && fileInput.files[0]) importFile(fileInput.files[0]);
+    });
+
+    dialog.addEventListener('click', function (event) {
+      if (event.target.closest('[data-content-import-close]')) {
+        dialog.close();
+        return;
+      }
+      var placeButton = event.target.closest('[data-content-import-place]');
+      if (placeButton) {
+        var key = placeButton.dataset.contentImportPlace;
+        var systemKey = placeButton.dataset.contentImportTarget
+          || dialog.querySelector('[data-content-import-extra-target]').value;
+        announce(place(key, systemKey) ? 'İçerik "' + systemKey + '" sekmesine yerleştirildi.' : 'Yerleştirilecek içerik yok.');
+        return;
+      }
+      if (event.target.closest('[data-content-import-place-all]')) {
+        var placed = ['overview', 'curriculum', 'why'].filter(function (key, index) {
+          return place(key, ['OVERVIEW', 'CURRICULUM', 'WHY'][index]);
+        });
+        announce(placed.length + ' sekme dolduruldu.');
+        dialog.close();
+        var firstTab = form.querySelector('[data-tab-editor]');
+        if (firstTab) firstTab.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll('[data-product-form]').forEach(initForm);
+    document.querySelectorAll('[data-product-form]').forEach(function (form) {
+      initForm(form);
+      initContentImport(form);
+    });
   });
 }());

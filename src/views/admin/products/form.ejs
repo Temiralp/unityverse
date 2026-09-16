@@ -185,8 +185,13 @@
           <h2>İçerik Sekmeleri</h2>
           <p>İlk üç sekmenin başlığı sabittir. Ek sekmeleri serbestçe yönetebilirsiniz.</p>
         </div>
-        <button type="button" class="button button-secondary" data-add-tab>Tab Ekle</button>
+        <div class="product-content-builder__buttons">
+          <button type="button" class="button button-secondary" data-content-import-open>Word'den içe aktar</button>
+          <input type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" data-content-import-file hidden>
+          <button type="button" class="button button-secondary" data-add-tab>Tab Ekle</button>
+        </div>
       </div>
+      <p class="field-help content-import-status" role="status" aria-live="polite" data-content-import-status></p>
       <div data-tab-list>
         <% productTabs.forEach((tab, index) => { %>
           <section class="product-tab-editor" data-tab-editor data-system-key="<%= tab.systemKey || '' %>">
@@ -223,6 +228,57 @@
     <button type="submit"><%= submitLabel %></button>
   </form>
 </section>
+
+<%# Word'den içe aktar: sunucu docx'i tab HTML'ine çevirir; admin önizler ve editöre yerleştirir. Kayıt "Güncelle/Kaydet" ile. %>
+<dialog class="content-import-modal" data-content-import-dialog role="dialog" aria-modal="true" aria-labelledby="content-import-title">
+  <div class="content-import-modal__content">
+    <div class="content-import-modal__header">
+      <h2 id="content-import-title">Word'den içe aktar — önizleme</h2>
+      <button type="button" class="content-import-modal__close" data-content-import-close aria-label="Kapat">×</button>
+    </div>
+    <div class="content-import-modal__body">
+      <p class="content-import-report" data-content-import-report></p>
+      <ul class="content-import-warnings" data-content-import-warnings></ul>
+      <p class="field-help">Yerleştirme yalnızca bu formdaki editörleri değiştirir; sayfada "Güncelle" düğmesine basana kadar hiçbir şey kaydedilmez.</p>
+      <label class="content-import-mode">
+        Yerleştirme biçimi
+        <select data-content-import-mode>
+          <option value="replace">Değiştir (mevcut içeriğin yerine)</option>
+          <option value="append">Sonuna ekle</option>
+        </select>
+      </label>
+      <% [
+        ['overview', 'Eğitime İlk Bakış', 'OVERVIEW'],
+        ['curriculum', 'Ders İçerikleri', 'CURRICULUM'],
+        ['why', 'Neden Bu Eğitim', 'WHY'],
+        ['extra', 'Eşleşmeyen bölümler', '']
+      ].forEach(([key, label, systemKey]) => { %>
+        <section class="content-import-section" data-content-import-section="<%= key %>">
+          <div class="content-import-section__head">
+            <h3><%= label %></h3>
+            <div class="content-import-section__actions">
+              <% if (systemKey) { %>
+                <button type="button" class="button button-secondary" data-content-import-place="<%= key %>" data-content-import-target="<%= systemKey %>">Editöre yerleştir</button>
+              <% } else { %>
+                <select data-content-import-extra-target aria-label="Hedef sekme">
+                  <option value="OVERVIEW">Eğitime İlk Bakış</option>
+                  <option value="CURRICULUM">Ders İçerikleri</option>
+                  <option value="WHY">Neden Bu Eğitim</option>
+                </select>
+                <button type="button" class="button button-secondary" data-content-import-place="<%= key %>">Seçili sekmeye yerleştir</button>
+              <% } %>
+            </div>
+          </div>
+          <div class="content-import-preview" data-content-import-preview="<%= key %>"></div>
+        </section>
+      <% }) %>
+    </div>
+    <div class="content-import-modal__footer">
+      <button type="button" class="button" data-content-import-place-all>Üç sekmeye de yerleştir</button>
+      <button type="button" class="button button-secondary" data-content-import-close>Kapat</button>
+    </div>
+  </div>
+</dialog>
 
 <template id="product-tab-template">
   <section class="product-tab-editor" data-tab-editor>
@@ -280,5 +336,5 @@
 </template>
 
 <script src="/vendor/jodit/jodit.min.js"></script>
-<script src="/public/tema10/js/admin-product-editor.js?v=20260915-1"></script>
+<script src="/public/tema10/js/admin-product-editor.js?v=20260916-1"></script>
 <%- include('../partials/footer') %>

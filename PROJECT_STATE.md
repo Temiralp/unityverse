@@ -1,12 +1,12 @@
 # PROJECT_STATE.md — canlı durum günlüğü
 
 > Her çember (circle) bittiğinde güncellenir. Yeni oturum/agent buradan başlar. Tarihler mutlak (YYYY-MM-DD).
-> Son güncelleme: **2026-09-16** — Çember #9 production'da uygulandı (69 kurs fiyatı, doğrulandı, yedek + revert raporu sunucuda).
+> Son güncelleme: **2026-09-16** — Çember #8b (admin kurs formunda "Word'den içe aktar": önizleme dialogu + editöre yerleştirme) tamamlandı; commit/deploy Mimar'da.
 
 ## Nerede kaldık
 - Kod: `main` — Çember #0…#7 Mimar tarafından commit/deploy edildi ve canlıda doğrulandı (2026-09-15/16).
-- **Aktif çember:** yok. Çember #9 **production'da uygulandı** (2026-09-16 14:03): 69 ürün yazıldı, script DB'den yeniden okuyup 69/69 doğruladı. Yedek: `~/backups/unityverse/pre-prices-20260916_1358.dump` (10.7 MB); geri alma anahtarı: `~/backups/unityverse/prices-report-20260916_1403.json` (`--revert`). Dokunulmayan: 8 "çocuk" istisnası, 4 rejimi belirsiz Yazılım kursu (1462, 1463, 1653, 1657 — Mimar kararı), 10 kurs zaten hedefteydi. Kod **commit bekleyen**.
-- Çember #8a canlıda doğrulandı (2026-09-16). **8b ve sonrası askıda** — Mimar'ın vereceği .md dosyasında planlanacak.
+- **Aktif çember:** yok. Çember #9 production'da uygulandı ve Mimar canlıda doğruladı (2026-09-16). **Commit bekleyen:** Çember #8b. Sıradaki: 8c (AI extractor, opsiyonel) / 8d (PDF) — Mimar kararı; ya da backlog.
+- Çember #8a ve #8b tamamlandı (2026-09-16).
 - Gerçek örnek docx repo dışında: `~/unityverse-private-fixtures/Siber_Guvenlik_Mufredati_AI_Guncellemesi.docx` (WhatsApp tmp klasöründen kopyalandı).
 - Yerelde `uploads/products/1789467*.jpg` (3 dosya, 2026-09-15 yerel admin testi) izlenmiyor — commit'e eklenmemeli.
 - Sonraki çemberi Mimar seçer (Backlog).
@@ -37,7 +37,7 @@
 - [ ] R12 — `npm audit` bulguları: jodit + sanitize-html öncelikli, sonra express/qs, prisma, undici (her biri ayrı küçük çember, testli)
 - [x] **Çember #8a** tamamlandı → **Çember #8 — Word (.docx) → kurs içeriği içe aktarma** (Mimar 2026-09-16: yaklaşım A onaylandı, B ileride ehtiyat; `mammoth` bağımlılığına site bütünlüğü şartıyla razı)
   - 8a: `docx → ara format {overview, curriculum[{title,items}], why} → tab HTML` saf servisi; Word şablonu (.docx) + 1 sayfa rehber; fixture = anonimleştirilmiş gerçek docx; `mammoth` lazy require (public site etkilenmez)
-  - 8b: Admin UI — her tabda "Word'den içe aktar" → önizleme → editöre yerleştir; otomatik kayıt yok; PDF yüklenirse "Lütfen .docx kaynağını yükleyin"
+  - [x] 8b: Admin UI — "Word'den içe aktar" → önizleme dialogu → editöre yerleştir (Değiştir/Sonuna ekle, tek tek veya üçü birden); otomatik kayıt yok; PDF → 400 mesajı
   - 8c (opsiyonel): AI extractor aynı ara formata; yalnızca A "tanımadım" derse
   - Kanıt: örnek docx `Heading1`×9, `Heading2`×12, `ListBullet`×117, 2 tablo → A ile birebir eşleşir; örnek PDF tasarım belgesi (semantik yok) → A için kırılgan, kaynak docx istenir
 - [ ] R1 — `local_server.js` dosyasını repodan çıkar (parola zaten döndürüldü; düşük)
@@ -53,6 +53,7 @@
 - `clear-site-data` ile 301 önbellek kırma denemesi revert edildi (`9afe7b57`). Tekrarlama.
 - Varyant sayfalarının canonical'ı ana ürüne yönelmeli (`2cb9fa14`) — kurs/varyant işinde koru.
 - Cache-busting: CSS/JS değişince HTML'lerdeki `?v=` parametresi güncellenir (`bcc0911a`), aksi halde kullanıcılar eski dosyayı görür.
+- Tarayıcı e2e'de admin girişi gerekiyorsa şifreyi asistan girmez; Mimar geçici test hesabıyla giriş yapar, asistan devam eder (2026-09-16 uygulaması).
 - Kurs fiyatları anonim ziyaretçiye gösterilmez (`/api/member-prices` üye oturumu ister; statik sayfa JSON-LD `price` her zaman "0"). Fiyat değişikliğinin canlı doğrulaması anonim `curl` ile **yapılamaz**; script'in DB yeniden-okuma doğrulaması + Mimar'ın üye/admin görsel kontrolü esastır.
 - Yerel Docker DB **production'ın güncel kopyası değildir** (2026-09-16: 46 kurs yerelde DRAFT, canlıda yayında; 1 slug yerelde yok). Veri işlerinde yerel DB yalnızca mantık/format testi içindir; gerçek etki listesi production dry-run ile alınır.
 - Kurs adında/slug'ında 'online' veya 'yüz yüze' geçmeyen kurslar var ve `lessonType` alanı tüm kurslarda boş → rejim tahmini için güvenilir DB sinyali yok; plan satırında açık `mode` kullan.
@@ -90,6 +91,7 @@
 |---|---|---|---|
 | 0 | 2026-09-15 | Proje araştırması + CLAUDE.md sistemi | 5 doküman; 12 unit test baseline PASS; R1 güvenlik bulgusu |
 | 1b | 2026-09-15 | Belgeler Türkçeye çevrildi (`CLAUDE.md`, `.claude/rules/*`) | 4 dosya, kod değişikliği yok |
+| 8b | 2026-09-16 | Admin "Word'den içe aktar": `POST /admin/products/import-content` (multer bellek, CSRF), `import-response.js`, form dialogu, `admin-product-editor.js` (fetch → önizleme → Jodit), CSS | 8 dosya (+2 yeni), ~420 satır; 8/8 test; yerel HTTP e2e (302/403/200/400×3); gerçek Chrome: dialog, 12 panel, 3 editör dolduruldu, Sonuna ekle, 0 konsol hatası |
 | 9 | 2026-09-16 | Toplu fiyat güncellemesi: plan JSON 91 satır, servis, CLI dry-run/apply/revert; **production'da uygulandı** (69 UPDATE, 18 SKIP, 4 MANUAL) | 5 dosya (+4 yeni) + `discountedVariantPrice` export; 8/8 test; yerel tam döngü: 76 yazım yalnız fiyat alanları, idempotent, revert birebir; 6 MANUAL (4 rejim belirsiz — Mimar: dokunulmaz, 1 süre null, 1 slug yok) |
 | 8a | 2026-09-16 | docx → blok → bölüm ağacı → tab haritası → tab HTML (3 saf servis), CLI önizleme, anonim fixture, Word şablonu + rehber, `mammoth@1.12.3` | 12 dosya (+10 yeni), ~470 satır kod/test + 2 docx; 20/20 test; gerçek docx: Pille 1, 12 panel, 0 uyarı; PDF reddi; lazy require kanıtlandı |
 | 7 | 2026-09-15 | Kurs listesi returnTo (Güncelle, Geri Dön, Durum, Sil; varyant yönlendirmesi query'yi korur) | 7 dosya (+2 yeni), ~120 satır; 8/8 test; yerel e2e: filtreli listeye 302, evil/`//` → `/admin/products` |

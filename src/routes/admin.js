@@ -39,6 +39,7 @@ const {
 } = require('../services/admin-password');
 const { normalizeProductImageSource } = require('../services/product-content');
 const { safeReturnTo } = require('../services/admin-return-to');
+const { buildImportResponse } = require('../services/course-import/import-response');
 const {
   hasAnyRegistrationProfileInput,
   validateRegistrationProfile
@@ -170,6 +171,7 @@ router.use((req, res, next) => {
       || /^\/blog\/\d+$/.test(req.path)
       || req.path === '/products'
       || req.path === '/products/image'
+      || req.path === '/products/import-content'
       || /^\/products\/\d+$/.test(req.path)
       || req.path === '/corporate-references'
       || /^\/corporate-references\/\d+$/.test(req.path)
@@ -204,6 +206,23 @@ function handleBlogImageUpload(req, res, next) {
       req.blogUploadError = 'Kapak görseli JPG, PNG, WebP, GIF veya AVIF formatında olmalıdır.';
     }
 
+    return next();
+  });
+}
+
+// Word (.docx) icerik ice aktarma: bellekte tutulur, kaydedilmez; imza/boyut kontrolu serviste
+const CONTENT_IMPORT_MAX_SIZE = 5 * 1024 * 1024;
+const contentImportUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: CONTENT_IMPORT_MAX_SIZE, files: 1 }
+}).single('contentFile');
+
+function handleContentImportUpload(req, res, next) {
+  contentImportUpload(req, res, (error) => {
+    if (!error) return next();
+    req.contentImportError = error.code === 'LIMIT_FILE_SIZE'
+      ? 'Dosya 5 MB sınırını aşıyor.'
+      : 'Dosya yüklenemedi.';
     return next();
   });
 }
@@ -2081,6 +2100,19 @@ router.post('/products/image', requireAdmin, handleProductImageUpload, requireMu
         messages: []
       }
     });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+// Kurs formu "Word'den içe aktar": docx -> tab HTML (önizleme). Hiçbir şey kaydetmez.
+router.post('/products/import-content', requireAdmin, handleContentImportUpload, requireMultipartCsrf, async (req, res, next) => {
+  try {
+    if (req.contentImportError) {
+      return res.status(400).json({ success: false, message: req.contentImportError });
+    }
+    const response = await buildImportResponse(req.file && req.file.buffer);
+    return res.status(response.status).json(response.body);
   } catch (error) {
     return next(error);
   }

@@ -1799,3 +1799,131 @@ html.has-corporate-reference-modal {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* Word'den içe aktar (kurs formu) */
+.product-content-builder__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.content-import-status:empty {
+  display: none;
+}
+
+.content-import-modal {
+  background: transparent;
+  border: 0;
+  max-height: 92vh;
+  max-width: min(1100px, calc(100vw - 32px));
+  padding: 0;
+  width: 92vw;
+}
+
+.content-import-modal::backdrop {
+  background: rgba(15, 23, 42, 0.76);
+}
+
+.content-import-modal__content {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.34);
+  display: flex;
+  flex-direction: column;
+  max-height: 92vh;
+  overflow: hidden;
+}
+
+.content-import-modal__header,
+.content-import-modal__footer {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 14px 20px;
+}
+
+.content-import-modal__header {
+  border-bottom: 1px solid var(--line);
+}
+
+.content-import-modal__footer {
+  border-top: 1px solid var(--line);
+  justify-content: flex-end;
+}
+
+.content-import-modal__header h2 {
+  font-size: 18px;
+}
+
+.content-import-modal__close {
+  background: #f2f4f7;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 20px;
+  height: 36px;
+  width: 36px;
+}
+
+.content-import-modal__body {
+  display: grid;
+  gap: 14px;
+  overflow: auto;
+  padding: 16px 20px;
+}
+
+.content-import-report {
+  font-weight: 600;
+}
+
+.content-import-warnings:empty {
+  display: none;
+}
+
+.content-import-warnings {
+  color: var(--danger);
+  font-size: 13px;
+  margin: 0;
+  padding-left: 18px;
+}
+
+.content-import-mode select {
+  max-width: 320px;
+}
+
+.content-import-section {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.content-import-section__head {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.content-import-section__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.content-import-preview {
+  background: #fafafa;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  font-size: 14px;
+  max-height: 260px;
+  overflow: auto;
+  padding: 10px 12px;
+}
+
+.content-import-preview .panel-collapse {
+  display: block;
+}
+
