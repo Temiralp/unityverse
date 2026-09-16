@@ -1,0 +1,705 @@
+{
+  "name": "price-update-2026-09-16",
+  "source": "unityverse_4_8_10_ay.xlsx (Mimar, 2026-09-16)",
+  "currency": "TRY",
+  "order": [
+    "oyun",
+    "yazilim",
+    "grafik"
+  ],
+  "categories": {
+    "oyun": {
+      "label": "Oyun Geliştirme",
+      "excludeTitle": "çocuk",
+      "prices": {
+        "4": {
+          "online": 79000,
+          "yuzyuze": 98750
+        },
+        "8": {
+          "online": 123750,
+          "yuzyuze": 186250
+        },
+        "10": {
+          "online": 286000,
+          "yuzyuze": 286000
+        }
+      }
+    },
+    "yazilim": {
+      "label": "Yazılım",
+      "excludeTitle": "çocuk",
+      "prices": {
+        "4": {
+          "online": 79000,
+          "yuzyuze": 98750
+        },
+        "8": {
+          "online": 123750,
+          "yuzyuze": 186250
+        },
+        "10": {
+          "online": 286000,
+          "yuzyuze": 286000
+        }
+      }
+    },
+    "grafik": {
+      "label": "Grafik Tasarım",
+      "excludeTitle": null,
+      "prices": {
+        "4": {
+          "online": 59000,
+          "yuzyuze": 89000
+        },
+        "8": {
+          "online": 89000,
+          "yuzyuze": 123750
+        },
+        "10": {
+          "online": 149000,
+          "yuzyuze": 149000
+        }
+      }
+    }
+  },
+  "rows": [
+    {
+      "category": "oyun",
+      "months": 4,
+      "slug": "unity-ile-oyun-gelistirme-yuz-yuze-egitimi-4-ay-1483",
+      "title": "Unity ile Oyun Geliştirme Yüz Yüze Eğitimi 4 ay",
+      "excelPrice": 56500
+    },
+    {
+      "category": "oyun",
+      "months": 4,
+      "slug": "unreal-engine-5-gorsellestirme-ve-animasyon-yuz-yuze-egitim-4-ay-1407",
+      "title": "Unreal Engine 5 Görselleştirme ve Animasyon Yüz Yüze Eğitim 4 ay",
+      "excelPrice": 69000
+    },
+    {
+      "category": "oyun",
+      "months": 4,
+      "slug": "unreal-engine-ile-metaverse-gelistirme-online-canli-egitim-851",
+      "title": "Unreal Engine 5 ile Metaverse & Sanal Dünya Geliştirme Kursu – Online Canlı",
+      "excelPrice": 52000
+    },
+    {
+      "category": "oyun",
+      "months": 4,
+      "slug": "unreal-engine-ile-metaverse-gelistirme-yuz-yuze-egitim-850",
+      "title": "Unreal Engine 5 ile Metaverse & Sanal Dünya Geliştirme Kursu – Yüz Yüze",
+      "excelPrice": 69000
+    },
+    {
+      "category": "oyun",
+      "months": 4,
+      "slug": "unreal-engine-5-gorsellestirme-ve-animasyon-yuz-yuze-egitim-1032",
+      "title": "Unreal Engine 5 ile Mimari Görselleştirme ve Sinematik Animasyon Kursu – Yüz Yüze",
+      "excelPrice": 69000
+    },
+    {
+      "category": "oyun",
+      "months": 4,
+      "slug": "unreal-engine-ile-sanal-gerceklik-online-canli-egitim-653",
+      "title": "Unreal Engine 5 ile VR / Sanal Gerçeklik Geliştirme Kursu – Online Canlı",
+      "excelPrice": 52000
+    },
+    {
+      "category": "oyun",
+      "months": 4,
+      "slug": "unreal-engine-ile-sanal-gerceklik-yuz-yuze-egitim-654",
+      "title": "Unreal Engine 5 ile VR / Sanal Gerçeklik Geliştirme Kursu – Yüz Yüze",
+      "excelPrice": 59000
+    },
+    {
+      "category": "oyun",
+      "months": 4,
+      "slug": "unreal-engine-ile-metaverse-gelistirme-online-canli-egitim-4-ay-1410",
+      "title": "Unreal Engine ile Metaverse Geliştirme Online / Canlı Eğitim 4 ay",
+      "excelPrice": 52000
+    },
+    {
+      "category": "oyun",
+      "months": 4,
+      "slug": "unreal-engine-ile-metaverse-gelistirme-yuz-yuze-egitim-4-ay-1409",
+      "title": "Unreal Engine ile Metaverse Geliştirme Yüz Yüze Eğitim 4 ay",
+      "excelPrice": 69000
+    },
+    {
+      "category": "oyun",
+      "months": 4,
+      "slug": "unreal-engine-ile-sanal-gerceklik-online-canli-egitim-4-ay-1406",
+      "title": "Unreal Engine ile Sanal Gerçeklik Online / Canlı Eğitim 4 ay",
+      "excelPrice": 52000
+    },
+    {
+      "category": "oyun",
+      "months": 4,
+      "slug": "unreal-engine-ile-sanal-gerceklik-yuz-yuze-egitim-4-ay-1405",
+      "title": "Unreal Engine ile Sanal Gerçeklik Yüz Yüze Eğitim 4 ay",
+      "excelPrice": 59000
+    },
+    {
+      "category": "oyun",
+      "months": 8,
+      "slug": "cocuk-ve-gencler-icin-unity-ile-oyun-gelistirme-canli-online-egitimi-8-ay-1382",
+      "title": "Çocuk ve Gençler İçin Unity ile Oyun Geliştirme Canlı (Online) Eğitimi 8 ay",
+      "excelPrice": 48000
+    },
+    {
+      "category": "oyun",
+      "months": 8,
+      "slug": "cocuk-ve-gencler-icin-unity-ile-oyun-gelistirme-yuz-yuze-egitimi-8-ay-1419",
+      "title": "Çocuk ve Gençler İçin Unity ile Oyun Geliştirme Yüz Yüze Eğitimi 8 ay",
+      "excelPrice": 56000
+    },
+    {
+      "category": "oyun",
+      "months": 8,
+      "slug": "cocuklar-icin-unity-ile-oyun-gelistirme-canli-online-egitimi-1380",
+      "title": "Çocuklar İçin Unity ile Oyun Geliştirme ve Kodlama Kursu – Online Canlı (7-17 Yaş)",
+      "excelPrice": 48000
+    },
+    {
+      "category": "oyun",
+      "months": 8,
+      "slug": "cocuklar-icin-unity-ile-oyun-gelistirme-yuz-yuze-egitimi-1042",
+      "title": "Çocuklar İçin Unity ile Oyun Geliştirme ve Kodlama Kursu – Yüz Yüze (7-13 Yaş)",
+      "excelPrice": 56000
+    },
+    {
+      "category": "oyun",
+      "months": 8,
+      "slug": "cocuk-ve-gencler-icin-unity-ile-oyun-gelistirme-yuz-yuze-egitimi-1042",
+      "title": "Çocuklar İçin Unity ile Oyun Geliştirme Yüz Yüze Eğitimi",
+      "excelPrice": 22500
+    },
+    {
+      "category": "oyun",
+      "months": 8,
+      "slug": "unity-ile-oyun-gelistirme-yuz-yuze-egitimi-1481",
+      "title": "Unity ile 2D & 3D Oyun Geliştirme Kursu – Yüz Yüze Eğitim",
+      "excelPrice": 123750
+    },
+    {
+      "category": "oyun",
+      "months": 8,
+      "slug": "unity-ile-oyun-gelistirme-canli-online-egitimi-1478",
+      "title": "Unity ile Oyun Geliştirme Canlı (Online) Eğitimi",
+      "excelPrice": 49000
+    },
+    {
+      "category": "oyun",
+      "months": 8,
+      "slug": "unity-ile-oyun-gelistirme-canli-online-egitimi-8-ay-1479",
+      "title": "Unity ile Oyun Geliştirme Canlı (Online) Eğitimi 8 ay",
+      "excelPrice": 98750
+    },
+    {
+      "category": "oyun",
+      "months": 8,
+      "slug": "unity-ile-oyun-gelistirme-yuz-yuze-egitimi-8-ay-1482",
+      "title": "Unity ile Oyun Geliştirme Yüz Yüze Eğitimi 8 ay",
+      "excelPrice": 123750
+    },
+    {
+      "category": "oyun",
+      "months": 10,
+      "slug": "unity-ile-oyun-gelistirme-canli-online-egitimi-staj-garantili-17",
+      "title": "Unity ile Oyun Geliştirme Kursu – Online Canlı Eğitim (Staj Garantili)",
+      "excelPrice": 186250
+    },
+    {
+      "category": "oyun",
+      "months": 10,
+      "slug": "unity-ile-oyun-gelistirme-yuz-yuze-egitimi-staj-garantili-10-ay-1575",
+      "title": "Unity ile Oyun Geliştirme Yüz Yüze Eğitimi (Staj Garantili) 10 ay",
+      "excelPrice": 186250
+    },
+    {
+      "category": "oyun",
+      "months": 10,
+      "slug": "unity-ile-oyun-gelistirme-yuz-yuze-egitimi-staj-garantili-598",
+      "title": "Unity Oyun Geliştirme Kursu – Yüz Yüze Sınıf Eğitimi (Staj Garantili)",
+      "excelPrice": 186250
+    },
+    {
+      "category": "yazilim",
+      "months": 4,
+      "slug": "aranan-programci-olma-kampi-online-kursu-4-ay-1502",
+      "title": "Aranan Programcı Olma Kampı Online Kursu 4 ay",
+      "excelPrice": 55000
+    },
+    {
+      "category": "yazilim",
+      "months": 4,
+      "slug": "aranan-programci-olma-kampi-yuz-yuze-kursu-4-ay-1500",
+      "title": "Aranan Programcı Olma Kampı Yüz Yüze Kursu 4 ay",
+      "excelPrice": 56000
+    },
+    {
+      "category": "yazilim",
+      "months": 4,
+      "slug": "back-end-development-onlinecanli-egitimi-4-ay-1214",
+      "title": "Back-End Development Online(Canlı) Eğitimi 4 ay",
+      "excelPrice": 49000
+    },
+    {
+      "category": "yazilim",
+      "months": 4,
+      "slug": "back-end-development-yuz-yuze-egitimi-4-ay-1215",
+      "title": "Back-End Development Yüz Yüze Eğitimi 4 ay",
+      "excelPrice": 49000
+    },
+    {
+      "category": "yazilim",
+      "months": 4,
+      "slug": "back-end-development-onlinecanli-egitimi-986",
+      "title": "Backend Web Geliştirme Kursu – Node.js, .NET, API Online Canlı",
+      "excelPrice": 49000
+    },
+    {
+      "category": "yazilim",
+      "months": 4,
+      "slug": "back-end-development-yuz-yuze-egitimi-1010",
+      "title": "Backend Web Geliştirme Kursu – Node.js, .NET, API Yüz Yüze",
+      "excelPrice": 49000
+    },
+    {
+      "category": "yazilim",
+      "months": 4,
+      "slug": "cocuklar-ve-gencler-icin-yazilim-uzmanligi-egitimi-canli-online-4-ay-1588",
+      "title": "Çocuklar ve Gençler İçin Yazılım Uzmanlığı Eğitimi Canlı (Online) 4 ay",
+      "excelPrice": 28000
+    },
+    {
+      "category": "yazilim",
+      "months": 4,
+      "slug": "flutter-ile-mobil-uygulama-gelistirme-canli-online-egitimi-557",
+      "title": "Flutter & Dart ile Cross-Platform Mobil Uygulama Geliştirme Kursu – Online",
+      "excelPrice": 69000
+    },
+    {
+      "category": "yazilim",
+      "months": 4,
+      "slug": "flutter-ile-mobil-uygulama-gelistirme-yuz-yuze-egitimi-606",
+      "title": "Flutter & Dart ile Cross-Platform Mobil Uygulama Geliştirme Kursu – Yüz Yüze",
+      "excelPrice": 79000
+    },
+    {
+      "category": "yazilim",
+      "months": 4,
+      "slug": "flutter-ile-mobil-uygulama-gelistirme-canli-online-egitimi-4-ay-1278",
+      "title": "Flutter İle Mobil Uygulama Geliştirme Canlı (Online) Eğitimi 4 ay",
+      "excelPrice": 69000
+    },
+    {
+      "category": "yazilim",
+      "months": 4,
+      "slug": "flutter-ile-mobil-uygulama-gelistirme-yuz-yuze-egitimi-4-ay-1238",
+      "title": "Flutter İle Mobil Uygulama Geliştirme Yüz Yüze Eğitimi 4 ay",
+      "excelPrice": 79000
+    },
+    {
+      "category": "yazilim",
+      "months": 4,
+      "slug": "front-end-development-onlinecanli-egitimi-4-ay-1213",
+      "title": "Front-End Development Online(Canlı) Eğitimi 4 ay",
+      "excelPrice": 49000
+    },
+    {
+      "category": "yazilim",
+      "months": 4,
+      "slug": "front-end-development-yuz-yuze-egitimi-4-ay-1212",
+      "title": "Front-End Development Yüz Yüze Eğitimi 4 ay",
+      "excelPrice": 49000
+    },
+    {
+      "category": "yazilim",
+      "months": 4,
+      "slug": "front-end-development-onlinecanli-egitimi-982",
+      "title": "Frontend Web Geliştirme Kursu – React, HTML, CSS, JS Online Canlı",
+      "excelPrice": 49000
+    },
+    {
+      "category": "yazilim",
+      "months": 4,
+      "slug": "front-end-development-yuz-yuze-egitimi-1019",
+      "title": "Frontend Web Geliştirme Kursu – React, HTML, CSS, JS Yüz Yüze",
+      "excelPrice": 49000
+    },
+    {
+      "category": "yazilim",
+      "months": 4,
+      "slug": "siber-guvenlik-egitimi-4-ay-1463",
+      "title": "Siber Güvenlik Eğitimi 4 Ay",
+      "excelPrice": 79000
+    },
+    {
+      "category": "yazilim",
+      "months": 4,
+      "slug": "siber-guvenlik-egitimi-1462",
+      "title": "Siber Güvenlik Temelleri Kursu – Ağ Güvenliği & Tehdit Analizi",
+      "excelPrice": 79000
+    },
+    {
+      "category": "yazilim",
+      "months": 4,
+      "slug": "siber-guvenlik-uzmanligi-ve-etichal-hacking-canli-online-egitimi-1093",
+      "title": "Siber Güvenlik Uzmanlığı & Ethical Hacking Kursu – Online Canlı (CEH)",
+      "excelPrice": 69000
+    },
+    {
+      "category": "yazilim",
+      "months": 4,
+      "slug": "siber-guvenlik-uzmanligi-ve-etichal-hacking-yuz-yuze-egitimi-1092",
+      "title": "Siber Güvenlik Uzmanlığı & Ethical Hacking Kursu – Yüz Yüze (CEH & Pentest)",
+      "excelPrice": 79000
+    },
+    {
+      "category": "yazilim",
+      "months": 4,
+      "slug": "sifirdan-uzmanliga-it-ve-sistem-yonetimi-egitimi-online-1654",
+      "title": "Sıfırdan IT ve Sistem Yönetimi Uzmanlığı Kursu – Online (Windows Server & Linux)",
+      "excelPrice": 69000
+    },
+    {
+      "category": "yazilim",
+      "months": 4,
+      "slug": "sifirdan-uzmanliga-it-ve-sistem-yonetimi-egitimi-1653",
+      "title": "Sıfırdan IT ve Sistem Yönetimi Uzmanlığı Kursu – Windows Server, Linux & Network",
+      "excelPrice": 79000
+    },
+    {
+      "category": "yazilim",
+      "months": 4,
+      "slug": "sifirdan-uzmanliga-it-ve-sistem-yonetimi-egitimi-4-ay-1657",
+      "title": "Sıfırdan Uzmanlığa IT ve Sistem Yönetimi Eğitimi 4 ay",
+      "excelPrice": 79000
+    },
+    {
+      "category": "yazilim",
+      "months": 4,
+      "slug": "sifirdan-uzmanliga-it-ve-sistem-yonetimi-egitimi-online-4-ay-1658",
+      "title": "Sıfırdan Uzmanlığa IT ve Sistem Yönetimi Eğitimi Online 4 ay",
+      "excelPrice": 69000
+    },
+    {
+      "category": "yazilim",
+      "months": 4,
+      "slug": "yazilim-test-otomasyonu-canli-online-egitimi-4-ay-1455",
+      "title": "Yazılım Test Otomasyonu Canlı (Online) Eğitimi 4 ay",
+      "excelPrice": 59000
+    },
+    {
+      "category": "yazilim",
+      "months": 4,
+      "slug": "yazilim-uzmanligi-yuz-yuze-egitim-4-ay-1475",
+      "title": "Yazılım Uzmanlığı Yüz Yüze Eğitim 4 ay",
+      "excelPrice": 56000
+    },
+    {
+      "category": "yazilim",
+      "months": 8,
+      "slug": "aranan-programci-olma-kampi-online-kursu-8-ay-1503",
+      "title": "Aranan Programcı Olma Kampı Online Kursu 8 ay",
+      "excelPrice": 86248.25
+    },
+    {
+      "category": "yazilim",
+      "months": 8,
+      "slug": "aranan-programci-olma-kampi-yuz-yuze-kursu-8-ay-1499",
+      "title": "Aranan Programcı Olma Kampı Yüz Yüze Kursu 8 ay",
+      "excelPrice": 123750
+    },
+    {
+      "category": "yazilim",
+      "months": 8,
+      "slug": "cocuklar-icin-yazilim-uzmanligi-egitimi-canli-online-1587",
+      "title": "Çocuklar İçin Yazılım Uzmanlığı Programı – Kapsamlı Online Canlı (10-17 Yaş)",
+      "excelPrice": 48000
+    },
+    {
+      "category": "yazilim",
+      "months": 8,
+      "slug": "cocuklar-ve-gencler-icin-yazilim-uzmanligi-egitimi-canli-online-8-ay-1589",
+      "title": "Çocuklar ve Gençler İçin Yazılım Uzmanlığı Eğitimi Canlı (Online) 8 ay",
+      "excelPrice": 48000
+    },
+    {
+      "category": "yazilim",
+      "months": 8,
+      "slug": "full-stack-development-canli-online-egitim-1563",
+      "title": "Full Stack Development Canlı ( Online ) Eğitim",
+      "excelPrice": 98750
+    },
+    {
+      "category": "yazilim",
+      "months": 8,
+      "slug": "full-stack-development-canli-online-egitim-1059",
+      "title": "Full Stack Web Geliştirme Kursu – Canlı Online (React & Node.js)",
+      "excelPrice": 98750
+    },
+    {
+      "category": "yazilim",
+      "months": 8,
+      "slug": "aranan-programci-olma-kampi-online-kursu-1501",
+      "title": "Sıfırdan Yazılımcı Olma Bootcamp – Online Kamp",
+      "excelPrice": 86248.25
+    },
+    {
+      "category": "yazilim",
+      "months": 8,
+      "slug": "aranan-programci-olma-kampi-yuz-yuze-kursu-1498",
+      "title": "Sıfırdan Yazılımcı Olma Bootcamp – Yüz Yüze Kamp",
+      "excelPrice": 123750
+    },
+    {
+      "category": "yazilim",
+      "months": 8,
+      "slug": "yazilim-test-otomasyonu-canli-online-egitimi-1454",
+      "title": "Yazılım Test Otomasyon Kursu – Canlı Online (Selenium & QA)",
+      "excelPrice": 123750
+    },
+    {
+      "category": "yazilim",
+      "months": 8,
+      "slug": "yazilim-test-otomasyonu-canli-online-egitimi-8-ay-1456",
+      "title": "Yazılım Test Otomasyonu Canlı (Online) Eğitimi 8 Ay",
+      "excelPrice": 123750
+    },
+    {
+      "category": "yazilim",
+      "months": 8,
+      "slug": "yazilim-uzmanligi-canli-online-egitim-1468",
+      "title": "Yazılım Uzmanlığı Canlı (Online) Eğitim",
+      "excelPrice": 55000
+    },
+    {
+      "category": "yazilim",
+      "months": 8,
+      "slug": "yazilim-uzmanligi-canli-online-egitim-8-ay-1471",
+      "title": "Yazılım Uzmanlığı Canlı (Online) Eğitim 8 ay",
+      "excelPrice": 98750
+    },
+    {
+      "category": "yazilim",
+      "months": 8,
+      "slug": "yazilim-uzmanligi-yuz-yuze-egitim-1473",
+      "title": "Yazılım Uzmanlığı Kursu – Yüz Yüze Sınıf Eğitimi",
+      "excelPrice": 123750
+    },
+    {
+      "category": "yazilim",
+      "months": 8,
+      "slug": "yazilim-uzmanligi-yuz-yuze-egitim-8-ay-1474",
+      "title": "Yazılım Uzmanlığı Yüz Yüze Eğitim 8 ay",
+      "excelPrice": 123750
+    },
+    {
+      "category": "yazilim",
+      "months": 10,
+      "slug": "aranan-programci-olma-canli-online-kamp-kursu-10-ay-staj-garantili-1159",
+      "title": "Aranan Programcı Olma Canlı (Online) Kamp Kursu 10 ay (Staj Garantili)",
+      "excelPrice": 149000
+    },
+    {
+      "category": "yazilim",
+      "months": 10,
+      "slug": "aranan-programci-olma-kampi-yuz-yuze-kursu-10-ay-staj-garantili-1353",
+      "title": "Aranan Programcı Olma Kampı Yüz Yüze Kursu 10 ay (Staj Garantili)",
+      "excelPrice": 149000
+    },
+    {
+      "category": "yazilim",
+      "months": 10,
+      "slug": "full-stack-development-yuz-yuze-egitim-staj-garantili-10-ay-1564",
+      "title": "Full Stack Development Yüz Yüze Eğitim (Staj Garantili) 10 ay",
+      "excelPrice": 149000
+    },
+    {
+      "category": "yazilim",
+      "months": 10,
+      "slug": "full-stack-development-yuz-yuze-egitim-staj-garantili-1060",
+      "title": "Full Stack Web Geliştirme Kursu – Yüz Yüze (Staj Garantili)",
+      "excelPrice": 149000
+    },
+    {
+      "category": "yazilim",
+      "months": 10,
+      "slug": "yazilim-uzmanligi-canli-online-egitim-staj-garantili-668",
+      "title": "Full Stack Yazılım Uzmanlığı Kursu – Online Canlı (Staj Garantili)",
+      "excelPrice": 186250
+    },
+    {
+      "category": "yazilim",
+      "months": 10,
+      "slug": "yazilim-uzmanligi-yuz-yuze-egitimi-staj-garantili-669",
+      "title": "Full Stack Yazılım Uzmanlığı Kursu – Yüz Yüze (Staj Garantili)",
+      "excelPrice": 186250
+    },
+    {
+      "category": "yazilim",
+      "months": 10,
+      "slug": "aranan-programci-olma-canli-online-kamp-kursu-staj-garantili-555",
+      "title": "Sıfırdan Yazılımcı Olma Bootcamp – Online Canlı (Staj Garantili)",
+      "excelPrice": 149000
+    },
+    {
+      "category": "yazilim",
+      "months": 10,
+      "slug": "aranan-programci-olma-kampi-yuz-yuze-kursu-staj-garantili-672",
+      "title": "Sıfırdan Yazılımcı Olma Bootcamp – Yüz Yüze (Staj Garantili)",
+      "excelPrice": 149000
+    },
+    {
+      "category": "yazilim",
+      "months": 10,
+      "slug": "yazilim-uzmaligi-yuz-yuze-egitim-staj-garantili-1457",
+      "title": "Yazılım Geliştirici Yetiştirme Programı – Yüz Yüze (Staj Garantili)",
+      "excelPrice": 186250
+    },
+    {
+      "category": "yazilim",
+      "months": 10,
+      "slug": "yazilim-test-otomasyonu-egitimi-canli-online-egitimi-staj-garantili-7",
+      "title": "Yazılım Test Otomasyon Kursu – Online Canlı (Staj Garantili) QA & SDET",
+      "excelPrice": 186250
+    },
+    {
+      "category": "yazilim",
+      "months": 10,
+      "slug": "yazilim-test-otomasyonu-egitimi-canli-online-egitimi-staj-garantili-1565",
+      "title": "Yazılım Test Otomasyon Kursu – Online Canlı Staj Garantili (Selenium & CI/CD)",
+      "excelPrice": 186250
+    },
+    {
+      "category": "yazilim",
+      "months": 10,
+      "slug": "yazilim-test-otomasyonu-canli-online-egitimi-10-ay-staj-garantili-1324",
+      "title": "Yazılım Test Otomasyonu Canlı (Online) Eğitimi 10 ay Staj Garantili",
+      "excelPrice": 186250
+    },
+    {
+      "category": "yazilim",
+      "months": 10,
+      "slug": "yazilim-uzmaligi-yuz-yuze-egitim-staj-garantili-10-ay-1574",
+      "title": "Yazılım Uzmalığı Yüz Yüze Eğitim Staj Garantili 10 ay",
+      "excelPrice": 186250
+    },
+    {
+      "category": "yazilim",
+      "months": 10,
+      "slug": "yazilim-uzmanligi-canli-online-egitim-10-ay-staj-garantili-1206",
+      "title": "Yazılım Uzmanlığı Canlı (Online) Eğitim 10 ay (Staj Garantili)",
+      "excelPrice": 186250
+    },
+    {
+      "category": "yazilim",
+      "months": 10,
+      "slug": "yazilim-uzmanligi-yuz-yuze-egitimi-10-ay-staj-garantili-1334",
+      "title": "Yazılım Uzmanlığı Yüz Yüze Eğitimi 10 Ay (Staj Garantili)",
+      "excelPrice": 186250
+    },
+    {
+      "category": "grafik",
+      "months": 4,
+      "slug": "grafik-tasarim-kursu-and-video-efekt-uzmanligi-canli-online",
+      "title": "Grafik Tasarım Kursu & Video Efekt Uzmanlığı – Canlı Online",
+      "excelPrice": 49000
+    },
+    {
+      "category": "grafik",
+      "months": 4,
+      "slug": "grafik-tasarim-ve-video-efekt-uzmanligi-yuz-yuze-egitimi-4-ay-1491",
+      "title": "Grafik Tasarım ve Video Efekt Uzmanlığı (Yüz Yüze) Eğitimi 4 ay",
+      "excelPrice": 49000
+    },
+    {
+      "category": "grafik",
+      "months": 4,
+      "slug": "grafik-tasarim-ve-video-efekt-uzmanligi-canli-online-egitimi-4-ay-1488",
+      "title": "Grafik Tasarım ve Video Efekt Uzmanlığı Canlı (Online) Eğitimi 4 ay",
+      "excelPrice": 39000
+    },
+    {
+      "category": "grafik",
+      "months": 4,
+      "slug": "uiux-tasarim-egitimi-canli-online-egitimi-4-ay-1515",
+      "title": "UI/UX Tasarım Eğitimi Canlı (Online) Eğitimi 4 ay",
+      "excelPrice": 31300
+    },
+    {
+      "category": "grafik",
+      "months": 8,
+      "slug": "grafik-tasarim-ve-video-efekt-uzmanligi-canli-online-egitimi-1484",
+      "title": "Grafik Tasarım Kursu & Video Efekt Uzmanlığı – Canlı Online",
+      "excelPrice": 69000
+    },
+    {
+      "category": "grafik",
+      "months": 8,
+      "slug": "grafik-tasarim-ve-video-efekt-uzmanligi-yuz-yuze-egitimi-1489",
+      "title": "Grafik Tasarım Kursu & Video Efekt Uzmanlığı – Yüz Yüze",
+      "excelPrice": 89000
+    },
+    {
+      "category": "grafik",
+      "months": 8,
+      "slug": "grafik-tasarim-ve-video-efekt-uzmanligi-yuz-yuze-egitimi-8-ay-1490",
+      "title": "Grafik Tasarım ve Video Efekt Uzmanlığı (Yüz Yüze) Eğitimi 8 ay",
+      "excelPrice": 89000
+    },
+    {
+      "category": "grafik",
+      "months": 8,
+      "slug": "grafik-tasarim-ve-video-efekt-uzmanligi-canli-online-egitimi-8-ay-1487",
+      "title": "Grafik Tasarım ve Video Efekt Uzmanlığı Canlı (Online) Eğitimi 8 ay",
+      "excelPrice": 69000
+    },
+    {
+      "category": "grafik",
+      "months": 8,
+      "slug": "uiux-tasarim-egitimi-canli-online-egitimi-8-ay-1516",
+      "title": "UI/UX Tasarım Eğitimi Canlı (Online) Eğitimi 8 ay",
+      "excelPrice": 61300
+    },
+    {
+      "category": "grafik",
+      "months": 8,
+      "slug": "uiux-tasarim-egitimi-canli-online-egitimi-1514",
+      "title": "UI/UX Tasarım Kursu – Figma & Kullanıcı Deneyimi Online Canlı",
+      "excelPrice": 61300
+    },
+    {
+      "category": "grafik",
+      "months": 10,
+      "slug": "grafik-tasarim-ve-video-efekt-uzmanligi-canli-online-egitimi-staj-garantili-564",
+      "title": "Grafik Tasarım Kursu & Video Efekt Uzmanlığı – Online Canlı (Staj Garantili)",
+      "excelPrice": 99000
+    },
+    {
+      "category": "grafik",
+      "months": 10,
+      "slug": "grafik-tasarim-ve-video-efekt-uzmanligi-yuz-yuze-egitimi-staj-garantili-613",
+      "title": "Grafik Tasarım Kursu & Video Efekt Uzmanlığı – Yüz Yüze (Staj Garantili)",
+      "excelPrice": 99000
+    },
+    {
+      "category": "grafik",
+      "months": 10,
+      "slug": "grafik-tasarim-ve-video-efekt-canli-online-egitimi-8-ay-staj-garantili-1181",
+      "title": "Grafik Tasarım Ve Video Efekt Canlı (Online) Eğitimi 8 ay (Staj Garantili)",
+      "excelPrice": 99000
+    },
+    {
+      "category": "grafik",
+      "months": 10,
+      "slug": "grafik-tasarim-ve-video-efekt-yuz-yuze-egitimi-8-ay-staj-garantili-1217",
+      "title": "Grafik Tasarım Ve Video Efekt Yüz Yüze Eğitimi 8 ay (Staj Garantili)",
+      "excelPrice": 99000
+    }
+  ]
+}

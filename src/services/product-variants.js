@@ -455,5 +455,6 @@ module.exports = {
   publicProductVariants,
   replaceProductVariants,
   setParentProductStatus,
-  syncManagedProductVariants
+  syncManagedProductVariants,
+  discountedVariantPrice
 };

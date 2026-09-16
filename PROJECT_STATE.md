@@ -1,11 +1,12 @@
 # PROJECT_STATE.md — canlı durum günlüğü
 
 > Her çember (circle) bittiğinde güncellenir. Yeni oturum/agent buradan başlar. Tarihler mutlak (YYYY-MM-DD).
-> Son güncelleme: **2026-09-16** — Çember #8a (docx → kurs tab içeriği çevirici nüvesi, CLI önizleme, Word şablonu) tamamlandı; 8b (admin UI) sırada.
+> Son güncelleme: **2026-09-16** — Çember #9 (toplu kurs fiyat güncellemesi: plan dosyası + dry-run/apply/revert scripti) hazır; production dry-run Mimar'da.
 
 ## Nerede kaldık
 - Kod: `main` — Çember #0…#7 Mimar tarafından commit/deploy edildi ve canlıda doğrulandı (2026-09-15/16).
-- **Aktif çember:** yok. **Commit bekleyen:** Çember #8a (+ `mammoth` bağımlılığı → sunucuda `npm ci --omit=dev` gerekir). Sıradaki: 8b (admin UI: "Word'den içe aktar" → önizleme → editöre yerleştir).
+- **Aktif çember: #9 — toplu fiyat güncellemesi.** Kod hazır ve yerelde doğrulandı; **commit bekleyen**. Sıradaki adım: Mimar sunucuda `pg_dump` → `npm run prices:plan scripts/data/price-update-2026-09-16.json` (dry-run) → çıktıyı paylaşır → onay → `--apply --report`. 4 belirsiz Yazılım satırı (siber-guvenlik-1462/1463, it-sistem-1653/1657) Mimar kararıyla **MANUAL/dokunulmaz**.
+- Çember #8a canlıda doğrulandı (2026-09-16). **8b ve sonrası askıda** — Mimar'ın vereceği .md dosyasında planlanacak.
 - Gerçek örnek docx repo dışında: `~/unityverse-private-fixtures/Siber_Guvenlik_Mufredati_AI_Guncellemesi.docx` (WhatsApp tmp klasöründen kopyalandı).
 - Yerelde `uploads/products/1789467*.jpg` (3 dosya, 2026-09-15 yerel admin testi) izlenmiyor — commit'e eklenmemeli.
 - Sonraki çemberi Mimar seçer (Backlog).
@@ -55,6 +56,8 @@ Onaylanana kadar teslim paketlerinde sunucu adımları "DEPLOYMENT.md §12'ye uy
 - `clear-site-data` ile 301 önbellek kırma denemesi revert edildi (`9afe7b57`). Tekrarlama.
 - Varyant sayfalarının canonical'ı ana ürüne yönelmeli (`2cb9fa14`) — kurs/varyant işinde koru.
 - Cache-busting: CSS/JS değişince HTML'lerdeki `?v=` parametresi güncellenir (`bcc0911a`), aksi halde kullanıcılar eski dosyayı görür.
+- Yerel Docker DB **production'ın güncel kopyası değildir** (2026-09-16: 46 kurs yerelde DRAFT, canlıda yayında; 1 slug yerelde yok). Veri işlerinde yerel DB yalnızca mantık/format testi içindir; gerçek etki listesi production dry-run ile alınır.
+- Kurs adında/slug'ında 'online' veya 'yüz yüze' geçmeyen kurslar var ve `lessonType` alanı tüm kurslarda boş → rejim tahmini için güvenilir DB sinyali yok; plan satırında açık `mode` kullan.
 - `sanitizeProductTabContent` `data-*` özniteliklerini siler; akordeon `data-toggle`/ID/ARIA'yı kayıt anında `normalizeCurriculumAccordionContent` üretir. İçerik üreten kod (içe aktarma, AI, script) yalnızca **iskelet** yazmalı, bu öznitelikleri elle eklememelidir.
 - Pille 2 (stilsiz belge) tahmininde "1. Başlık" ile "1) madde" ayırt edilemez → numaralı kısa satır başlık sayılmaz; yalnızca anahtar kelimeli desenler ("Modül 1", "3. Hafta") ve kısa kalın satırlar başlıktır. Test bu hatayı yakaladı (2026-09-16).
 - Test fixture'ları: gerçek belge repoya girmez; yapı korunarak anonimleştirilmiş kopya `scripts/fixtures/` altına konur, gerçek dosya `~/unityverse-private-fixtures/`'da tutulur ve teslimde onunla da CLI doğrulaması yapılır.
@@ -74,6 +77,7 @@ Onaylanana kadar teslim paketlerinde sunucu adımları "DEPLOYMENT.md §12'ye uy
 | 2026-09-15 | Git/deploy işlemlerini yalnızca Mimar yürütür | Mimar'ın çalışma kuralı |
 | 2026-09-15 | Dil: sohbet AZ, kod yorumu ve .md TR, commit EN/TR | Mimar'ın kuralı |
 | 2026-09-15 | Kurs görseli için DB tek doğruluk kaynağı; statik detay sayfasında görsel DB ile aynıysa HTML'e dokunulmaz, farklıysa slider tek slayt olarak yeniden yazılır; og:image/itemprop/JSON-LD/paylaşım linki de güncellenir | 431/431 statik sayfa bugün DB ile aynı → sıfır görsel regresyon; liste sayfası zaten DB'den |
+| 2026-09-16 | Toplu fiyat değişikliği: elle SQL/admin değil, tarihli **plan dosyası** (`scripts/data/price-update-*.json`) + `scripts/update-course-prices.js` (dry-run varsayılan, `--apply` tek transaction, DB'den yeniden okuyup doğrulama, `--report` + `--revert`). Yazılan alanlar admin formuyla aynı: `price` + `discountPrice` (default varyant → ana kurs fiyatı). Belirsiz her durum MANUAL: bulunamadı, rejim belirsiz, süre/default varyant uyuşmazlığı, çatışma | Yerel DB production'dan eski (46 satır DRAFT, 1 slug yok) → "ne değişecek" yalnızca production dry-run'dan alınır; audit izi repoda; idempotent ve geri alınabilir |
 | 2026-09-16 | Kurs içeriği içe aktarma: qayda-esaslı (A) önce; A ve ileride AI (B) **aynı ara formatı** üretir, HTML'i her zaman bizim şablon renderer yazar; Word stil konvansiyonu (Başlık 1/2, madde işareti) + .docx zorunlu, PDF kabul edilmez (v1) | Deterministik, halüsinasyon yok, tek renderer; B eklenince yalnızca extractor değişir (maintainable/scalable) |
 | 2026-09-15 | Admin listelerinde "olduğum sayfada kal": `returnTo` URL/form ile taşınır, `safeReturnTo` (`src/services/admin-return-to.js`) yalnızca `/admin/products` altındaki göreli yolu kabul eder (open-redirect koruması); diğer bölümler için aynı servis yeniden kullanılır | Durumsuz, sunucu belleği yok, prefiks-kapalı |
 | 2026-09-15 | Admin şifre hash'i JSON dosyada değil DB'de kalır (`AdminUser.passwordHash`, bcrypt cost 12 = 60 karakter); rate-limit sayaçları `RateLimitEntry` (DB); başarılı değişiklikte diğer oturumlar iptal | Tek doğruluk kaynağı DB, deploy/restart'ta dosya kaybı riski yok, kalıcılık ilkesi; Mimar seçti |
@@ -88,6 +92,7 @@ Onaylanana kadar teslim paketlerinde sunucu adımları "DEPLOYMENT.md §12'ye uy
 |---|---|---|---|
 | 0 | 2026-09-15 | Proje araştırması + CLAUDE.md sistemi | 5 doküman; 12 unit test baseline PASS; R1 güvenlik bulgusu |
 | 1b | 2026-09-15 | Belgeler Türkçeye çevrildi (`CLAUDE.md`, `.claude/rules/*`) | 4 dosya, kod değişikliği yok |
+| 9 | 2026-09-16 | Toplu fiyat güncellemesi altyapısı (plan JSON 91 satır, servis, CLI dry-run/apply/revert) — production uygulaması Mimar'da | 5 dosya (+4 yeni) + `discountedVariantPrice` export; 8/8 test; yerel tam döngü: 76 yazım yalnız fiyat alanları, idempotent, revert birebir; 6 MANUAL (4 rejim belirsiz — Mimar: dokunulmaz, 1 süre null, 1 slug yok) |
 | 8a | 2026-09-16 | docx → blok → bölüm ağacı → tab haritası → tab HTML (3 saf servis), CLI önizleme, anonim fixture, Word şablonu + rehber, `mammoth@1.12.3` | 12 dosya (+10 yeni), ~470 satır kod/test + 2 docx; 20/20 test; gerçek docx: Pille 1, 12 panel, 0 uyarı; PDF reddi; lazy require kanıtlandı |
 | 7 | 2026-09-15 | Kurs listesi returnTo (Güncelle, Geri Dön, Durum, Sil; varyant yönlendirmesi query'yi korur) | 7 dosya (+2 yeni), ~120 satır; 8/8 test; yerel e2e: filtreli listeye 302, evil/`//` → `/admin/products` |
 | 6b | 2026-09-15 | Şifre formu UX: `.alert-success` sırası düzeltildi (yeşil), `admin-change-password.js` ile anlık politika/eşleşme uyarıları ve pasif buton | 5 dosya (+1 yeni), ~90 satır; sunucu doğrulaması değişmedi |
