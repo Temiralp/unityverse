@@ -5,12 +5,13 @@
 - `package.json` → `"test:<ad>": "node scripts/test-<ad>.js"` alias'ı eklenir (mevcut listeyi izle).
 - Prisma gerçek DB ile değil, **fake nesne** ile değiştirilir (örnek: `scripts/test-rate-limit.js` `fakePrisma`, `scripts/test-admin-members.js`). Service fonksiyonları prisma'yı parametre olarak alır.
 - Bazı testler **dosya içeriğini** okuyup `assert.match` ile route/view'ın gerekli parçayı içerdiğini doğrular (EJS/statik HTML için kabul edilen yöntem). Statik HTML fixture'ı olarak gerçek `urun/<slug>/index.html` dosyaları kullanılabilir (örnek: `scripts/test-legacy-product-image.js`).
+- **Fixture kuralı:** gerçek müşteri/yazar belgeleri repoya girmez. Yapısı korunarak anonimleştirilmiş kopya `scripts/fixtures/<konu>/` altına, yanına `README.md` (yapı sayıları, nasıl üretildiği) konur; gerçek dosya `~/unityverse-private-fixtures/`'da tutulur ve teslim paketinde onunla da doğrulama yapılır (örnek: `scripts/fixtures/course-import/`).
 - Tarayıcı smoke testleri `scripts/*-browser-smoke.js` — Chrome CDP (`*_DEBUG_PORT`) + çalışan sunucu (`*_BASE_URL`) gerektirir. Yalnızca Mimar isteyince çalıştırılır.
 
 ## Üç kategori
 | Kategori | Gereklilik | Örnek | Kim çalıştırır |
 |---|---|---|---|
-| Unit (DB'siz) | hiçbir şey | `test-rate-limit`, `test-admin-members`, `test-course-duration`, `test-registration-pii`, `test-member-registration`, `test-legacy-member-import`, `test-product-variants`, `test-blog-categories`, `test-bank-transfer-discount`, `test-registration-visibility`, `test-social-oauth`, `test-profile-completion`, `test-legacy-product-image` | Sen, her çemberde |
+| Unit (DB'siz) | hiçbir şey | `test-rate-limit`, `test-admin-members`, `test-course-duration`, `test-registration-pii`, `test-member-registration`, `test-legacy-member-import`, `test-product-variants`, `test-blog-categories`, `test-bank-transfer-discount`, `test-registration-visibility`, `test-social-oauth`, `test-profile-completion`, `test-legacy-product-image`, `test-admin-password`, `test-admin-return-to`, `test-course-import` | Sen, her çemberde |
 | Sunucu/DB | `npm run dev` + PostgreSQL + `.env` | `test-enrollment`, `test-paytr-token`, `test-paytr-callback`, `catalog-admin-sync-smoke` | Mimar yerelde / staging |
 | Tarayıcı | Chrome `--remote-debugging-port` | `csp-browser-smoke`, `enrollment-frontend-browser-smoke`, `paytr-iframe-browser-smoke` | Mimar |
 

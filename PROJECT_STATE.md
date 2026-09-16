@@ -1,11 +1,12 @@
 # PROJECT_STATE.md — canlı durum günlüğü
 
 > Her çember (circle) bittiğinde güncellenir. Yeni oturum/agent buradan başlar. Tarihler mutlak (YYYY-MM-DD).
-> Son güncelleme: **2026-09-15** — Çember #7 (admin kurs listesi: Güncelle/Geri Dön/Durum/Sil sonrası filtreli listeye dönüş) tamamlandı.
+> Son güncelleme: **2026-09-16** — Çember #8a (docx → kurs tab içeriği çevirici nüvesi, CLI önizleme, Word şablonu) tamamlandı; 8b (admin UI) sırada.
 
 ## Nerede kaldık
-- Kod: `main` — Çember #0…#6b Mimar tarafından commit/deploy edildi ve canlıda doğrulandı (2026-09-15). **Commit bekleyen:** Çember #7.
-- **Aktif çember:** yok.
+- Kod: `main` — Çember #0…#7 Mimar tarafından commit/deploy edildi ve canlıda doğrulandı (2026-09-15/16).
+- **Aktif çember:** yok. **Commit bekleyen:** Çember #8a (+ `mammoth` bağımlılığı → sunucuda `npm ci --omit=dev` gerekir). Sıradaki: 8b (admin UI: "Word'den içe aktar" → önizleme → editöre yerleştir).
+- Gerçek örnek docx repo dışında: `~/unityverse-private-fixtures/Siber_Guvenlik_Mufredati_AI_Guncellemesi.docx` (WhatsApp tmp klasöründen kopyalandı).
 - Yerelde `uploads/products/1789467*.jpg` (3 dosya, 2026-09-15 yerel admin testi) izlenmiyor — commit'e eklenmemeli.
 - Sonraki çemberi Mimar seçer (Backlog).
 
@@ -31,9 +32,16 @@ Onaylanana kadar teslim paketlerinde sunucu adımları "DEPLOYMENT.md §12'ye uy
 | R9 | `scripts/test-price-visibility-language.js` HEAD'de kırık: `unityverse.css`'de "Fiyatı görmek için giriş yapın" metni yok (commit `9cd9d90d`, 2026-08-07'de temizlik sırasında silinmiş olabilir) | test çıktısı 2026-09-15 | Test mi güncellenecek, CSS mi geri gelecek — Mimar kararı; küçük çember | Backlog |
 | R10 | Dinamik kurs sayfalarında Python şablonundan miras meta'lar ve JSON-LD | Çember #5 ile kapatıldı: tablo güdümlü `pageMetaTags` + `product-structured-data.js` | — | Kapatıldı |
 | R11 | `public/tema10/js/filters.js` `legacyFilterFallbackPayload()` içinde sabit kategori sayıları (23, 76…) — yalnızca Vue yokken/ajax düşünce kullanılır ve CSS `#filterPnl`'i zaten gizler → görünmez; `scripts/inject-legacy-filter-fallback.js` de sabit | kod | Dokunulmadı; sunucu tarafı senkron (Çember #4) görünen listeyi düzeltir | Bilgi |
+| R12 | `npm audit` (2026-09-16): 11 bulgu (6 high, 5 moderate) — **hepsi önceden mevcut**, `mammoth` zincirinde değil: `prisma/@prisma/config` (deepmerge-ts), `express/body-parser/qs`, `jodit` (admin editör XSS), `sanitize-html` (SVG SMIL bypass), `undici`, `nanoid`, `brace-expansion` | `npm audit` çıktısı | Ayrı çember: sürüm yükseltmeleri tek tek, testlerle (jodit + sanitize-html admin/public içerik güvenliği için öncelikli) | Backlog (orta) |
 | R8 | Ana kurs görseli değiştirilen üründe statik sayfadaki çoklu galeri (9 sayfa) tek görsele iner | Çember #1 tasarım kararı | Admin tek görsel yönetir; kabul edilen davranış | Kabul edildi |
 
 ## Backlog (Mimar sıralar)
+- [ ] R12 — `npm audit` bulguları: jodit + sanitize-html öncelikli, sonra express/qs, prisma, undici (her biri ayrı küçük çember, testli)
+- [x] **Çember #8a** tamamlandı → **Çember #8 — Word (.docx) → kurs içeriği içe aktarma** (Mimar 2026-09-16: yaklaşım A onaylandı, B ileride ehtiyat; `mammoth` bağımlılığına site bütünlüğü şartıyla razı)
+  - 8a: `docx → ara format {overview, curriculum[{title,items}], why} → tab HTML` saf servisi; Word şablonu (.docx) + 1 sayfa rehber; fixture = anonimleştirilmiş gerçek docx; `mammoth` lazy require (public site etkilenmez)
+  - 8b: Admin UI — her tabda "Word'den içe aktar" → önizleme → editöre yerleştir; otomatik kayıt yok; PDF yüklenirse "Lütfen .docx kaynağını yükleyin"
+  - 8c (opsiyonel): AI extractor aynı ara formata; yalnızca A "tanımadım" derse
+  - Kanıt: örnek docx `Heading1`×9, `Heading2`×12, `ListBullet`×117, 2 tablo → A ile birebir eşleşir; örnek PDF tasarım belgesi (semantik yok) → A için kırılgan, kaynak docx istenir
 - [ ] R1 — `local_server.js` dosyasını repodan çıkar (parola zaten döndürüldü; düşük)
 - [ ] R2 — `.env.example` tamamlama (docs, küçük)
 - [ ] R4 — `npm test` toplu unit runner (test altyapısı, küçük)
@@ -47,6 +55,10 @@ Onaylanana kadar teslim paketlerinde sunucu adımları "DEPLOYMENT.md §12'ye uy
 - `clear-site-data` ile 301 önbellek kırma denemesi revert edildi (`9afe7b57`). Tekrarlama.
 - Varyant sayfalarının canonical'ı ana ürüne yönelmeli (`2cb9fa14`) — kurs/varyant işinde koru.
 - Cache-busting: CSS/JS değişince HTML'lerdeki `?v=` parametresi güncellenir (`bcc0911a`), aksi halde kullanıcılar eski dosyayı görür.
+- `sanitizeProductTabContent` `data-*` özniteliklerini siler; akordeon `data-toggle`/ID/ARIA'yı kayıt anında `normalizeCurriculumAccordionContent` üretir. İçerik üreten kod (içe aktarma, AI, script) yalnızca **iskelet** yazmalı, bu öznitelikleri elle eklememelidir.
+- Pille 2 (stilsiz belge) tahmininde "1. Başlık" ile "1) madde" ayırt edilemez → numaralı kısa satır başlık sayılmaz; yalnızca anahtar kelimeli desenler ("Modül 1", "3. Hafta") ve kısa kalın satırlar başlıktır. Test bu hatayı yakaladı (2026-09-16).
+- Test fixture'ları: gerçek belge repoya girmez; yapı korunarak anonimleştirilmiş kopya `scripts/fixtures/` altına konur, gerçek dosya `~/unityverse-private-fixtures/`'da tutulur ve teslimde onunla da CLI doğrulaması yapılır.
+- Yeni bağımlılık ekleyince `npm audit` çalıştır ve bulguların yeni zincire ait olup olmadığını ayır (R12 böyle bulundu).
 - Admin liste → düzenle → geri dönüş: sabit `res.redirect('/admin/products')` yerine `productListReturnTo(req)`; yeni bölümlere eklerken aynı deseni (link `?returnTo=`, hidden input, `safeReturnTo` prefiks) kullan.
 - `admin.css` içinde aynı özgüllükteki kural sırası önemlidir: `.alert-success` gibi varyantlar `.alert`'ten sonra tanımlanmalı (aksi halde temel kural kazanır).
 - Admin şifresi değiştirildikten sonra `npm run seed` çalıştırmak şifreyi `.env ADMIN_PASSWORD` değerine geri döndürür — kurtarma dışında asla.
@@ -62,6 +74,7 @@ Onaylanana kadar teslim paketlerinde sunucu adımları "DEPLOYMENT.md §12'ye uy
 | 2026-09-15 | Git/deploy işlemlerini yalnızca Mimar yürütür | Mimar'ın çalışma kuralı |
 | 2026-09-15 | Dil: sohbet AZ, kod yorumu ve .md TR, commit EN/TR | Mimar'ın kuralı |
 | 2026-09-15 | Kurs görseli için DB tek doğruluk kaynağı; statik detay sayfasında görsel DB ile aynıysa HTML'e dokunulmaz, farklıysa slider tek slayt olarak yeniden yazılır; og:image/itemprop/JSON-LD/paylaşım linki de güncellenir | 431/431 statik sayfa bugün DB ile aynı → sıfır görsel regresyon; liste sayfası zaten DB'den |
+| 2026-09-16 | Kurs içeriği içe aktarma: qayda-esaslı (A) önce; A ve ileride AI (B) **aynı ara formatı** üretir, HTML'i her zaman bizim şablon renderer yazar; Word stil konvansiyonu (Başlık 1/2, madde işareti) + .docx zorunlu, PDF kabul edilmez (v1) | Deterministik, halüsinasyon yok, tek renderer; B eklenince yalnızca extractor değişir (maintainable/scalable) |
 | 2026-09-15 | Admin listelerinde "olduğum sayfada kal": `returnTo` URL/form ile taşınır, `safeReturnTo` (`src/services/admin-return-to.js`) yalnızca `/admin/products` altındaki göreli yolu kabul eder (open-redirect koruması); diğer bölümler için aynı servis yeniden kullanılır | Durumsuz, sunucu belleği yok, prefiks-kapalı |
 | 2026-09-15 | Admin şifre hash'i JSON dosyada değil DB'de kalır (`AdminUser.passwordHash`, bcrypt cost 12 = 60 karakter); rate-limit sayaçları `RateLimitEntry` (DB); başarılı değişiklikte diğer oturumlar iptal | Tek doğruluk kaynağı DB, deploy/restart'ta dosya kaybı riski yok, kalıcılık ilkesi; Mimar seçti |
 | 2026-09-15 | Dinamik kurs head meta'ları tek tablodan (`pageMetaTags`) yönetilir; JSON-LD `Product` DB'den yeniden üretilir (`priceValidUntil` yıl sonu hesaplanır, `<` kaçışı); statik sayfalarda og:image/itemprop image her zaman mutlak URL (origin `res.locals`'tan) | Kalıcılık ilkesi: durumsuz, tek doğruluk kaynağı DB, yeni meta = 1 satır; OG spesifikasyonu mutlak URL ister |
@@ -75,6 +88,7 @@ Onaylanana kadar teslim paketlerinde sunucu adımları "DEPLOYMENT.md §12'ye uy
 |---|---|---|---|
 | 0 | 2026-09-15 | Proje araştırması + CLAUDE.md sistemi | 5 doküman; 12 unit test baseline PASS; R1 güvenlik bulgusu |
 | 1b | 2026-09-15 | Belgeler Türkçeye çevrildi (`CLAUDE.md`, `.claude/rules/*`) | 4 dosya, kod değişikliği yok |
+| 8a | 2026-09-16 | docx → blok → bölüm ağacı → tab haritası → tab HTML (3 saf servis), CLI önizleme, anonim fixture, Word şablonu + rehber, `mammoth@1.12.3` | 12 dosya (+10 yeni), ~470 satır kod/test + 2 docx; 20/20 test; gerçek docx: Pille 1, 12 panel, 0 uyarı; PDF reddi; lazy require kanıtlandı |
 | 7 | 2026-09-15 | Kurs listesi returnTo (Güncelle, Geri Dön, Durum, Sil; varyant yönlendirmesi query'yi korur) | 7 dosya (+2 yeni), ~120 satır; 8/8 test; yerel e2e: filtreli listeye 302, evil/`//` → `/admin/products` |
 | 6b | 2026-09-15 | Şifre formu UX: `.alert-success` sırası düzeltildi (yeşil), `admin-change-password.js` ile anlık politika/eşleşme uyarıları ve pasif buton | 5 dosya (+1 yeni), ~90 satır; sunucu doğrulaması değişmedi |
 | 6 | 2026-09-15 | Admin şifre değiştirme (`/admin/change-password`, politika, 2 rate-limit, oturum iptali) | 7 dosya (+3 yeni), ~330 satır (120'si test); 22/22 test; yerel e2e 14 senaryo (politika, yanlış şifre, 401/429, eski şifre reddi, ikinci oturum düşmesi) |
