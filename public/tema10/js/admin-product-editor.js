@@ -42,6 +42,9 @@
       processPasteHTML: true,
       sourceEditor: 'area',
       beautifyHTML: false,
+      // Jodit varsayılanı "script,iframe,object,embed" → kaynak/görsel geçişinde YouTube iframe'i
+      // siliniyordu (B5). iframe'e izin verilir; sunucu sanitize'i yalnızca YouTube host'larını kabul eder.
+      cleanHTML: { denyTags: 'script,object,embed' },
       defaultMode: window.Jodit.MODE_WYSIWYG,
       buttons: [
         'source', '|', 'undo', 'redo', '|',
