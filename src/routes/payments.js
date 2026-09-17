@@ -10,6 +10,7 @@ const {
   requestPaytrIframeToken,
   verifyPaytrCallbackHash
 } = require('../services/paytr');
+const { buildPurchaseEvent, serializeForScript } = require('../services/analytics-events');
 const { processPaytrCallback } = require('../services/paytr-callback');
 const {
   sendBankTransferEmails,
@@ -276,7 +277,11 @@ function renderPaymentResult(res, options) {
     resultMethod: options.resultMethod || null,
     registration: options.registration || null,
     paymentUrl: options.paymentUrl || null,
-    courseUrl: options.courseUrl || '/tum-urunler/'
+    courseUrl: options.courseUrl || '/tum-urunler/',
+    // GA4 purchase (Cember 13): ID .env'de yoksa view hicbir sey render etmez
+    ga4MeasurementId: String(process.env.GA4_MEASUREMENT_ID || '').trim(),
+    ga4Purchase: buildPurchaseEvent(options),
+    serializeForScript
   });
 }
 

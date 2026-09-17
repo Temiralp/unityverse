@@ -62,4 +62,11 @@
   </section>
 </main>
 
+<%# GA4 purchase: yalnızca başarılı kart ödemesinde ve ölçüm ID tanımlıysa (Çember 13). Inline JS yok:
+    payload JSON data-bloğu, gönderim harici script (CSP: script-src 'self'). %>
+<% if (ga4MeasurementId && ga4Purchase) { %>
+<script type="application/json" nonce="<%= cspNonce %>" data-ga4-purchase data-measurement-id="<%= ga4MeasurementId %>"><%- serializeForScript(ga4Purchase) %></script>
+<script src="/public/tema10/js/ga4-purchase.js?v=20260917-1"></script>
+<% } %>
+
 <%- include('../partials/footer', { useLegacyPaymentFooter: true }) %>

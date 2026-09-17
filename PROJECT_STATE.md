@@ -1,11 +1,11 @@
 # PROJECT_STATE.md — canlı durum günlüğü
 
 > Her çember (circle) bittiğinde güncellenir. Yeni oturum/agent buradan başlar. Tarihler mutlak (YYYY-MM-DD).
-> Son güncelleme: **2026-09-17** — Çember 11 doğrulandı; Çember 12 (B5: kurs editöründe iframe/video korunur) tamamlandı, commit/deploy Mimar'da.
+> Son güncelleme: **2026-09-17** — Çember 13 (GA4 purchase olayı, ödeme sonuç sayfası) tamamlandı; B2/B3 keşif raporları yazıldı; commit/deploy Mimar'da.
 
 ## Nerede kaldık
 - Kod: `main` — Çember #0…#7 Mimar tarafından commit/deploy edildi ve canlıda doğrulandı (2026-09-15/16).
-- **Aktif çember:** yok. Çember #8b deploy edildi ve canlıda doğrulandı (2026-09-17). Çember 10 ve 11 canlıda/terminalde doğrulandı (2026-09-17). **Commit bekleyen:** Çember 12 (B5). Ardından Backlog B1…B6 (2026-09-17 Mimar tarafından iletilen istekler).
+- **Aktif çember:** yok. Çember #8b deploy edildi ve canlıda doğrulandı (2026-09-17). Çember 10 ve 11 canlıda/terminalde doğrulandı (2026-09-17). **Commit bekleyen:** Çember 13 (GA4 purchase) + B2/B3 keşif raporları (`docs/kesif/`). Ardından Backlog B1…B6 (2026-09-17 Mimar tarafından iletilen istekler).
 - Çember #8a ve #8b tamamlandı (2026-09-16).
 - Gerçek örnek docx repo dışında: `~/unityverse-private-fixtures/Siber_Guvenlik_Mufredati_AI_Guncellemesi.docx` (WhatsApp tmp klasöründen kopyalandı).
 - Yerelde `uploads/products/1789467*.jpg` (3 dosya, 2026-09-15 yerel admin testi) izlenmiyor — commit'e eklenmemeli.
@@ -36,6 +36,9 @@
 ## Backlog (Mimar sıralar)
 - [x] **Çember 10 (tamamlandı, commit bekliyor): üye kayıt/giriş hata mesajları.** `uye-girisi/index.html:2551` ve `uye-ol/index.html:2551` `error:` callback'i her 4xx/5xx'te sabit "Sunucu hatası…" gösterir, sunucunun gerçek mesajını (409 "kayıtlı üye var", 429 rate-limit 5/saat/IP, 400 doğrulama) yutar; giriş formunda (`scripts.js:2007`) `error:` callback'i hiç yok (401 sessiz). Düzeltme: `jqXHR.responseJSON.message` göster; `LEGACY_SCRIPTS_VERSION` bump. (2026-09-17 öğrenci şikayeti)
 - [x] **B1 (Çember 11, commit bekliyor) — Havale kilidi kayıt tutarını eziyordu.** Kök neden: `lockBankTransferRegistration` totalAmount'u kursun **güncel** fiyatıyla yeniden hesaplıyordu (167.625 = 186.250×0,90; öğrenciye gösterilen 134.100 = 149.000×0,90). Düzeltme: `bankTransferBaseAmount` (kayıttaki totalAmount korunur; PayTR ile aynı kural) + her iki ödeme mailinde Kupon / Kupon İndirimi satırları.
+- [ ] **B2 keşfi tamamlandı → `docs/kesif/B2-odeme-entegrasyonu.md`** (2026-09-17). Özet: PayTR kart taksidi bankanındır, PayTR tek callback gönderir → "her taksit otomatik ödendi" kart için mümkün değil; otomatik havale için **PayTR Havale/EFT iFrame API** (mevcut callback yeniden kullanılır) önerilir; banka API'si yalnızca banka teyidiyle. Kararlar Mimar'da.
+- [ ] **B3 keşfi tamamlandı → `docs/kesif/B3-hubspot.md`** (2026-09-17). Özet: L1 takip kodu (CSP allowlist + çerez onayı) + L2 lead/üye senkronu (Contacts batch upsert, private app token) önerilir; GTM üzerinden değil doğrudan; KVKK kararı gerekli.
+- [ ] **R13 — GTM'in enjekte ettiği 3. taraf scriptler CSP tarafından engelleniyor** (canlı loglar 2026-09-17: elfsight platform.js, delightchat WhatsApp widget, facebook frame/form-action). Bu widget'lar isteniyorsa `csp.js` allowlist'e eklenmeli; istenmiyorsa GTM'den kaldırılmalı — Mimar kararı.
 - [ ] **B2 — Ödeme entegrasyonu (büyük): PayTR + havale/EFT → admin & öğrenci paneli otomatik.** Bugün: PayTR callback tek çekimi işler; havale `PENDING` kalır, admin `Ödeme Ekle` ile elle kaydeder (bug değil, tasarım). İstek: PayTR taksitli ödemelerin (3/6/12…) `EducationInstallment` olarak otomatik düşmesi ve her taksitin ödendi olması; banka hesabına gelen havalelerin otomatik eşleşmesi (banka API/açık bankacılık — dış etken: bankanın API'si var mı? araştırılacak); admin elle düzeltme korunur. Ayrı keşif çemberi: PayTR taksit callback alanları resmi dokümandan okunacak.
 - [ ] **B3 — HubSpot CRM entegrasyonu.** İstek: ziyaretçi/üye takibi, admin panele entegre. Keşif: HubSpot ücretsiz CRM + tracking script (CSP allowlist gerekir) + Forms/Contacts API ile lead senkronu (`leads.js`, üye kaydı). KVKK/çerez onayı etkisi değerlendirilecek. Önce kapsam kararı (yalnızca takip scripti mi, iki yönlü senkron mu).
 - [ ] **B4 — İçerik hizalama/tutarlılık.** "Eğitime İlk Bakış" ve diğer sekmelerde görsel/metin hizasız (Jodit'te ve sitede). Çözüm yönü: tek içerik CSS'i (admin önizleme + public sekme aynı stil), içe aktarma renderer'ında görsel/paragraf sarmalayıcı sınıflar; mevcut kurslar için audit + toplu normalize (dry-run).
@@ -61,6 +64,8 @@
 - `clear-site-data` ile 301 önbellek kırma denemesi revert edildi (`9afe7b57`). Tekrarlama.
 - Varyant sayfalarının canonical'ı ana ürüne yönelmeli (`2cb9fa14`) — kurs/varyant işinde koru.
 - Cache-busting: CSS/JS değişince HTML'lerdeki `?v=` parametresi güncellenir (`bcc0911a`), aksi halde kullanıcılar eski dosyayı görür.
+- Ödeme sayfaları (`/odeme/*`, EJS) analitik script **taşımaz** (header partial'da script yok; gtag/GTM yalnızca legacy statik sayfalarda) ve `paymentCsp` ile korunur: inline JS nonce ister, dış host allowlist'e eklenmeli. Görev dosyalarındaki "zaten yüklü" varsayımlarını her zaman kodla doğrula (GA4 görevi 2026-09-17: 3 varsayım yanlıştı).
+- İstemciye veri geçirirken inline JS string'i değil `<script type="application/json" nonce>` + `\u003c` kaçışı + harici JS (repo deseni: `data-courses-json`).
 - Jodit 4 varsayılan `cleanHTML.denyTags` iframe içerir; `editor.value` her set edildiğinde (kaynak↔görsel, içe aktarma) iframe silinir. Video içeren editörlerde `denyTags: 'script,object,embed'` ver ve sunucu sanitize'in host allowlist'ini koru. Editör davranışı için tahmin yerine gitignore'lu `uploads/admin/*.html` probe sayfası + Chrome ile yeniden üretim (2026-09-17).
 - Ödeme tutarı kuralı: bekleyen kayıt tutarı yalnızca `syncPendingRegistrationAmount` ile (kuponsuz, kilitlenmemiş) senkronlanır; havale kilidi ve PayTR token **kayıttaki totalAmount'u** kullanır. Yeni bir ödeme yolu eklerken tutarı asla `product.price`'tan yeniden hesaplama (kupon/gösterilen tutar kaybolur — B1 hatası).
 - PM2 log zaman damgaları **UTC**'dir (Türkiye = +3). `unityverse-backend-error.log` CSP ihlali gürültüsüyle dolu; gerçek hataları `grep -v "CSP violation"` ile süz. Kullanıcıya dönen HTTP kodunu görmenin en kısa yolu Nginx access log (`POST /ajax/member/register` satırındaki status).
@@ -88,6 +93,7 @@
 | 2026-09-15 | Git/deploy işlemlerini yalnızca Mimar yürütür | Mimar'ın çalışma kuralı |
 | 2026-09-15 | Dil: sohbet AZ, kod yorumu ve .md TR, commit EN/TR | Mimar'ın kuralı |
 | 2026-09-15 | Kurs görseli için DB tek doğruluk kaynağı; statik detay sayfasında görsel DB ile aynıysa HTML'e dokunulmaz, farklıysa slider tek slayt olarak yeniden yazılır; og:image/itemprop/JSON-LD/paylaşım linki de güncellenir | 431/431 statik sayfa bugün DB ile aynı → sıfır görsel regresyon; liste sayfası zaten DB'den |
+| 2026-09-17 | GA4 purchase: PayTR ok_url landing anında (callback'ten bağımsız) gönderilir — thank-you page standardı; ölçüm ID env'de (`G-M662SLVT18`, Mimar teyit etti); tekrarı localStorage anahtarı önler; payload sunucuda hesaplanır | Görev dosyası + kod gerçekliği (gtag yok, CSP) uzlaştırıldı; DB/migration yok |
 | 2026-09-17 | Havale/EFT kilidinde tutar = kayıttaki `totalAmount` (kupon dahil); yalnızca boşsa kursun güncel fiyatı | Öğrenciye gösterilen tutar bağlayıcıdır; PayTR akışıyla tutarlı; Mimar seçti |
 | 2026-09-16 | Toplu fiyat değişikliği: elle SQL/admin değil, tarihli **plan dosyası** (`scripts/data/price-update-*.json`) + `scripts/update-course-prices.js` (dry-run varsayılan, `--apply` tek transaction, DB'den yeniden okuyup doğrulama, `--report` + `--revert`). Yazılan alanlar admin formuyla aynı: `price` + `discountPrice` (default varyant → ana kurs fiyatı). Belirsiz her durum MANUAL: bulunamadı, rejim belirsiz, süre/default varyant uyuşmazlığı, çatışma | Yerel DB production'dan eski (46 satır DRAFT, 1 slug yok) → "ne değişecek" yalnızca production dry-run'dan alınır; audit izi repoda; idempotent ve geri alınabilir |
 | 2026-09-16 | Kurs içeriği içe aktarma: qayda-esaslı (A) önce; A ve ileride AI (B) **aynı ara formatı** üretir, HTML'i her zaman bizim şablon renderer yazar; Word stil konvansiyonu (Başlık 1/2, madde işareti) + .docx zorunlu, PDF kabul edilmez (v1) | Deterministik, halüsinasyon yok, tek renderer; B eklenince yalnızca extractor değişir (maintainable/scalable) |
@@ -104,6 +110,7 @@
 |---|---|---|---|
 | 0 | 2026-09-15 | Proje araştırması + CLAUDE.md sistemi | 5 doküman; 12 unit test baseline PASS; R1 güvenlik bulgusu |
 | 1b | 2026-09-15 | Belgeler Türkçeye çevrildi (`CLAUDE.md`, `.claude/rules/*`) | 4 dosya, kod değişikliği yok |
+| 13 | 2026-09-17 | GA4 `purchase` olayı: `analytics-events.js` (saf payload), `result.ejs` JSON data-bloğu + `ga4-purchase.js`, `paymentCsp` GA4 allowlist, `GA4_MEASUREMENT_ID` env | 8 dosya (+3 yeni), ~190 satır; 6/6 regresyon; gerçek Chrome: dataLayer'da purchase (value 149000, coupon), ikinci yüklemede 0 tekrar |
 | 12 | 2026-09-17 | B5: kurs editöründe Jodit `cleanHTML.denyTags` iframe'siz | 3 dosya (+1 test), 4 satır kod; gerçek Chrome probe ile kök neden kanıtlandı; 6/6 test |
 | 11 | 2026-09-17 | B1: havale kilidi kayıt tutarını korur (`bankTransferBaseAmount`), ödeme maillerinde kupon satırları | 5 dosya (+1 yeni), ~45 satır; yeni test + 7 regresyon PASS (`test-bank-transfer-discount` yeni kurala göre güncellendi) |
 | 10 | 2026-09-17 | Üye kayıt/giriş formları sunucunun 4xx mesajını gösterir (409/429/400/401); `scripts.js` `?v=5.4.119` | 5 dosya, ~20 satır; test + 6 regresyon PASS; yerel: 409/400/401 JSON mesajları doğrulandı |

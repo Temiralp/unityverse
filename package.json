@@ -65,6 +65,7 @@
     "test:course-import": "node scripts/test-course-import.js",
     "test:admin-content-import": "node scripts/test-admin-content-import.js",
     "test:admin-editor-iframe": "node scripts/test-admin-editor-iframe.js",
+    "test:ga4-purchase-event": "node scripts/test-ga4-purchase-event.js",
     "course-import:preview": "node scripts/course-import-preview.js",
     "test:course-price-update": "node scripts/test-course-price-update.js",
     "prices:plan": "node scripts/update-course-prices.js --plan",

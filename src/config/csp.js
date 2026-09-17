@@ -81,14 +81,23 @@ const ejsCsp = helmet.contentSecurityPolicy({
   }
 });
 
+// Odeme sayfalari: PayTR + GA4 (purchase olayi icin gtag.js ve olcum uc noktalari)
+const GA4_SCRIPT_SOURCES = ['https://www.googletagmanager.com'];
+const GA4_CONNECT_SOURCES = [
+  'https://*.google-analytics.com',
+  'https://*.analytics.google.com',
+  'https://*.googletagmanager.com'
+];
+
 const paymentCsp = helmet.contentSecurityPolicy({
   directives: {
     ...commonDirectives(),
-    connectSrc: ["'self'", 'https://www.paytr.com'],
+    connectSrc: ["'self'", 'https://www.paytr.com', ...GA4_CONNECT_SOURCES],
     frameSrc: [...COMMON_FRAME_SOURCES, ...PAYTR_FRAME_SOURCES, 'https:'],
     scriptSrc: [
       "'self'",
       'https://www.paytr.com',
+      ...GA4_SCRIPT_SOURCES,
       (req, res) => `'nonce-${res.locals.cspNonce}'`
     ]
   }
