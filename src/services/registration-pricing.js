@@ -50,7 +50,16 @@ async function syncPendingRegistrationAmount(prisma, registration) {
   });
 }
 
+// Havale/EFT kilidinde esas alinacak tutar: kayitta saklanan totalAmount (kupon uygulanmis /
+// odeme sayfasinda senkronlanmis, ogrenciye gosterilen tutar) korunur; yalnizca bossa kursun
+// guncel fiyati kullanilir. Kart (PayTR) akisiyla ayni kural.
+function bankTransferBaseAmount(registration) {
+  if (registration && registration.totalAmount != null) return String(registration.totalAmount);
+  return currentProductAmount(registration && registration.product);
+}
+
 module.exports = {
+  bankTransferBaseAmount,
   currentProductAmount,
   syncPendingRegistrationAmount
 };

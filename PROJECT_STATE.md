@@ -1,11 +1,11 @@
 # PROJECT_STATE.md — canlı durum günlüğü
 
 > Her çember (circle) bittiğinde güncellenir. Yeni oturum/agent buradan başlar. Tarihler mutlak (YYYY-MM-DD).
-> Son güncelleme: **2026-09-17** — Çember #8b canlıda doğrulandı; acil kayıt hatası analizi yapıldı (Çember 10 bekliyor); B1–B6 istekleri backlog'a alındı.
+> Son güncelleme: **2026-09-17** — Çember 10 canlıda doğrulandı; Çember 11 (B1 havale tutarı + kupon mail satırları) tamamlandı, commit/deploy Mimar'da.
 
 ## Nerede kaldık
 - Kod: `main` — Çember #0…#7 Mimar tarafından commit/deploy edildi ve canlıda doğrulandı (2026-09-15/16).
-- **Aktif çember:** yok. Çember #8b deploy edildi ve canlıda doğrulandı (2026-09-17). **Commit bekleyen:** Çember 10 (kayıt/giriş hata mesajları). Ardından Backlog B1…B6 (2026-09-17 Mimar tarafından iletilen istekler).
+- **Aktif çember:** yok. Çember #8b deploy edildi ve canlıda doğrulandı (2026-09-17). Çember 10 canlıda doğrulandı (2026-09-17). **Commit bekleyen:** Çember 11 (B1). Ardından Backlog B1…B6 (2026-09-17 Mimar tarafından iletilen istekler).
 - Çember #8a ve #8b tamamlandı (2026-09-16).
 - Gerçek örnek docx repo dışında: `~/unityverse-private-fixtures/Siber_Guvenlik_Mufredati_AI_Guncellemesi.docx` (WhatsApp tmp klasöründen kopyalandı).
 - Yerelde `uploads/products/1789467*.jpg` (3 dosya, 2026-09-15 yerel admin testi) izlenmiyor — commit'e eklenmemeli.
@@ -35,7 +35,7 @@
 
 ## Backlog (Mimar sıralar)
 - [x] **Çember 10 (tamamlandı, commit bekliyor): üye kayıt/giriş hata mesajları.** `uye-girisi/index.html:2551` ve `uye-ol/index.html:2551` `error:` callback'i her 4xx/5xx'te sabit "Sunucu hatası…" gösterir, sunucunun gerçek mesajını (409 "kayıtlı üye var", 429 rate-limit 5/saat/IP, 400 doğrulama) yutar; giriş formunda (`scripts.js:2007`) `error:` callback'i hiç yok (401 sessiz). Düzeltme: `jqXHR.responseJSON.message` göster; `LEGACY_SCRIPTS_VERSION` bump. (2026-09-17 öğrenci şikayeti)
-- [ ] **B1 — Havale + kupon: mail tutarı yanlış.** Öğrenci kuponla 134.100 ödedi, maile 167.625 (kuponsuz) düştü. `sendBankTransferEmails` / `payment-notifications.js` kupon sonrası tutarı ve kupon kodunu (kullanıldıysa) göndermeli. Araştırma + test.
+- [x] **B1 (Çember 11, commit bekliyor) — Havale kilidi kayıt tutarını eziyordu.** Kök neden: `lockBankTransferRegistration` totalAmount'u kursun **güncel** fiyatıyla yeniden hesaplıyordu (167.625 = 186.250×0,90; öğrenciye gösterilen 134.100 = 149.000×0,90). Düzeltme: `bankTransferBaseAmount` (kayıttaki totalAmount korunur; PayTR ile aynı kural) + her iki ödeme mailinde Kupon / Kupon İndirimi satırları.
 - [ ] **B2 — Ödeme entegrasyonu (büyük): PayTR + havale/EFT → admin & öğrenci paneli otomatik.** Bugün: PayTR callback tek çekimi işler; havale `PENDING` kalır, admin `Ödeme Ekle` ile elle kaydeder (bug değil, tasarım). İstek: PayTR taksitli ödemelerin (3/6/12…) `EducationInstallment` olarak otomatik düşmesi ve her taksitin ödendi olması; banka hesabına gelen havalelerin otomatik eşleşmesi (banka API/açık bankacılık — dış etken: bankanın API'si var mı? araştırılacak); admin elle düzeltme korunur. Ayrı keşif çemberi: PayTR taksit callback alanları resmi dokümandan okunacak.
 - [ ] **B3 — HubSpot CRM entegrasyonu.** İstek: ziyaretçi/üye takibi, admin panele entegre. Keşif: HubSpot ücretsiz CRM + tracking script (CSP allowlist gerekir) + Forms/Contacts API ile lead senkronu (`leads.js`, üye kaydı). KVKK/çerez onayı etkisi değerlendirilecek. Önce kapsam kararı (yalnızca takip scripti mi, iki yönlü senkron mu).
 - [ ] **B4 — İçerik hizalama/tutarlılık.** "Eğitime İlk Bakış" ve diğer sekmelerde görsel/metin hizasız (Jodit'te ve sitede). Çözüm yönü: tek içerik CSS'i (admin önizleme + public sekme aynı stil), içe aktarma renderer'ında görsel/paragraf sarmalayıcı sınıflar; mevcut kurslar için audit + toplu normalize (dry-run).
@@ -60,6 +60,7 @@
 - `clear-site-data` ile 301 önbellek kırma denemesi revert edildi (`9afe7b57`). Tekrarlama.
 - Varyant sayfalarının canonical'ı ana ürüne yönelmeli (`2cb9fa14`) — kurs/varyant işinde koru.
 - Cache-busting: CSS/JS değişince HTML'lerdeki `?v=` parametresi güncellenir (`bcc0911a`), aksi halde kullanıcılar eski dosyayı görür.
+- Ödeme tutarı kuralı: bekleyen kayıt tutarı yalnızca `syncPendingRegistrationAmount` ile (kuponsuz, kilitlenmemiş) senkronlanır; havale kilidi ve PayTR token **kayıttaki totalAmount'u** kullanır. Yeni bir ödeme yolu eklerken tutarı asla `product.price`'tan yeniden hesaplama (kupon/gösterilen tutar kaybolur — B1 hatası).
 - PM2 log zaman damgaları **UTC**'dir (Türkiye = +3). `unityverse-backend-error.log` CSP ihlali gürültüsüyle dolu; gerçek hataları `grep -v "CSP violation"` ile süz. Kullanıcıya dönen HTTP kodunu görmenin en kısa yolu Nginx access log (`POST /ajax/member/register` satırındaki status).
 - Legacy jQuery formları (`uye-girisi`, `uye-ol`, `scripts.js` signin) sunucu 4xx mesajını göstermez; yeni public endpoint eklerken istemci `error` callback'inin `responseJSON.message` kullandığından emin ol.
 - Tarayıcı e2e'de admin girişi gerekiyorsa şifreyi asistan girmez; Mimar geçici test hesabıyla giriş yapar, asistan devam eder (2026-09-16 uygulaması).
@@ -85,6 +86,7 @@
 | 2026-09-15 | Git/deploy işlemlerini yalnızca Mimar yürütür | Mimar'ın çalışma kuralı |
 | 2026-09-15 | Dil: sohbet AZ, kod yorumu ve .md TR, commit EN/TR | Mimar'ın kuralı |
 | 2026-09-15 | Kurs görseli için DB tek doğruluk kaynağı; statik detay sayfasında görsel DB ile aynıysa HTML'e dokunulmaz, farklıysa slider tek slayt olarak yeniden yazılır; og:image/itemprop/JSON-LD/paylaşım linki de güncellenir | 431/431 statik sayfa bugün DB ile aynı → sıfır görsel regresyon; liste sayfası zaten DB'den |
+| 2026-09-17 | Havale/EFT kilidinde tutar = kayıttaki `totalAmount` (kupon dahil); yalnızca boşsa kursun güncel fiyatı | Öğrenciye gösterilen tutar bağlayıcıdır; PayTR akışıyla tutarlı; Mimar seçti |
 | 2026-09-16 | Toplu fiyat değişikliği: elle SQL/admin değil, tarihli **plan dosyası** (`scripts/data/price-update-*.json`) + `scripts/update-course-prices.js` (dry-run varsayılan, `--apply` tek transaction, DB'den yeniden okuyup doğrulama, `--report` + `--revert`). Yazılan alanlar admin formuyla aynı: `price` + `discountPrice` (default varyant → ana kurs fiyatı). Belirsiz her durum MANUAL: bulunamadı, rejim belirsiz, süre/default varyant uyuşmazlığı, çatışma | Yerel DB production'dan eski (46 satır DRAFT, 1 slug yok) → "ne değişecek" yalnızca production dry-run'dan alınır; audit izi repoda; idempotent ve geri alınabilir |
 | 2026-09-16 | Kurs içeriği içe aktarma: qayda-esaslı (A) önce; A ve ileride AI (B) **aynı ara formatı** üretir, HTML'i her zaman bizim şablon renderer yazar; Word stil konvansiyonu (Başlık 1/2, madde işareti) + .docx zorunlu, PDF kabul edilmez (v1) | Deterministik, halüsinasyon yok, tek renderer; B eklenince yalnızca extractor değişir (maintainable/scalable) |
 | 2026-09-15 | Admin listelerinde "olduğum sayfada kal": `returnTo` URL/form ile taşınır, `safeReturnTo` (`src/services/admin-return-to.js`) yalnızca `/admin/products` altındaki göreli yolu kabul eder (open-redirect koruması); diğer bölümler için aynı servis yeniden kullanılır | Durumsuz, sunucu belleği yok, prefiks-kapalı |
@@ -100,6 +102,7 @@
 |---|---|---|---|
 | 0 | 2026-09-15 | Proje araştırması + CLAUDE.md sistemi | 5 doküman; 12 unit test baseline PASS; R1 güvenlik bulgusu |
 | 1b | 2026-09-15 | Belgeler Türkçeye çevrildi (`CLAUDE.md`, `.claude/rules/*`) | 4 dosya, kod değişikliği yok |
+| 11 | 2026-09-17 | B1: havale kilidi kayıt tutarını korur (`bankTransferBaseAmount`), ödeme maillerinde kupon satırları | 5 dosya (+1 yeni), ~45 satır; yeni test + 7 regresyon PASS (`test-bank-transfer-discount` yeni kurala göre güncellendi) |
 | 10 | 2026-09-17 | Üye kayıt/giriş formları sunucunun 4xx mesajını gösterir (409/429/400/401); `scripts.js` `?v=5.4.119` | 5 dosya, ~20 satır; test + 6 regresyon PASS; yerel: 409/400/401 JSON mesajları doğrulandı |
 | 8b ✓ | 2026-09-17 | 8b canlıda Mimar tarafından doğrulandı | — |
 | 8b | 2026-09-16 | Admin "Word'den içe aktar": `POST /admin/products/import-content` (multer bellek, CSRF), `import-response.js`, form dialogu, `admin-product-editor.js` (fetch → önizleme → Jodit), CSS | 8 dosya (+2 yeni), ~420 satır; 8/8 test; yerel HTTP e2e (302/403/200/400×3); gerçek Chrome: dialog, 12 panel, 3 editör dolduruldu, Sonuna ekle, 0 konsol hatası |

@@ -20,6 +20,7 @@ const {
   normalizeBankTransferDiscountRate
 } = require('../services/bank-transfer-pricing');
 const {
+  bankTransferBaseAmount,
   currentProductAmount,
   syncPendingRegistrationAmount
 } = require('../services/registration-pricing');
@@ -217,8 +218,8 @@ async function lockBankTransferRegistration(prismaClient, req, registrationId) {
       return { registration, newlyLocked: false };
     }
 
-    const latestAmount = currentProductAmount(registration.product);
-    const totalAmount = latestAmount == null ? registration.totalAmount : latestAmount;
+    // Kayittaki tutar (kupon dahil) korunur; kursun guncel fiyatiyla ezilmez (B1 duzeltmesi)
+    const totalAmount = bankTransferBaseAmount(registration);
     const quote = bankTransferQuote(registration.product, totalAmount);
 
     if (quote.amount == null) {

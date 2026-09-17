@@ -227,14 +227,16 @@ async function bankTransferLockTests() {
     8
   );
 
+  // Cember 11 (B1, 2026-09-17): kilit kayittaki totalAmount'u korur, kursun guncel fiyatiyla
+  // ezmez (kupon / ogrenciye gosterilen tutar kaybolmasin). 50.000 -> %20 havale = 40.000
   assert.equal(result.newlyLocked, true);
-  assert.equal(updatedData.totalAmount, '49000.00');
+  assert.equal(updatedData.totalAmount, '50000.00');
   assert.equal(updatedData.paymentMethod, 'BANK_TRANSFER');
   assert.equal(updatedData.bankTransferDiscountRate, '20.00');
-  assert.equal(updatedData.bankTransferAmount, '39200.00');
+  assert.equal(updatedData.bankTransferAmount, '40000.00');
   assert.equal(createdNote.registrationId, 8);
   assert.match(createdNote.note, /Havale indirimi: %20\.00/);
-  assert.match(createdNote.note, /Beklenen tutar: 39\.200,00 TL/);
+  assert.match(createdNote.note, /Beklenen tutar: 40\.000,00 TL/);
 }
 
 function viewIntegrationTests() {

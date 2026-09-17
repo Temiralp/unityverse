@@ -152,6 +152,7 @@ function cardPaymentMailData({ registration, payment }) {
     { label: 'Öğrenci', value: studentName },
     { label: 'Eğitim', value: courseTitle },
     { label: 'Kayıt No', value: `#${registration.id}` },
+    ...couponRows(registration),
     { label: 'Eğitim Tutarı', value: courseAmount },
     { label: 'Toplam Ödenen', value: paidAmount },
     { label: 'Ödeme Planı', value: installment },
@@ -182,6 +183,17 @@ function cardPaymentMailData({ registration, payment }) {
   };
 }
 
+// Kupon kullanildiysa her iki mailde (ogrenci + admin) kupon kodu ve indirimi gosterilir.
+function couponRows(registration) {
+  const code = textValue(registration && registration.couponCode, '');
+  if (!code) return [];
+  const rows = [{ label: 'Kupon', value: code }];
+  if (registration.couponDiscount != null) {
+    rows.push({ label: 'Kupon İndirimi', value: `-${formatMoney(registration.couponDiscount)}` });
+  }
+  return rows;
+}
+
 function bankTransferMailData({ registration, bankTransfer }) {
   const studentName = fullName(registration);
   const courseTitle = textValue(registration.courseTitle);
@@ -192,6 +204,7 @@ function bankTransferMailData({ registration, bankTransfer }) {
     { label: 'Öğrenci', value: studentName },
     { label: 'Eğitim', value: courseTitle },
     { label: 'Kayıt No', value: `#${registration.id}` },
+    ...couponRows(registration),
     { label: 'Ödenecek Tutar', value: amount },
     { label: 'Ödeme Planı', value: 'Havale/EFT toplam ödeme' },
     { label: 'Açıklama', value: reference },

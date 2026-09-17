@@ -73,6 +73,7 @@
     "import:legacy-members": "node scripts/import-legacy-members.js",
     "test:member-registration": "node scripts/test-member-registration.js",
     "test:member-form-errors": "node scripts/test-member-form-errors.js",
+    "test:coupon-bank-transfer-amount": "node scripts/test-coupon-bank-transfer-amount.js",
     "test:rate-limit": "node scripts/test-rate-limit.js",
     "seed": "node prisma/seed.js"
   },
