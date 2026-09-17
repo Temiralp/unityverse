@@ -2548,8 +2548,10 @@ pixelCompleteRegistration($('#reg_name').val(), 1);					_success('', result.mess
 pixelCompleteRegistration($('#reg_name').val(), 0);					sendSystemLog('', 'register', result.message);
 				}
 			},
-			error: function() {
-				_error('', "Sunucu hatası. Lütfen daha sonra tekrar deneyiniz.");
+			error: function(jqXHR) {
+				// Sunucunun gerçek mesajı (409 kayıtlı üye, 429 deneme sınırı, 400 doğrulama) gösterilir
+				var serverMessage = jqXHR && jqXHR.responseJSON && jqXHR.responseJSON.message;
+				_error('', serverMessage || "Sunucu hatası. Lütfen daha sonra tekrar deneyiniz.");
 			}
 		});
 

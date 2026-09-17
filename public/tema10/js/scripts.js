@@ -2027,6 +2027,11 @@ function signin(from_sidebar = false)
 				sendSystemLog('', 'signin', result.message);
 			}
 		},
+		error: function(jqXHR) {
+			// 401 hatalı şifre / 429 deneme sınırı gibi sunucu mesajları kullanıcıya gösterilir
+			var serverMessage = jqXHR && jqXHR.responseJSON && jqXHR.responseJSON.message;
+			_error('', serverMessage || "Giriş yapılamadı. Lütfen daha sonra tekrar deneyiniz.");
+		}
 	});
 	return false;
 }
