@@ -15,6 +15,7 @@ const prisma = require('./db');
 const adminRoutes = require('./routes/admin');
 const apiRoutes = require('./routes/api');
 const catalogRoutes = require('./routes/catalog');
+const cookieConsentRoutes = require('./routes/cookie-consent');
 const enrollmentRoutes = require('./routes/enrollments');
 const leadRoutes = require('./routes/leads');
 const legacyFilterRoutes = require('./routes/legacy-filters');
@@ -215,6 +216,7 @@ if (legacyFrontendMode) {
   app.use('/', catalogRoutes);
 }
 app.use('/odeme', paymentRoutes);
+app.use('/ajax', cookieConsentRoutes);
 app.use('/ajax', legacyFilterRoutes);
 app.use('/ajax', leadRoutes);
 app.use('/ajax/enroll', enrollmentRoutes);
