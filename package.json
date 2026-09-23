@@ -9,6 +9,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
+    "test:legacy-csp-widgets": "node scripts/test-legacy-csp-widgets.js",
     "test:cookie-consent-endpoint": "node scripts/test-cookie-consent-endpoint.js",
     "test:enrollment": "node scripts/test-enrollment.js",
     "test:enrollment-browser": "node scripts/enrollment-frontend-browser-smoke.js",

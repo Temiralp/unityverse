@@ -1,8 +1,24 @@
 const crypto = require('crypto');
 const helmet = require('helmet');
 
+// GTM konteynerinin enjekte ettigi 3. taraf widget'lar (R13, 2026-09-23 canli Chrome kaniti:
+// bu iki script encodedBodySize=0 ile engelleniyordu). Kaynak GTM oldugu icin repoda izleri yok.
+const WIDGET_SCRIPT_SOURCES = [
+  'https://static.elfsight.com',
+  'https://d2mpatx37cqexb.cloudfront.net'
+];
+
+// Delightchat embed'i kendi CSS'ini de <link> ile ekliyor (yerel kanit: style-src-elem ihlali).
+const WIDGET_STYLE_SOURCES = ['https://d2mpatx37cqexb.cloudfront.net'];
+
+const WIDGET_CONNECT_SOURCES = [
+  'https://*.elfsight.com',
+  'https://*.delightchat.io'
+];
+
 const LEGACY_SCRIPT_SOURCES = [
   "'self'",
+  ...WIDGET_SCRIPT_SOURCES,
   'https://www.googletagmanager.com',
   'https://connect.facebook.net',
   'https://embed.tawk.to',
@@ -15,6 +31,7 @@ const LEGACY_SCRIPT_SOURCES = [
 
 const LEGACY_CONNECT_SOURCES = [
   "'self'",
+  ...WIDGET_CONNECT_SOURCES,
   'https://*.google-analytics.com',
   'https://*.analytics.google.com',
   'https://*.googletagmanager.com',
@@ -41,6 +58,8 @@ const PAYTR_FRAME_SOURCES = [
   'https://goguvenliodeme.bkm.com.tr'
 ];
 
+const COMMON_STYLE_SOURCES = ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'];
+
 function commonDirectives() {
   return {
     defaultSrc: ["'self'"],
@@ -53,7 +72,7 @@ function commonDirectives() {
     mediaSrc: ["'self'", 'blob:', 'https:'],
     objectSrc: ["'none'"],
     scriptSrcAttr: ["'unsafe-inline'"],
-    styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+    styleSrc: COMMON_STYLE_SOURCES,
     workerSrc: ["'self'", 'blob:'],
     reportUri: ['/csp-report'],
     upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null
@@ -64,7 +83,8 @@ const legacyCsp = helmet.contentSecurityPolicy({
   directives: {
     ...commonDirectives(),
     connectSrc: LEGACY_CONNECT_SOURCES,
-    scriptSrc: [...LEGACY_SCRIPT_SOURCES, "'unsafe-inline'"]
+    scriptSrc: [...LEGACY_SCRIPT_SOURCES, "'unsafe-inline'"],
+    styleSrc: [...COMMON_STYLE_SOURCES, ...WIDGET_STYLE_SOURCES]
   }
 });
 
