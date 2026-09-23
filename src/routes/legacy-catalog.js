@@ -9,7 +9,6 @@ const {
 } = require('../services/legacy-category-counts');
 const { ensureLegacyCategorySearch } = require('../services/legacy-category-search');
 const { normalizeLegacyBlogDetailContent } = require('../services/legacy-blog-detail');
-const { ensureLegacyWhatsappButton } = require('../services/legacy-whatsapp');
 const { publicCatalogProductWhere } = require('../services/public-catalog');
 
 const router = express.Router();
@@ -398,7 +397,7 @@ async function renderLegacyBlogDetail(post) {
     .replace(blogDetailBannerPattern, renderLegacyBlogDetailBanner(post))
     .replace(blogDetailContentPattern, `$1\n${content}\n$2`);
 
-  return ensureLegacyWhatsappButton(normalizeLegacyBlogPaths(renderedHtml));
+  return normalizeLegacyBlogPaths(renderedHtml);
 }
 
 function createBlogCard(post) {
@@ -617,7 +616,7 @@ router.get(['/blog', '/blog/', '/blog/:categoryId(\\d+)', '/blog/:categoryId(\\d
       : blogQuery
         ? await renderLegacyBlogSearch(template, blogQuery)
         : await renderLegacyBlogList(template, currentPage, pageSize, '/blog/');
-    const html = ensureLegacyWhatsappButton(normalizeLegacyBlogPaths(renderedHtml));
+    const html = normalizeLegacyBlogPaths(renderedHtml);
 
     res.setHeader('Cache-Control', 'no-cache');
     return res.send(html);

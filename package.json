@@ -20,7 +20,6 @@
     "test:lead-mail": "node scripts/test-lead-mail-notification.js",
     "test:legacy-youtube": "node scripts/test-legacy-youtube-embeds.js",
     "test:course-overview": "node scripts/test-course-overview.js",
-    "test:legacy-whatsapp": "node scripts/test-legacy-whatsapp.js",
     "test:legacy-header": "node scripts/test-legacy-header-layout.js",
     "test:legacy-homepage": "node scripts/test-legacy-homepage-responsive.js",
     "test:legacy-product-visibility": "node scripts/test-legacy-product-visibility.js",

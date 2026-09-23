@@ -17,7 +17,16 @@ const enhancedPage = enhanceLegacyHtml(basicPage);
 
 assert(enhancedPage.includes(LEGACY_HEADER_LAYOUT_MARKER));
 assert(enhancedPage.includes(`legacy-header-layout.css?v=${LEGACY_HEADER_LAYOUT_VERSION}`));
-assert(enhancedPage.includes('legacy-whatsapp-appointment'));
+// Cember 16: kendi WhatsApp dugmemiz kaldirildi (GTM'deki delightchat widget'i ile ust uste
+// biniyordu). Sayfaya artik enjekte edilmemeli ve hicbir kaynak dosya servisi cagirmamali.
+assert(!enhancedPage.includes('legacy-whatsapp-appointment'));
+assert(!enhancedPage.includes('data-legacy-whatsapp-style'));
+
+const catalogSource = fs.readFileSync(path.join(__dirname, '..', 'src/routes/legacy-catalog.js'), 'utf8');
+assert(!catalogSource.includes('ensureLegacyWhatsappButton'));
+const middlewareSource = fs.readFileSync(path.join(__dirname, '..', 'src/middleware/legacy-whatsapp.js'), 'utf8');
+assert(!middlewareSource.includes('ensureLegacyWhatsappButton'));
+assert(!fs.existsSync(path.join(__dirname, '..', 'src/services/legacy-whatsapp.js')));
 assert.strictEqual(occurrences(enhancedPage, LEGACY_HEADER_LAYOUT_MARKER), 1);
 assert.strictEqual(enhanceLegacyHtml(enhancedPage), enhancedPage);
 assert.strictEqual(ensureLegacyHeaderLayout('<div>fragment</div>'), '<div>fragment</div>');

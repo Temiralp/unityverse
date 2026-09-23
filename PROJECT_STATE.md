@@ -1,11 +1,11 @@
 # PROJECT_STATE.md — canlı durum günlüğü
 
 > Her çember (circle) bittiğinde güncellenir. Yeni oturum/agent buradan başlar. Tarihler mutlak (YYYY-MM-DD).
-> Son güncelleme: **2026-09-23** — Çember 14 (R14) canlıda doğrulandı; Çember 15 (R13: GTM widget'ları için legacy CSP allowlist) tamamlandı, commit/deploy Mimar'da. Sıradaki: **B4 içerik hizalama**.
+> Son güncelleme: **2026-09-23** — Çember 14 (R14) ve 15 (R13) canlıda doğrulandı; Çember 16 (çift WhatsApp düğmesi: kendi butonumuz kaldırıldı) tamamlandı, commit/deploy Mimar'da. Sıradaki: **B4-a içerik hizalama (CSS)**.
 
 ## Nerede kaldık
 - Kod: `main` — Çember #0…#7 Mimar tarafından commit/deploy edildi ve canlıda doğrulandı (2026-09-15/16).
-- **Aktif çember:** yok. Çember 14 (R14) **canlıda doğrulandı** (2026-09-23: `POST /ajax/cookieselection` → 200 `{"status":"ok"}`). Çember 15 (R13) tamamlandı, commit bekliyor. Sıradaki: **B4 — içerik hizalama** (Mimar 2026-09-23: örnek düzgün sayfa `urun/sizma-testi-egitimi-online-pentest-egitimi-penetrasyon-testi/`, bozuk sayfa `urun/yazilim-uzmanligi-canli-online-egitim-staj-garantili-668/`; yalnız bu ikisi değil, benzer tüm kurslar). Çember #8b deploy edildi ve canlıda doğrulandı (2026-09-17). Çember 10 ve 11 canlıda/terminalde doğrulandı (2026-09-17). Çember 13 canlıda doğrulandı (2026-09-17: gerçek domenden probe → GA4 Gerçek Zamanlı `purchase`; canlı kart ödemesi sonuç sayfasında dataLayer purchase). Sıradaki: **B3 HubSpot planı**. Ardından Backlog B1…B6 (2026-09-17 Mimar tarafından iletilen istekler).
+- **Aktif çember:** yok. Çember 14 (R14) **canlıda doğrulandı** (2026-09-23: `POST /ajax/cookieselection` → 200 `{"status":"ok"}`). Çember 15 (R13) **canlıda doğrulandı** (2026-09-23: `window.eapps` object, delightchat JS+CSS yüklendi; render edilen EJS sayfasında — `/admin/login` — widget host'u yok). Çember 16 tamamlandı, commit bekliyor. Sıradaki: **B4 — içerik hizalama** (Mimar 2026-09-23: örnek düzgün sayfa `urun/sizma-testi-egitimi-online-pentest-egitimi-penetrasyon-testi/`, bozuk sayfa `urun/yazilim-uzmanligi-canli-online-egitim-staj-garantili-668/`; yalnız bu ikisi değil, benzer tüm kurslar). Çember #8b deploy edildi ve canlıda doğrulandı (2026-09-17). Çember 10 ve 11 canlıda/terminalde doğrulandı (2026-09-17). Çember 13 canlıda doğrulandı (2026-09-17: gerçek domenden probe → GA4 Gerçek Zamanlı `purchase`; canlı kart ödemesi sonuç sayfasında dataLayer purchase). Sıradaki: **B3 HubSpot planı**. Ardından Backlog B1…B6 (2026-09-17 Mimar tarafından iletilen istekler).
 - Çember #8a ve #8b tamamlandı (2026-09-16).
 - Gerçek örnek docx repo dışında: `~/unityverse-private-fixtures/Siber_Guvenlik_Mufredati_AI_Guncellemesi.docx` (WhatsApp tmp klasöründen kopyalandı).
 - Yerelde `uploads/products/1789467*.jpg` (3 dosya, 2026-09-15 yerel admin testi) izlenmiyor — commit'e eklenmemeli.
@@ -59,6 +59,11 @@
 - [ ] R9 — `test-price-visibility-language` kırık test kararı (test vs CSS)
 - [ ] §Sunucu kalan sorular: DB konumu, uploads yedeği; `DEPLOYMENT.md` gerçek kurulumla (~/unityverse, pm2 unityverse-backend) uyumlu hale getirilmeli
 - [ ] `PRODUCTION_CHECKLIST.md` §1 "kritik yeni dosyalar" maddesi eski (dosyalar zaten commit'te) — güncellenmeli
+
+## Çift WhatsApp düğmesi (Çember 16, 2026-09-23)
+- R13 ile delightchat widget'ı açılınca sayfada **iki** WhatsApp düğmesi oluştu: kendi `a.legacy-whatsapp-appointment` (260×45, bottom 75 / right 24) ile delightchat'in `div#wa-btn-wrapper` (216×45, bottom 80 / right 20) neredeyse üst üste biniyordu; bizimki daha geniş olduğu için soldan taşıp ikinci bir ikon gibi görünüyordu.
+- Mimar kararı: **kendi butonumuz kaldırıldı**, GTM'deki delightchat widget'ı kalsın. Buton 3 yerden enjekte ediliyordu (`legacy-whatsapp.js` enhance zinciri + `legacy-catalog.js`'te blog detay ve blog listesi); statik HTML'lerde hiç yoktu, bu yüzden kaldırma anında her sayfaya yansır.
+- **Kapsam notu:** delightchat GTM ile geliyor → 630 legacy statik sayfanın hepsinde görünür. EJS sayfalarında (admin, `/odeme/*`, üye profili) GTM yok, dolayısıyla widget da yok — ödeme sayfalarına 3. taraf script eklenmez (bkz. ders defteri). Widget ileride GTM'den kaldırılırsa sitede WhatsApp düğmesi kalmaz; eski buton `git revert` ile geri gelir.
 
 ## Yapılmaması gerekenler (git geçmişinden öğrenilen dersler)
 - CSP ihlali logunu okurken `grep "CSP violation"` **yetmez**: `console.warn` nesneyi alt satırlara yazar, `blockedUri` başka satırdadır → `grep -A6 "CSP violation"` kullan. (2026-09-23'te boş çıktı bu yüzdendi, log gerçekten boş değildi.)
@@ -120,6 +125,8 @@
 |---|---|---|---|
 | 0 | 2026-09-15 | Proje araştırması + CLAUDE.md sistemi | 5 doküman; 12 unit test baseline PASS; R1 güvenlik bulgusu |
 | 1b | 2026-09-15 | Belgeler Türkçeye çevrildi (`CLAUDE.md`, `.claude/rules/*`) | 4 dosya, kod değişikliği yok |
+| 16 | 2026-09-23 | Çift WhatsApp düğmesi: `ensureLegacyWhatsappButton` 3 çağrı yerinden kaldırıldı, `src/services/legacy-whatsapp.js` ve testi silindi, `test-legacy-header-layout` "buton olmamalı" doğrulamasına çevrildi | 5 dosya (2 silme), ~10 satır; 25/25 test PASS (631 public HTML tarandı); yerel e2e: ana sayfa / ürün / blog / blog-detay / kategori / tüm-ürünler → buton 0, GTM 1 |
+| 15 ✓ | 2026-09-23 | R13 canlıda doğrulandı: `window.eapps` object (önce undefined), `embed.min.js`+`embed.min.css` yüklendi; `/admin/login` CSP'sinde widget host'u yok | — |
 | 15 | 2026-09-23 | R13: `WIDGET_SCRIPT_SOURCES` / `WIDGET_CONNECT_SOURCES` / `WIDGET_STYLE_SOURCES` legacy CSP'ye eklendi (elfsight + delightchat); ödeme/EJS CSP'si değişmedi | 2 dosya (+1 yeni test), 22 satır; 24/24 test PASS; yerel gerçek Chrome: `window.eapps` object (önce undefined), `embed.min.css` 17 ms'de yüklendi, WhatsApp widget'ı göründü, kalan tek ihlal gtm.js `eval` (önceden var) |
 | 14 ✓ | 2026-09-23 | R14 canlıda doğrulandı: `POST /ajax/cookieselection` → 200 `{"status":"ok"}` + `no-store`; komşu yollar (productfilters 200, bilinmeyen 404, GET 404) değişmedi | — |
 | 14 | 2026-09-23 | R14: `src/routes/cookie-consent.js` (yan etkisiz `POST /ajax/cookieselection`) + `src/server.js` 2 satır bağlama | 2 yeni + 3 satır değişiklik; 23/23 test PASS; yerel e2e: 200 `{"status":"ok"}` + `no-store`, komşu `/ajax` route'ları (productfilters 200, member/register 400, bilinmeyen yol 404, GET 404) değişmedi |

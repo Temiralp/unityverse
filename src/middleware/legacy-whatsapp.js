@@ -8,7 +8,6 @@ const {
 const { ensureLegacyAssetVersions } = require('../services/legacy-assets');
 const { ensureLegacyHeaderLayout } = require('../services/legacy-header-layout');
 const { ensureLegacyHomepageLocalAssets } = require('../services/legacy-homepage');
-const { ensureLegacyWhatsappButton } = require('../services/legacy-whatsapp');
 const { synchronizeLegacyProductDetailImage } = require('../services/legacy-product-image');
 const { synchronizeLegacyProductTabs } = require('../services/legacy-product-tabs');
 const { removeLegacyRelatedProducts } = require('../services/legacy-related-products');
@@ -83,7 +82,7 @@ function enhanceLegacyHtml(
         `<link rel="canonical" href="${canonicalUrl}" />`
       )
     : withLocalHomepageAssets;
-  return ensureLegacyWhatsappButton(ensureLegacyHeaderLayout(withCanonical));
+  return ensureLegacyHeaderLayout(withCanonical);
 }
 
 function injectLegacyWhatsappIntoHtmlResponses(req, res, next) {
