@@ -9,6 +9,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
+    "test:legacy-course-overview-script": "node scripts/test-legacy-course-overview-script.js",
     "test:course-content-styles": "node scripts/test-course-content-styles.js",
     "test:legacy-csp-widgets": "node scripts/test-legacy-csp-widgets.js",
     "test:cookie-consent-endpoint": "node scripts/test-cookie-consent-endpoint.js",
