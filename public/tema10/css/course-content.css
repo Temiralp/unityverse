@@ -1,0 +1,64 @@
+/* Kurs sekmesi icerigi — ortak hizalama stili (B4-a, 2026-09-23)
+ *
+ * Kapsam BILEREK dardir: yalnizca kurs detay sayfasinin uc sekmesi ve admin editor
+ * onizlemesi. Global secici (img{}, p{}) yazilmaz — sekme disina tasarsa tum siteyi
+ * etkiler; scripts/test-course-content-styles.js bunu makineyle dogrular.
+ *
+ * Olculen iki sorun (438 statik kurs sayfasi tarandi):
+ *   1) 3764 gorselin 27'si kaptan genis (en buyuk 1200px, kap ~1076px) + 425'inde width
+ *      atributu yok -> tasma.
+ *   2) 618 blokta 2+ gorsel yan yana; sarmalayici/bosluk olmadigi icin sola yigiliyor.
+ *      Gercek yapi olculdu: 269 blokta gorseller dogrudan kardes, 190 blokta biri dogrudan
+ *      digeri <span> icinde, 159 blokta hepsi sarmalayici icinde. Bu yuzden asagidaki dort
+ *      desen birlikte kullanilir; "img + img" (bitisik kardes) gercek yapiyi TUTMAZ.
+ *      Dorduncu desen, gorsellerin AYRI <span>'lar icinde oldugu durumu karsilar
+ *      (canli sayfada olculdu: <h2><span><img></span><span><img></span></h2>).
+ *
+ * Mimar karari (2026-09-23): TEK gorselli paragraflar ortalanmaz — asagidaki dort desenin
+ * hicbiri tek gorselli bloga uymaz, boylece bugun duzgun gorunen kurslar degismez.
+ */
+
+/* Kurs sekmeleri + admin editor onizlemesi. :is() ile tek yerde tanimlanir. */
+:is(#tab-info, #tab-additional-content2, #tab-additional-content3, .jodit-wysiwyg) img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* 2+ gorsel iceren blok: sarmalayan, bosluklu, ortalanmis bir siraya doner.
+ * :has() desteklenmeyen tarayicida kural yok sayilir -> bugunku gorunum korunur. */
+:is(#tab-info, #tab-additional-content2, #tab-additional-content3, .jodit-wysiwyg)
+  :is(p, h1, h2, h3, h4, div):is(
+    :has(> img ~ img),
+    :has(> img):has(> :is(span, strong, em, a) img),
+    :has(> :is(span, strong, em, a):has(> img ~ img)),
+    :has(> :is(span, strong, em, a):has(img) ~ :is(span, strong, em, a):has(img))
+  ) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Flex kabinda <br> bos bir satir ogesi uretir; bu bloklarda gizlenir. */
+:is(#tab-info, #tab-additional-content2, #tab-additional-content3, .jodit-wysiwyg)
+  :is(p, h1, h2, h3, h4, div):is(
+    :has(> img ~ img),
+    :has(> img):has(> :is(span, strong, em, a) img),
+    :has(> :is(span, strong, em, a):has(> img ~ img)),
+    :has(> :is(span, strong, em, a):has(img) ~ :is(span, strong, em, a):has(img))
+  ) br {
+  display: none;
+}
+
+/* Gorseli saran satir ici etiketler flex ogesi olurken kendi boyutlarini korumali. */
+:is(#tab-info, #tab-additional-content2, #tab-additional-content3, .jodit-wysiwyg)
+  :is(p, h1, h2, h3, h4, div):is(
+    :has(> img ~ img),
+    :has(> img):has(> :is(span, strong, em, a) img),
+    :has(> :is(span, strong, em, a):has(> img ~ img)),
+    :has(> :is(span, strong, em, a):has(img) ~ :is(span, strong, em, a):has(img))
+  ) > :is(span, strong, em, a) {
+  display: inline-flex;
+  align-items: center;
+}

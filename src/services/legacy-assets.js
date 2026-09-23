@@ -3,6 +3,7 @@ const LEGACY_UNITYVERSE_CSS_VERSION = '5.4.110';
 const LEGACY_SCRIPTS_VERSION = '5.4.119';
 const LEGACY_ENROLLMENT_LOCATION_VERSION = '20260811-1';
 const LEGACY_BANK_TRANSFER_CSS_VERSION = '20260807-1';
+const LEGACY_COURSE_CONTENT_CSS_VERSION = '20260923-1';
 const LEGACY_CATALOG_JS_VERSION = '20260807-1';
 const LEGACY_FILTERS_VERSION = '5.4.99';
 
@@ -13,6 +14,7 @@ const bankTransferCssPattern = /((?:href)=["'][^"']*public\/tema10\/css\/bank-tr
 const catalogScriptsPattern = /((?:src)=["'][^"']*public\/tema10\/js\/legacy-course-catalog\.js\?v=)[^"'&]+/gi;
 const filtersPattern = /((?:src)=["'][^"']*public\/tema10\/js\/filters\.js\?v=)[^"'&]+/gi;
 const productDetailsPattern = /id=["']product_details_content["']/i;
+const courseContentCssLinkPattern = /<link\b[^>]*href=["'][^"']*course-content\.css(?:\?[^"']*)?["'][^>]*>/i;
 const bankTransferCssLinkPattern = /<link\b[^>]*href=["'][^"']*public\/tema10\/css\/bank-transfer-discount\.css(?:\?[^"']*)?["'][^>]*>/i;
 const enrollmentLocationScriptPattern = /<script\b[^>]*src=["'][^"']*public\/tema10\/js\/enrollment-location\.js(?:\?[^"']*)?["'][^>]*><\/script>/i;
 const legacyScriptsTagPattern = /<script\b[^>]*src=["'][^"']*public\/tema10\/js\/scripts\.js(?:\?[^"']*)?["'][^>]*><\/script>/i;
@@ -40,6 +42,17 @@ function ensureLegacyAssetVersions(html) {
   }
 
   if (
+    productDetailsPattern.test(updated)
+    && !courseContentCssLinkPattern.test(updated)
+    && /<\/head>/i.test(updated)
+  ) {
+    updated = updated.replace(
+      /<\/head>/i,
+      `<link rel="stylesheet" href="/public/tema10/css/course-content.css?v=${LEGACY_COURSE_CONTENT_CSS_VERSION}"></head>`
+    );
+  }
+
+  if (
     !enrollmentLocationScriptPattern.test(updated)
     && legacyScriptsTagPattern.test(updated)
   ) {
@@ -54,6 +67,7 @@ function ensureLegacyAssetVersions(html) {
 
 module.exports = {
   LEGACY_BANK_TRANSFER_CSS_VERSION,
+  LEGACY_COURSE_CONTENT_CSS_VERSION,
   LEGACY_CATALOG_JS_VERSION,
   LEGACY_FILTERS_VERSION,
   LEGACY_ENROLLMENT_LOCATION_VERSION,
