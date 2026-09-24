@@ -4,8 +4,6 @@ const LEGACY_SCRIPTS_VERSION = '5.4.119';
 const LEGACY_ENROLLMENT_LOCATION_VERSION = '20260811-1';
 const LEGACY_BANK_TRANSFER_CSS_VERSION = '20260807-1';
 const LEGACY_COURSE_CONTENT_CSS_VERSION = '20260923-1';
-// Dinamik kurs sayfasindaki surumle ayni olmalidir (legacy-product-detail.js).
-const LEGACY_COURSE_OVERVIEW_JS_VERSION = '20260726-2';
 const LEGACY_CATALOG_JS_VERSION = '20260807-1';
 const LEGACY_FILTERS_VERSION = '5.4.99';
 
@@ -16,10 +14,6 @@ const bankTransferCssPattern = /((?:href)=["'][^"']*public\/tema10\/css\/bank-tr
 const catalogScriptsPattern = /((?:src)=["'][^"']*public\/tema10\/js\/legacy-course-catalog\.js\?v=)[^"'&]+/gi;
 const filtersPattern = /((?:src)=["'][^"']*public\/tema10\/js\/filters\.js\?v=)[^"'&]+/gi;
 const productDetailsPattern = /id=["']product_details_content["']/i;
-// "Egitime Ilk Bakis" duzenleyicisi: isareti (data-course-overview) zincirde
-// synchronizeLegacyProductTabs koyar, bu yuzden burada aranabilir.
-const courseOverviewMarkerPattern = /data-course-overview\b/i;
-const courseOverviewScriptPattern = /<script\b[^>]*src=["'][^"']*course-overview\.js(?:\?[^"']*)?["'][^>]*><\/script>/i;
 const courseContentCssLinkPattern = /<link\b[^>]*href=["'][^"']*course-content\.css(?:\?[^"']*)?["'][^>]*>/i;
 const bankTransferCssLinkPattern = /<link\b[^>]*href=["'][^"']*public\/tema10\/css\/bank-transfer-discount\.css(?:\?[^"']*)?["'][^>]*>/i;
 const enrollmentLocationScriptPattern = /<script\b[^>]*src=["'][^"']*public\/tema10\/js\/enrollment-location\.js(?:\?[^"']*)?["'][^>]*><\/script>/i;
@@ -58,18 +52,6 @@ function ensureLegacyAssetVersions(html) {
     );
   }
 
-  // Statik kurs sayfalari da dinamik sayfalarla ayni duzenleyiciyi yuklesin (Cember 18).
-  if (
-    courseOverviewMarkerPattern.test(updated)
-    && !courseOverviewScriptPattern.test(updated)
-    && /<\/body>/i.test(updated)
-  ) {
-    updated = updated.replace(
-      /<\/body>/i,
-      `<script src="/public/tema10/js/course-overview.js?v=${LEGACY_COURSE_OVERVIEW_JS_VERSION}" defer></script></body>`
-    );
-  }
-
   if (
     !enrollmentLocationScriptPattern.test(updated)
     && legacyScriptsTagPattern.test(updated)
@@ -86,7 +68,6 @@ function ensureLegacyAssetVersions(html) {
 module.exports = {
   LEGACY_BANK_TRANSFER_CSS_VERSION,
   LEGACY_COURSE_CONTENT_CSS_VERSION,
-  LEGACY_COURSE_OVERVIEW_JS_VERSION,
   LEGACY_CATALOG_JS_VERSION,
   LEGACY_FILTERS_VERSION,
   LEGACY_ENROLLMENT_LOCATION_VERSION,
