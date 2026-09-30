@@ -37,7 +37,8 @@
             .replace(/ı/g, 'i')
             .normalize('NFD')
             .replace(/[\u0300-\u036f]/g, '')
-            .replace(/[^a-z0-9]+/g, ' ')
+            .replace(/[–—]/g, '-')
+            .replace(/[(),;:'"“”’«»!?{}[\]<>]/g, ' ')
             .replace(/\s+/g, ' ')
             .trim();
     }
@@ -52,8 +53,12 @@
 
         if (!normalizedQuery) return values.slice();
 
+        var queryTokens = normalizedQuery.split(' ').filter(Boolean);
         return values.filter(function(title) {
-            return normalizeSearchText(title).indexOf(normalizedQuery) !== -1;
+            var targetText = normalizeSearchText(title);
+            return queryTokens.every(function(token) {
+                return targetText.indexOf(token) !== -1;
+            });
         });
     }
 
@@ -317,9 +322,13 @@
             state.pageSize = pageSizeFromUrl();
             featureGroups = selectedFeatureGroups();
 
+            var queryTokens = normalizedQuery.split(' ').filter(Boolean);
+
             state.matches = state.entries.filter(function(entry) {
                 var matchesTitle = !normalizedQuery
-                    || entry.searchText.indexOf(normalizedQuery) !== -1;
+                    || queryTokens.every(function(token) {
+                        return entry.searchText.indexOf(token) !== -1;
+                    });
                 var matchesFeatures = featureGroups.every(function(terms) {
                     return terms.some(function(term) {
                         return entry.featureText.indexOf(term) !== -1;

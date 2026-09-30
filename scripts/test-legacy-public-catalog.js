@@ -110,7 +110,56 @@ function catalogSearchTests() {
   assert.equal(shouldIncludeProduct(unityCourse, 'PUB101', ''), true);
   assert.equal(shouldIncludeProduct(unityCourse, 'published-course', ''), true);
   assert.equal(shouldIncludeProduct(unityCourse, 'unity', 'oyun-gelistirme'), false);
+
+  const blenderCourse = product({
+    title: 'Blender & Unity Oyun Geliştirme Eğitimi Online – 80 Saat (40 Saat Blender + 40 Saat Unity)',
+    slug: 'blender-unity-kursu',
+    code: 'BLN80'
+  });
+  const csharpCourse = product({
+    title: 'Unity ile Oyun Geliştirme Eğitimi - Staj Garantili, C# & Shader Kodlama',
+    slug: 'unity-csharp-kursu',
+    code: 'CS101'
+  });
+  const cppCourse = product({
+    title: 'Yazılım Uzmanlığı Eğitimi (C++ ve Algoritma)',
+    slug: 'cpp-kursu',
+    code: 'CPP101'
+  });
+  const netCourse = product({
+    title: 'ASP.NET Core ile Web Geliştirme',
+    slug: 'aspnet-kursu',
+    code: 'NET101'
+  });
+  const uiuxCourse = product({
+    title: 'Photoshop ile UI/UX Tasarımı',
+    slug: 'uiux-kursu',
+    code: 'UIX101'
+  });
+
+  assert.equal(shouldIncludeProduct(blenderCourse, 'Blender online egitim 40 saat', ''), true);
+  assert.equal(shouldIncludeProduct(blenderCourse, '40 saat online blender', ''), true);
+  assert.equal(shouldIncludeProduct(blenderCourse, 'blender xyzolmayan', ''), false);
+
+  assert.equal(shouldIncludeProduct(csharpCourse, 'C#', ''), true);
+  assert.equal(shouldIncludeProduct(cppCourse, 'C#', ''), false);
+  assert.equal(shouldIncludeProduct(cppCourse, 'C++', ''), true);
+  assert.equal(shouldIncludeProduct(csharpCourse, 'C++', ''), false);
+  assert.equal(shouldIncludeProduct(csharpCourse, '#', ''), true);
+  assert.equal(shouldIncludeProduct(blenderCourse, '+', ''), true);
+  assert.equal(shouldIncludeProduct(blenderCourse, '&', ''), true);
+  assert.equal(shouldIncludeProduct(netCourse, '.NET', ''), true);
+  assert.equal(shouldIncludeProduct(uiuxCourse, 'UI/UX', ''), true);
+
   assert.equal(normalizeSearchText('İLERİ Düzey'), 'ileri duzey');
+  assert.equal(normalizeSearchText('C# Programlama'), 'c# programlama');
+  assert.equal(normalizeSearchText('C++ ve .NET'), 'c++ ve .net');
+  assert.equal(normalizeSearchText('UI/UX Tasarım'), 'ui/ux tasarim');
+  assert.equal(normalizeSearchText('Blender & Unity'), 'blender & unity');
+  assert.equal(normalizeSearchText('40 Saat + 40 Saat'), '40 saat + 40 saat');
+  assert.equal(normalizeSearchText('(C# Eğitimi)'), 'c# egitimi');
+  assert.equal(normalizeSearchText('Online – 80 Saat'), 'online - 80 saat');
+
   assert.equal(SEARCH_DEBOUNCE_MS, 200);
   assert.equal(MAX_QUERY_LENGTH, 100);
   assert.equal(normalizeQuery(`unity${'x'.repeat(200)}`).length, 100);
@@ -121,6 +170,37 @@ function catalogSearchTests() {
       'Çocuklar İçin UNITY Kursu'
     ], 'unity'),
     ['Unity ile Oyun Geliştirme', 'Çocuklar İçin UNITY Kursu']
+  );
+  assert.deepEqual(
+    filterTitles([
+      'Blender & Unity Oyun Geliştirme Eğitimi Online – 80 Saat',
+      'Unreal Engine Eğitimi',
+      'C# ile Unity Eğitimi'
+    ], 'blender online 80 saat'),
+    ['Blender & Unity Oyun Geliştirme Eğitimi Online – 80 Saat']
+  );
+  assert.deepEqual(
+    filterTitles([
+      'Unity ile C# Eğitimi',
+      'Python Eğitimi',
+      'C++ Algoritma'
+    ], 'C#'),
+    ['Unity ile C# Eğitimi']
+  );
+  assert.deepEqual(
+    filterTitles([
+      'Unity ile C# Eğitimi',
+      'Python Eğitimi',
+      'C++ Algoritma'
+    ], 'C++'),
+    ['C++ Algoritma']
+  );
+  assert.deepEqual(
+    filterTitles([
+      '40 Saat Blender + 40 Saat Unity',
+      'Tek Sezonluk Kurs'
+    ], '+'),
+    ['40 Saat Blender + 40 Saat Unity']
   );
   assert.deepEqual(paginationPages(1, 3), [1, 2, 3]);
   assert.deepEqual(paginationPages(6, 12), [1, 'ellipsis', 4, 5, 6, 7, 8, 'ellipsis', 12]);
@@ -284,7 +364,7 @@ function frontendSearchContractTest() {
 
   assert.match(controller, /SEARCH_DEBOUNCE_MS = 200/);
   assert.match(controller, /\.uv-product-card-item-name/);
-  assert.match(controller, /entry\.searchText\.indexOf\(normalizedQuery\)/);
+  assert.match(controller, /entry\.searchText\.indexOf\(token\)/);
   assert.doesNotMatch(controller, /pbl-product-card-item-brand/);
   assert.match(controller, /windowObject\.clearTimeout\(state\.timer\)/);
   assert.match(controller, /windowObject\.history\[mode \+ 'State'\]/);
