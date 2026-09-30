@@ -27,38 +27,56 @@ Bu ayrım, sorunun kökünü anlamak için **zorunlu** ön bilgidir:
 
 ---
 
-## 2. Ölçülen gerçek durum (438 statik kurs sayfası)
+## 2. Ölçülen gerçek durum
 
-### 2.1 Overview içeriğinin dağılımı
+> **Önemli metodoloji notu (2026-09-30 düzeltmesi).** İlk ölçüm `urun/*/index.html` **statik dosyaları**
+> üzerinde yapılmıştı ve yanıltıcıydı: ziyaretçinin gördüğü overview içeriği statik dosyadan değil,
+> **DB'den** gelir — `synchronizeLegacyProductTabs` panelin içini DB içeriğiyle değiştirir. Doğru kaynak
+> `ProductTab` tablosunda `systemKey = 'OVERVIEW'` satırının `content` alanıdır. Aşağıdaki sayılar
+> **DB üzerinden** alınmıştır. Denetim scripti de DB'yi okumalıdır, statik dosyayı değil.
+>
+> Sayılar **yerel Docker DB**'den alınmıştır ve production'dan biraz eski olabilir (bilinen durum:
+> yerelde bazı kurslar DRAFT). Kesin kapsam listesi production'da dry-run ile alınacaktır.
+
+### 2.1 Overview içeriğinin dağılımı (yerel DB, 435 kurs)
 
 | Kategori | Kurs sayısı |
 |---|---|
-| Overview **boş** (`<div id="tab-info"> </div>`) | **124** |
-| Yalnız metin, görsel yok | **12** |
-| Görselli ve **en az bir bozukluk işareti taşıyan** | **295** |
-| Görselli ve tamamen temiz | **0** |
+| **OVERVIEW tab'ı hiç yok** → panel boş render edilir | **23** |
+| OVERVIEW tab'ı var, içeriği boş | **0** |
+| OVERVIEW var, **görsel yok** (yalnız metin) | **21** |
+| OVERVIEW var, görselli ve **en az bir bozukluk işareti taşıyan** | **389** |
+| OVERVIEW var, görselli ve **tamamen temiz** | **2** |
 
-> Yani görseli olan **her** kursta en az bir bozukluk işareti var. Bu, içeriğin Word/WYSIWYG'den
-> yapıştırılmış olmasının tipik sonucudur.
+> Yani görseli olan 391 kursun **389'unda** en az bir bozukluk işareti var. İçerik Word/WYSIWYG'den
+> yapıştırılmış olduğu için bu beklenen bir sonuçtur.
 
-### 2.2 Bozukluk işaretlerinin sıklığı (295 kurs içinde)
+### 2.2 Bozukluk işaretlerinin sıklığı (412 OVERVIEW tab'ı içinde)
+
+> Bu sayıların **tek üretici kaynağı** artık `scripts/audit-course-overview.js`'tir (Çember 19).
+> Elle yazılmış ara ölçümler değil, o script'in çıktısı esastır; tekrar üretilebilir.
 
 | İşaret | Kurs sayısı |
 |---|---|
-| 3 veya daha fazla ardışık `<br>` (yapay boşluk) | **295** |
-| 20+ `&nbsp;` dolgusu (yapay girinti) | **295** |
-| Görselin **metinle aynı blokta** karışık olması (blokta 60+ karakter metin + görsel) | **177** |
-| Kaptan geniş görsel (`width` > ~1076px) | **28** |
+| 3 veya daha fazla ardışık `<br>` (yapay boşluk) | **389** |
+| 20+ `&nbsp;` dolgusu (yapay girinti) | **378** |
+| Görselin **metinle aynı blokta** karışık olması (blokta 60+ karakter metin + görsel) | **206** |
+| Kaptan geniş görsel (`width` > ~1076px) | **40** |
 
-### 2.3 Görsel istatistikleri
+### 2.3 Görsel istatistikleri (DB içeriği)
 
-- Toplam görsel: **3764**
-- `width` atributu **olmayan**: **425**
-- Genişlik dağılımı: min 150px, medyan **502px**, p90 590px, maks **1200px**
-- Aynı blokta 2+ görsel içeren blok: **618**
-  - 269 blokta görseller **doğrudan kardeş** (`<p><img>…<img></p>`)
-  - 190 blokta biri doğrudan, diğeri `<span>`/`<strong>` içinde
-  - 159 blokta hepsi sarmalayıcı içinde
+- Toplam görsel: **6879**
+- `width` atributu **olmayan**: **739**
+- Genişlik dağılımı: min 150px, medyan **502px**, maks **1200px** (kap ~1076px)
+- İçerik uzunluğu: min 86, medyan **13 364**, maks **33 390** karakter
+
+### 2.4 Çoklu görsel bloklarının yapısı (statik HTML üzerinden ölçüldü, yapı aynı)
+
+Aynı blokta 2+ görsel içeren **618** blok:
+
+- 269 blokta görseller **doğrudan kardeş** (`<p><img>…<img></p>`)
+- 190 blokta biri doğrudan, diğeri `<span>`/`<strong>` içinde
+- 159 blokta hepsi sarmalayıcı içinde
 
 **Tipik bozuk yapı örneği (canlı sayfadan alınmıştır):**
 
@@ -68,8 +86,6 @@ Bu ayrım, sorunun kökünü anlamak için **zorunlu** ön bilgidir:
 ```
 
 Görsel, başlık metniyle **aynı satır içi kapta**; öncesinde 4 adet `<br>` ve onlarca `&nbsp;` var.
-
----
 
 ## 3. Denenen çözümler ve sonuçları (tekrar edilmemesi için)
 
@@ -121,16 +137,19 @@ Görsel, başlık metniyle **aynı satır içi kapta**; öncesinde 4 adet `<br>`
 > Temel ilke: **Global bir görsel dönüşüm uygulamayın.** Mimar'ın şartı ve Çember 18 deneyimi bunu
 > yasaklıyor. Bunun yerine **kurs bazında teşhis → onaylı, geri alınabilir düzeltme**.
 
-### Adım 1 — Denetim (audit) scripti, YALNIZCA rapor üretir (önerilen ilk çember)
+### Adım 1 — Denetim (audit) scripti — **TAMAMLANDI (Çember 19)**
 
-`scripts/audit-course-overview.js` (yeni, DB'ye ve dosyaya **yazmaz**):
+Teslim edilenler: `src/services/course-overview-audit.js` (saf servis),
+`scripts/audit-course-overview.js` (CLI), `scripts/test-course-overview-audit.js` (test).
+DB'ye **yazmaz**; testte sahte prisma ile yazma çağrısı olmadığı doğrulanır.
 
-- Her kursun overview HTML'ini okur (kaynak: DB `ProductTab` içeriği — tek doğruluk kaynağı).
+- Her kursun overview HTML'ini **DB'den** okur: `ProductTab` where `systemKey='OVERVIEW'` → `content`.
+  Statik dosya okunmaz (bkz. §2 metodoloji notu).
 - Her kurs için bozukluk imzalarını çıkarır:
   `bosOverview`, `gorselYok`, `ardisikBr`, `nbspDolgusu`, `metinleKarisikGorselBlogu`,
   `kaptanGenisGorsel`, `widthAtributuYok`, `cokluGorselBlogu`, `satirIciSarmalayiciDerinligi`.
 - Çıktı: `scripts/data/overview-audit-<tarih>.json` + insan okunur özet tablo.
-- **Kabul kriteri:** rapor, §2'deki sayılarla tutarlı çıkmalı (doğrulanabilirlik).
+- **Kabul kriteri:** rapor yerelde çalıştırıldığında §2'deki sayıları birebir üretmeli (doğrulanabilirlik).
 
 Bu adım tek başına değerlidir: Mimar hangi kursun neden bozuk olduğunu **liste halinde** görür ve
 hangilerine dokunulacağına kendisi karar verir.
@@ -203,4 +222,4 @@ Bu desen bu repoda **kanıtlanmıştır** ve Mimar'ın onay akışına uyar:
 2. N1–N4 listesine eklenecek/çıkarılacak madde var mı?
 3. Hangi kurslara dokunulacak: yalnız en bozuk N tanesi mi, yoksa 295'in tamamı mı?
 4. Tek görselli paragraflar ortalanacak mı? (Çember 17'de **hayır** denmişti; karar hâlâ açık.)
-5. Boş overview'lu 124 kurs ne olacak — içerik girilecek mi, yoksa sekme gizlensin mi?
+5. OVERVIEW tab'ı hiç olmayan **23** kurs ne olacak — içerik girilecek mi, yoksa sekme gizlensin mi?

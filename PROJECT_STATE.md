@@ -13,11 +13,16 @@
   Çember 17/18'in sonucu, ekip tavsiyesi (denetim scripti → onaylı normalizasyon → Çember 9 deseniyle
   dry-run/apply/revert) ve Mimar'ın vereceği 5 açık karar.
 
-### Ölçülen durum (438 statik kurs sayfası, 2026-09-30)
-- Overview **boş**: 124 · yalnız metin: 12 · görselli ve **en az bir bozukluk işareti taşıyan: 295** ·
-  tamamen temiz görselli kurs: **0**
-- 295 kursun tamamında 3+ ardışık `<br>` ve 20+ `&nbsp;` dolgusu; **177**'sinde görsel metinle aynı
-  blokta karışık; **28**'inde kaptan geniş görsel.
+### Ölçülen durum (2026-09-30, **DB `ProductTab.OVERVIEW` üzerinden** — yerel DB)
+- 435 kursun **412**'sinde OVERVIEW tab'ı var (23'ünde hiç yok → panel boş render edilir).
+- 412 tab içinde: görselsiz **21** · görselli ve **bozukluk işareti taşıyan 389** · tamamen temiz **2**.
+- İşaretler: 3+ ardışık `<br>` **389** · 20+ `&nbsp;` **378** · görsel metinle aynı blokta **224** ·
+  kaptan geniş görsel **40**. Toplam **6879** görsel, **739**'unda `width` atributu yok.
+- Bu sayıların üreticisi **`scripts/audit-course-overview.js`** (Çember 19) — elle değil, script ile
+  tekrar üretilir. Production sayıları Mimar'ın çalıştırmasıyla alınacaktır.
+- **Metodoloji uyarısı:** ilk ölçüm statik `urun/*/index.html` üzerinden yapılmıştı ve yanıltıcıydı —
+  ziyaretçinin gördüğü içerik DB'den gelir (`synchronizeLegacyProductTabs` paneli DB içeriğiyle
+  değiştirir). Denetim DB'yi okumalıdır.
 
 ## Nerede kaldık
 - Kod: `main` — Çember #0…#7 Mimar tarafından commit/deploy edildi ve canlıda doğrulandı (2026-09-15/16).
@@ -92,7 +97,45 @@
 - **Kalıcılık:** değişiklik sunucu render zincirinde; restart sonrası aynı davranış sürer. DB/migration/env/bağımlılık değişikliği yok. Tarayıcı/canlı test yapılmadı; commit, deploy ve canlı kontrol Mimar'da.
 - **Önceki çıkarımın düzeltmesi:** script eksikliği bazı örnekleri açıklıyordu, tüm hizalama sorunlarının tek nedeni değildi. Overview işareti DB tab birleştirme yoluna bağlıdır; her statik kursun veya her dolu overview'un işaret taşıdığı varsayılamaz.
 
+## Kategori kategori ilerleme kararı (Mimar, 2026-09-30)
+- **Hepsi birden ele alınmayacak.** Sıra: **1) yazilim**, sonra oyun-gelistirme, grafik-tasarim,
+  3d-modelleme. Bir kategori canlıda başarılı olmadan diğerine geçilmez.
+- Değişiklik **yalnızca bozuk olanları** etkilemeli; düzgün görünen kurslara dokunulmamalı.
+- Çözüm **admin paneliyle entegre** olmalı: içerik admin editöründen görülebilir/düzenlenebilir kalmalı
+  (kodlar, düz metin hâli bozulmamalı).
+
+### Kategori denetim sonuçları (yerel DB, `scripts/audit-course-overview.js`)
+| Kategori | Kurs | OVERVIEW tab | Problemli | Temiz | Tab'ı yok |
+|---|---|---|---|---|---|
+| yazilim | 124 | 118 | **111** | 2 | 6 |
+| staj-garantili | 13 | 13 | **13** | 0 | 0 |
+
+### ⚠️ Kapsam tuzağı (2026-09-30 bulgusu)
+Mimar'ın öncelikli verdiği 10 linkten **3'ü `yazilim` kategorisinde DEĞİL**, `staj-garantili`
+kategorisinde: `...-staj-garantili-668`, `...-staj-garantili-669`, `...-10-ay-staj-garantili-1206`.
+Yalnızca `--kategori yazilim` ile ilerlenirse **öncelikli kurslar kapsam dışı kalır**. Bu yüzden
+normalizasyon kapsamı kategoriye değil, **Mimar'ın onayladığı slug listesine** göre belirlenmelidir
+(kategori yalnızca listeyi üretmek için kullanılır).
+
+### Öncelikli 10 kursun imzası (neredeyse birebir aynı)
+21–25 görsel · 1 metinle karışık blok · 7–12 ardışık `<br>` · 293–332 `&nbsp;` · satır içi sarmalayıcı
+derinliği 7–8. Aynı kaynaktan kopyalanmış içerikler → birinde doğrulanan düzeltme diğerlerinde aynı
+davranır (test yükü düşük, risk öngörülebilir).
+
 ## Yapılmaması gerekenler (git geçmişinden öğrenilen dersler)
+- **Tek geçişli metin dönüşümü idempotent olmayabilir.** Boş blok silinince iki yanındaki `<br>`
+  yan yana gelir ve YENİ bir zincir doğar; N1 çoktan çalışmıştır. Dönüşümler **değişiklik durana
+  kadar birlikte döngüde** çalıştırılmalıdır (2026-09-30, gerçek kurs içeriğinde yakalandı —
+  sentetik test kaçırmıştı; hatayı `--apply` sonrası ikinci dry-run gösterdi).
+- Türkçe/regex tuzağı: `"metni"` kelimesi `/metin/` desenine **uymaz** (harf sırası m-e-t-n-i).
+  Hata mesajını teste dayandırırken kelimenin çekimli hâline güvenme (2026-09-30).
+- `sanitizeProductTabContent` içeriği **yeniden yazar** (`../../uploads/...` → `/uploads/...`,
+  `<img>` → `<img />`). İçerik üzerinde çalışan bir script onu **çağırmamalıdır**, aksi halde
+  istenmeyen bir yol değişikliği de yapılmış olur (2026-09-30).
+- **Aynı repoda paralel iki AI ajanı çalıştırma.** 2026-09-30'da iki ajan aynı dosya adını
+  (`scripts/audit-course-overview.js`) kullandı; ikincisi birincinin commit'lenmemiş dosyasını üzerine
+  yazdı ve git'ten dönülemedi. Bir ajan işe başlarken **önce `git status`**'e bakmalı, tanımadığı
+  dosya varsa üzerine yazmadan sormalıdır.
 - Bir sayfa tipi "düzgün", diğeri "bozuk" görünüyorsa **önce iki sayfanın hangi kod yolundan geçtiğini karşılaştır**: statik dosyası olan kurs `enhanceLegacyHtml` zincirinden, olmayan kurs `legacy-product-detail.js`'ten render edilir ve bu iki yol farklı asset yükler. CSS yazmadan önce bu farkı ara (2026-09-23: B4-a CSS'i simptomu düzeltti, kök neden eksik script'ti).
 - **2026-09-24 dersi:** bir kursun görünümünü düzelten script tüm kurslara otomatik yayılmaz. Scriptin yüklenmesi ve taşma olmaması, farklı içeriklerin görsel düzeninin korunduğunu kanıtlamaz. İçerik çeşitlerini temsil eden masaüstü/mobil önizleme gerekir; Çember 18 bu nedenle geri alındı.
 - CSS seçicisi yazmadan önce **gerçek DOM yapısını ölç**: `<p><img><span>…</span><img></p>` yapısında `img + img` (bitişik kardeş) TUTMAZ, `img ~ img` gerekir. Kurs sekmelerinde 618 çoklu-görsel bloğu ölçüldü: 269 doğrudan kardeş, 190 biri doğrudan biri sarmalayıcıda, 159 tamamen sarmalayıcıda → tek desen yetmez (2026-09-23).
@@ -158,6 +201,9 @@
 ## Çember geçmişi
 | # | Tarih | Çember | Sonuç |
 |---|---|---|---|
+| 20 | 2026-09-30 | **B4 Adım 3 — 10 öncelikli kursun overview normalizasyonu.** `course-overview-normalize.js` (N1: 3+ `<br>`→1, N2: 2+ `&nbsp;`→boşluk, N3: boş blok kaldırma; metin/görsel kaybında **hata fırlatır**), plan JSON, `normalize-course-overview.js` CLI (dry-run/apply/revert, Çember 9 deseni) | 5 yeni + 2 değişen dosya, ~500 satır; 29/29 test PASS; **yerel tam döngü:** dry-run 10/10 DEGISECEK → apply 10/10 doğrulandı → ikinci dry-run **0 değişecek** (idempotent) → revert **10/10 bayt-bayt orijinal**. Uzunluk −%9…−%24; görsel sayısı ve görünen metin **her kursta aynı**. Production'da uygulama Mimar'da (önce `pg_dump`) |
+| 19b | 2026-09-30 | **Birleştirme:** paralel çalışan diğer ajanın audit implementasyonu yanlışlıkla üzerine yazıldı (commit'lenmemişti, git'ten dönülemedi); testi sağlamdı → **26 senaryonun tamamı** birleşik teste taşındı, `satirIciSarmalayiciDerinligi` + `countConsecutiveBr`/`countNbsp`/`classifyImageBlocks`/`maxInlineWrapperDepth` servise eklendi, `analyseOverviewHtml` giriş noktası açıldı, CLI'ye `--kategori` filtresi geldi | 28/28 test PASS; `scripts/test-audit-course-overview.js` kaldırıldı (senaryoları korunarak); tek doğruluk kaynağı: `src/services/course-overview-audit.js` |
+| 19 | 2026-09-30 | B4 Adım 1 — "Eğitime İlk Bakış" denetim raporu: `course-overview-audit.js` saf servisi (blok tarayıcı ile **en içteki** blok sayımı), `audit-course-overview.js` CLI (`--json`, `--limit`), test | 3 yeni + 2 değişen dosya, ~320 satır; 28/28 test PASS; **DB'ye yazmaz** (sahte prisma ile kanıtlandı); yerel çalıştırma: 435 kurs / 412 OVERVIEW tab / 389 problemli / 2 temiz; mevcut kod zincirine bağlanmadı (grep ile doğrulandı) |
 | 19 | 2026-09-30 | Kurs arama motoru: sırasız token/etiket eşleşmesi + sembol desteği (#, +, &, ., /, - vb.), `legacy-course-catalog.js` ve `legacy-catalog.js` senkronu, asset version bump | 5 dosya, ~65 satır (35'i test); 24/24 test PASS; regresyon yeşil |
 | 0 | 2026-09-15 | Proje araştırması + CLAUDE.md sistemi | 5 doküman; 12 unit test baseline PASS; R1 güvenlik bulgusu |
 | 1b | 2026-09-15 | Belgeler Türkçeye çevrildi (`CLAUDE.md`, `.claude/rules/*`) | 4 dosya, kod değişikliği yok |
