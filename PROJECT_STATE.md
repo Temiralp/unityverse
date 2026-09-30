@@ -1,7 +1,25 @@
 # PROJECT_STATE.md — canlı durum günlüğü
 
 > Her çember (circle) bittiğinde güncellenir. Yeni oturum/agent buradan başlar. Tarihler mutlak (YYYY-MM-DD).
-> Son güncelleme: **2026-09-24** — Çember 18 genel script enjeksiyonu Mimar isteğiyle yerelde geri alındı; commit/deploy ve canlı doğrulama bekliyor. Çember 17 ve önceden var olan dinamik sayfa davranışı korundu. Sıradaki işi Mimar seçer.
+> Son güncelleme: **2026-09-30** — Çember 18 geri alma commit'lendi (`37f2655e`). **Ana görev artık
+> "Eğitime İlk Bakış" içerik düzeni**; istek/şartlar, ölçümler ve önerilen çözüm yolu ayrı dosyalara
+> yazıldı (aşağıya bakınız). Oturum başka bir AI ajanına devredilecek.
+
+## Devir belgeleri (2026-09-30)
+- `docs/AI-AJAN-DEVIR-PROMPTU.md` — **devralan AI ajanına verilecek ilk mesaj**: roller, dil kuralı,
+  çember yöntemi, TDD, test altyapısı, güvenlik kuralları, teslim şablonu, pahalıya mal olmuş dersler,
+  nerede kaldığımız ve ilk adım.
+- `docs/egitime-ilk-bakis/00-GOREV-VE-SARTLAR.md` — Mimar'ın isteği ve şartları (özellikle:
+  **her kursa aynı hizalama dayatılmayacak**).
+- `docs/egitime-ilk-bakis/01-TEKNIK-ANALIZ-VE-TAVSIYELER.md` — 438 sayfanın ölçümü, iki render yolu,
+  Çember 17/18'in sonucu, ekip tavsiyesi (denetim scripti → onaylı normalizasyon → Çember 9 deseniyle
+  dry-run/apply/revert) ve Mimar'ın vereceği 5 açık karar.
+
+### Ölçülen durum (438 statik kurs sayfası, 2026-09-30)
+- Overview **boş**: 124 · yalnız metin: 12 · görselli ve **en az bir bozukluk işareti taşıyan: 295** ·
+  tamamen temiz görselli kurs: **0**
+- 295 kursun tamamında 3+ ardışık `<br>` ve 20+ `&nbsp;` dolgusu; **177**'sinde görsel metinle aynı
+  blokta karışık; **28**'inde kaptan geniş görsel.
 
 ## Nerede kaldık
 - Kod: `main` — Çember #0…#7 Mimar tarafından commit/deploy edildi ve canlıda doğrulandı (2026-09-15/16).
