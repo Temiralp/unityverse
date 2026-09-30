@@ -63,7 +63,8 @@ function normalizeSearchText(value) {
     .replace(/ı/g, 'i')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/[–—]/g, '-')
+    .replace(/[(),;:'"“”’«»!?{}[\]<>]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -141,7 +142,10 @@ function shouldIncludeProduct(product, query, categorySlug) {
 
   const normalizedQuery = normalizeSearchText(String(query || '').trim().slice(0, 100));
   if (!normalizedQuery) return true;
-  return productSearchText(product).includes(normalizedQuery);
+
+  const targetText = productSearchText(product);
+  const queryTokens = normalizedQuery.split(' ').filter(Boolean);
+  return queryTokens.every((token) => targetText.includes(token));
 }
 
 function renderLegacyProductCard(product, index) {
@@ -522,8 +526,13 @@ async function renderLegacyBlogCategory(html, category, currentPage, pageSize, q
     },
     orderBy: [{ publishedAt: 'desc' }, { createdAt: 'desc' }, { id: 'desc' }]
   });
+  const normalizedBlogQuery = normalizeSearchText(query);
+  const blogTokens = normalizedBlogQuery.split(' ').filter(Boolean);
   const matchingPosts = query
-    ? posts.filter((post) => blogPostSearchText(post).includes(normalizeSearchText(query)))
+    ? posts.filter((post) => {
+      const targetText = blogPostSearchText(post);
+      return blogTokens.every((token) => targetText.includes(token));
+    })
     : posts;
 
   if (query) {
@@ -559,8 +568,12 @@ async function renderLegacyBlogCategory(html, category, currentPage, pageSize, q
 
 async function renderLegacyBlogSearch(html, query) {
   const normalizedQuery = normalizeSearchText(query);
+  const searchTokens = normalizedQuery.split(' ').filter(Boolean);
   const cards = await collectAllBlogCards();
-  const matchingCards = cards.filter((card) => normalizeSearchText(legacyBlogCardText(card)).includes(normalizedQuery));
+  const matchingCards = cards.filter((card) => {
+    const targetText = normalizeSearchText(legacyBlogCardText(card));
+    return searchTokens.every((token) => targetText.includes(token));
+  });
   const results = matchingCards.length ? matchingCards.join('\n') : renderLegacyBlogEmptySearch(query);
 
   return html

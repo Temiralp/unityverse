@@ -1,9 +1,7 @@
 # PROJECT_STATE.md — canlı durum günlüğü
 
 > Her çember (circle) bittiğinde güncellenir. Yeni oturum/agent buradan başlar. Tarihler mutlak (YYYY-MM-DD).
-> Son güncelleme: **2026-09-30** — Çember 18 geri alma commit'lendi (`37f2655e`). **Ana görev artık
-> "Eğitime İlk Bakış" içerik düzeni**; istek/şartlar, ölçümler ve önerilen çözüm yolu ayrı dosyalara
-> yazıldı (aşağıya bakınız). Oturum başka bir AI ajanına devredilecek.
+> Son güncelleme: **2026-09-30** — Çember 19 (kurs arama motoru: sırasız sözcük/etiket eşleşmesi + sembol desteği) tamamlandı; testler 24/24 PASS.
 
 ## Devir belgeleri (2026-09-30)
 - `docs/AI-AJAN-DEVIR-PROMPTU.md` — **devralan AI ajanına verilecek ilk mesaj**: roller, dil kuralı,
@@ -23,7 +21,7 @@
 
 ## Nerede kaldık
 - Kod: `main` — Çember #0…#7 Mimar tarafından commit/deploy edildi ve canlıda doğrulandı (2026-09-15/16).
-- **Aktif çember:** yok. Çember 14 (R14) **canlıda doğrulandı** (2026-09-23: `POST /ajax/cookieselection` → 200 `{"status":"ok"}`). Çember 15 (R13) **canlıda doğrulandı** (2026-09-23: `window.eapps` object, delightchat JS+CSS yüklendi; render edilen EJS sayfasında — `/admin/login` — widget host'u yok). Çember 16 **canlıda doğrulandı** (2026-09-23: 7 sayfa tipinde buton 0, tek widget kaldı). Çember 17 (B4-a) canlıda. Çember 18 (`94e2d36d`) farklı kurs içeriklerini aynı düzene zorladığı için 2026-09-24 Mimar kararıyla yerelde geri alındı; yeni commit/deploy ve canlı doğrulama bekliyor. Sıradaki: **B4 — içerik hizalama** (Mimar 2026-09-23: örnek düzgün sayfa `urun/sizma-testi-egitimi-online-pentest-egitimi-penetrasyon-testi/`, bozuk sayfa `urun/yazilim-uzmanligi-canli-online-egitim-staj-garantili-668/`; yalnız bu ikisi değil, benzer tüm kurslar). Çember #8b deploy edildi ve canlıda doğrulandı (2026-09-17). Çember 10 ve 11 canlıda/terminalde doğrulandı (2026-09-17). Çember 13 canlıda doğrulandı (2026-09-17: gerçek domenden probe → GA4 Gerçek Zamanlı `purchase`; canlı kart ödemesi sonuç sayfasında dataLayer purchase). Sıradaki: **B3 HubSpot planı**. Ardından Backlog B1…B6 (2026-09-17 Mimar tarafından iletilen istekler).
+- **Aktif çember:** yok. Çember 19 (kurs arama motoru: sırasız sözcük/etiket eşleşmesi + sembol desteği, LEGACY_CATALOG_JS_VERSION bump) tamamlandı, commit/deploy bekliyor. Çember 14 (R14) **canlıda doğrulandı** (2026-09-23: `POST /ajax/cookieselection` → 200 `{"status":"ok"}`). Çember 15 (R13) **canlıda doğrulandı** (2026-09-23: `window.eapps` object, delightchat JS+CSS yüklendi; render edilen EJS sayfasında — `/admin/login` — widget host'u yok). Çember 16 **canlıda doğrulandı** (2026-09-23: 7 sayfa tipinde buton 0, tek widget kaldı). Çember 17 (B4-a) canlıda. Çember 18 (`94e2d36d`) farklı kurs içeriklerini aynı düzene zorladığı için 2026-09-24 Mimar kararıyla yerelde geri alındı; yeni commit/deploy ve canlı doğrulama bekliyor. Sıradaki ana görev: **B4 — içerik hizalama** ("Eğitime İlk Bakış" bölümü). Çember #8b deploy edildi ve canlıda doğrulandı (2026-09-17). Çember 10 ve 11 canlıda/terminalde doğrulandı (2026-09-17). Çember 13 canlıda doğrulandı. Sıradaki: **B3 HubSpot planı**. Ardından Backlog B1…B6.
 - Çember #8a ve #8b tamamlandı (2026-09-16).
 - Gerçek örnek docx repo dışında: `~/unityverse-private-fixtures/Siber_Guvenlik_Mufredati_AI_Guncellemesi.docx` (WhatsApp tmp klasöründen kopyalandı).
 - Yerelde `uploads/products/1789467*.jpg` (3 dosya, 2026-09-15 yerel admin testi) izlenmiyor — commit'e eklenmemeli.
@@ -133,6 +131,7 @@
 - Statik kurs sayfası (`urun/<slug>/index.html`) varsa dinamik route çalışmaz; DB→sayfa senkronu `enhanceLegacyHtml` zincirine eklenir (`src/middleware/legacy-whatsapp.js`). Yeni bir alan senkronlanacaksa aynı desen: visibility middleware `res.locals` → `enhanceLegacyHtml` parametresi → `src/services/legacy-*.js` saf fonksiyon.
 
 ## Karar günlüğü (ADR-mini)
+| 2026-09-30 | Kurs ve katalog arama motoru (server & client) kelime sırasından bağımsız token tabanlı (`tokens.every`) yapıldı; `normalizeSearchText` içine sembol desteği eklendi (`+`, `#`, `&`, `.`, `/`, `-` vb. korunur, noktalama boşluğa döner); asset version bump (`20260930-1`) | Admin ve kullanıcıların etiketlerle ve programlama sembolleriyle (C#, C++, .NET, UI/UX, 40 Saat + 40 Saat) kurs bulabilmesi sağlandı; sıfır DB/şema etkisi |
 | 2026-09-24 | Çember 18 genel overview script enjeksiyonu geri alındı; önceden var olan dinamik davranış ve Çember 17 korundu | Mimar: kursların farklı içerikleri aynı düzene zorlanmamalı; yeni çözüm ayrı iş olarak seçilecek |
 | 2026-09-23 | Kurs sekmesi görsel hizalaması **CSS ile** yapılır (DB içeriğine dokunulmaz); kapsam yalnızca üç sekme id'si + `.jodit-wysiwyg`; 2+ görselli bloklar flex ile sarmalanıp ortalanır, **tek görselli paragraflara dokunulmaz** | Mimar kararı: bugün düzgün görünen kurslarda sıfır değişiklik; DB'ye dokunmadan 438 sayfaya anında ulaşır; yeni kurs otomatik kapsanır |
 | Tarih | Karar | Gerekçe |
@@ -159,6 +158,7 @@
 ## Çember geçmişi
 | # | Tarih | Çember | Sonuç |
 |---|---|---|---|
+| 19 | 2026-09-30 | Kurs arama motoru: sırasız token/etiket eşleşmesi + sembol desteği (#, +, &, ., /, - vb.), `legacy-course-catalog.js` ve `legacy-catalog.js` senkronu, asset version bump | 5 dosya, ~65 satır (35'i test); 24/24 test PASS; regresyon yeşil |
 | 0 | 2026-09-15 | Proje araştırması + CLAUDE.md sistemi | 5 doküman; 12 unit test baseline PASS; R1 güvenlik bulgusu |
 | 1b | 2026-09-15 | Belgeler Türkçeye çevrildi (`CLAUDE.md`, `.claude/rules/*`) | 4 dosya, kod değişikliği yok |
 | 18 geri alma | 2026-09-24 | Genel overview enjeksiyonu kaldırıldı; regresyon testi ters beklentiye güncellendi | 25 PASS, 1 önceden mevcut FAIL (R9); servis Çember 18 öncesiyle aynı; commit/deploy ve canlı doğrulama bekliyor |

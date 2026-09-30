@@ -581,7 +581,8 @@ router.get(['/tum-urunler', '/tum-urunler/'], async (req, res, next) => {
           product.category ? product.category.name : ''
         ].join(' ').toLocaleLowerCase('tr-TR');
 
-        return haystack.includes(q.toLocaleLowerCase('tr-TR'));
+        const queryTokens = q.toLocaleLowerCase('tr-TR').split(/\s+/).filter(Boolean);
+        return queryTokens.every((token) => haystack.includes(token));
       })
       : allProducts;
     const totalProducts = filteredProducts.length;
