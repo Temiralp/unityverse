@@ -1,0 +1,18 @@
+{
+  "aciklama": "Cember 20 — 'Egitime Ilk Bakis' icerigindeki Word yapistirma artiklarinin temizlenmesi. Mimar'in oncelikli verdigi 10 kurs. Basarili olursa kalan yazilim kategorisi (111 kurs) ayri plan dosyasiyla islenir.",
+  "tarih": "2026-09-30",
+  "donusumler": ["N1: 3+ ardisik <br> -> tek <br>", "N2: 2+ ardisik &nbsp; -> tek bosluk", "N3: bos bloklarin kaldirilmasi"],
+  "kapsam": "slug listesi (kategori degil) — oncelikli kurslarin 3'u 'staj-garantili' kategorisinde oldugu icin kategori filtresi yetersiz kalir",
+  "kurslar": [
+    "yazilim-uzmanligi-canli-online-egitim-staj-garantili-668",
+    "yazilim-uzmanligi-yuz-yuze-egitimi-staj-garantili-669",
+    "yazilim-uzmanligi-yuz-yuze-egitim-4-ay-1475",
+    "yazilim-uzmanligi-yuz-yuze-egitim-1473",
+    "yazilim-uzmanligi-canli-online-egitim-1468",
+    "yazilim-uzmanligi-canli-online-egitim-10-ay-staj-garantili-1206",
+    "yazilim-uzmaligi-yuz-yuze-egitim-staj-garantili-1457",
+    "yazilim-test-otomasyonu-canli-online-egitimi-4-ay-1455",
+    "yazilim-test-otomasyonu-canli-online-egitimi-1454",
+    "yazilim-test-otomasyonu-canli-online-egitimi-10-ay-staj-garantili-1324"
+  ]
+}
