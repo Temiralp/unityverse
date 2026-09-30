@@ -1,0 +1,674 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Unityverse Ajans</title>
+<meta name="description" content="Unityverse Ajans — şirketlerin marka ve kurumsal iletişim departmanını dışarıdan, aylık sabit ücretle bir ekip olarak üstleniyoruz.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --paper:#FFFFFF; --surface:#FFFFFF; --ink:#2C2733; --ink-2:#6B6474; --line:#ECE7F0;
+  --accent:#6A4C84; --accent-ink:#FFFFFF; --live:#3F8C7A; --strike:#B3ABBA;
+  --peach:#FADCD0; --mint:#D3ECE4; --lilac:#E7E0F3; --tint:#FAF8FC;
+  --sand:var(--peach); --p-rose:var(--peach); --p-apricot:var(--peach); --p-sage:var(--mint); --p-sky:var(--mint); --p-lilac:var(--lilac);
+  --display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#1C1920; --surface:#24202A; --ink:#F2EEF6; --ink-2:#B7AFC0; --line:#39333F;
+  --accent:#C9B4E6; --accent-ink:#1C1920; --live:#8FD1BE; --strike:#766E7E;
+  --peach:#43302B; --mint:#23362F; --lilac:#332B40; --tint:#211D26; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --paper:#1C1920; --surface:#24202A; --ink:#F2EEF6; --ink-2:#B7AFC0; --line:#39333F;
+  --accent:#C9B4E6; --accent-ink:#1C1920; --live:#8FD1BE; --strike:#766E7E;
+  --peach:#43302B; --mint:#23362F; --lilac:#332B40; --tint:#211D26; color-scheme:dark;}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font:16px/1.6 var(--body);margin:0}
+.wrap{max-width:1140px;margin:0 auto;padding-inline:20px}
+a{color:inherit}
+h1,h2,h3{font-family:var(--display);line-height:1.08;margin:0;text-wrap:balance;letter-spacing:-.02em}
+p{margin:0}
+.eyebrow{font:500 12px/1.2 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.btn{display:inline-flex;align-items:center;gap:10px;background:var(--accent);color:var(--accent-ink);font:600 15px var(--body);padding:14px 22px;border-radius:4px;text-decoration:none;border:0;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:color-mix(in srgb,var(--paper) 90%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:14px}
+.logo{font:800 20px var(--display);text-decoration:none;display:flex;align-items:baseline;gap:8px}
+.logo{white-space:nowrap}
+.btn{white-space:nowrap}
+@media (max-width:1400px){.logo small{display:none}}
+.logo small{font:500 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+.nav ul{display:flex;gap:18px;white-space:nowrap;list-style:none;margin:0;padding:0;font-size:14px}
+.nav ul a{text-decoration:none;color:var(--ink-2)} .nav ul a:hover{color:var(--ink)}
+@media (max-width:1100px){.nav ul{display:none}}
+
+/* hero: the job ad */
+.hero{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center;padding-block:72px 64px}
+.hero h1{font-size:clamp(32px,4vw,52px);font-weight:800}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.disc{list-style:none;margin:22px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.disc li{font:500 14px var(--body);border:1px solid var(--ink);border-radius:99px;padding:6px 14px;background:var(--surface)}
+.hero .lead{font-size:19px;color:var(--ink-2);max-width:34em;margin-top:24px}
+.hero .ctas{display:flex;flex-wrap:wrap;gap:12px;margin-top:32px}
+.hero .proof{margin-top:24px;padding-top:16px;border-top:1px solid var(--line);font-size:14px;color:var(--ink-2);max-width:36em}
+.stat-row strong{font-size:clamp(28px,3.4vw,44px)}
+.ad{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:22px 22px 18px;position:relative}
+.ad-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:12px}
+.ad-top b{font:700 19px/1.2 var(--display);display:block}
+.ad-top span{font:400 12px var(--mono);color:var(--ink-2)}
+.ad-top .cnt{font:500 11px var(--mono);white-space:nowrap;background:var(--sand);color:var(--ink);padding:4px 8px;border-radius:99px}
+.ad ul{list-style:none;margin:0;padding:0;display:grid;gap:7px;font-size:14px}
+.ad li{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:baseline;color:var(--strike);text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--strike) 70%,transparent)}
+.ad li span{font:500 11px var(--mono);text-decoration:none;display:inline-block;color:var(--live);white-space:nowrap}
+.ad-foot{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font:500 13px var(--body);color:var(--ink)}
+.ad-foot strong{color:var(--accent)}
+@media (max-width:900px){.hero{grid-template-columns:1fr;gap:40px;padding-block:48px}}
+
+section{padding-block:80px;border-top:1px solid var(--line)}
+.sec-head{display:grid;grid-template-columns:1fr 1.4fr;gap:40px;margin-bottom:44px;align-items:end}
+.sec-head h2{font-size:clamp(30px,4vw,50px);font-weight:700}
+.sec-head p{color:var(--ink-2);max-width:36em}
+@media (max-width:820px){.sec-head{grid-template-columns:1fr;gap:16px}}
+
+/* compare */
+.cmp{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--line);gap:1px}
+.cmp > div{background:var(--surface);padding:28px;display:flex;flex-direction:column;gap:14px}
+.cmp > div.us{background:var(--ink);color:var(--paper)}
+.cmp h3{font-size:22px}
+.cmp ul{margin:0;padding-left:18px;display:grid;gap:8px;font-size:15px}
+.cmp .us li{color:color-mix(in srgb,var(--paper) 82%,var(--ink))}
+.cmp > div:not(.us) li{color:var(--ink-2)}
+@media (max-width:720px){.cmp{grid-template-columns:1fr}}
+
+/* services */
+.svc{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.svc article{background:var(--paper);padding:30px;display:flex;flex-direction:column;gap:10px}
+.svc .tag{font:500 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+.svc h3{font-size:24px}
+.svc p{color:var(--ink-2);font-size:15px}
+.svc ul{margin:6px 0 0;padding:0;list-style:none;display:grid;gap:6px;font-size:14.5px}
+.svc li{padding-left:18px;position:relative}
+.svc li::before{content:"";position:absolute;left:0;top:.62em;width:8px;height:2px;background:var(--accent)}
+.svc article.extra{grid-column:1/-1;background:var(--sand);color:var(--ink)}
+.svc article.extra p{color:var(--ink);max-width:44em}
+.svc article.extra h3{font-size:clamp(24px,2.8vw,32px);max-width:24em}
+.acad{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:10px}
+.acad b{display:block;font:700 17px var(--display);margin-bottom:8px}
+.svc .acad li::before{background:var(--ink)}
+@media (max-width:820px){.acad{grid-template-columns:1fr}}
+@media (max-width:720px){.svc{grid-template-columns:1fr}}
+
+/* packages */
+.pk{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.pk article{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:26px;display:flex;flex-direction:column;gap:12px}
+.pk article.hl{border:2px solid var(--accent)}
+.pk .who{font-size:14px;color:var(--ink-2)}
+.pk h3{font-size:24px}
+.pk ul{margin:0;padding-left:18px;display:grid;gap:6px;font-size:14.5px}
+.pk .note{margin-top:20px;font-size:14px;color:var(--ink-2)}
+@media (max-width:900px){.pk{grid-template-columns:1fr}}
+
+/* process */
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;counter-reset:s;margin:0;padding:0}
+.steps li{list-style:none;border-top:3px solid var(--ink);padding-top:18px;display:flex;flex-direction:column;gap:8px}
+.steps li::before{counter-increment:s;content:"Adım " counter(s);font:500 12px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+.steps h3{font-size:21px}
+.steps p{color:var(--ink-2);font-size:15px}
+.steps .t{font:400 12px var(--mono);color:var(--ink-2)}
+@media (max-width:900px){.steps{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:520px){.steps{grid-template-columns:1fr}}
+
+/* references */
+.case{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
+.case blockquote{margin:0;font:600 clamp(24px,2.8vw,34px)/1.2 var(--display);letter-spacing:-.01em}
+.case .meta{margin-top:18px;color:var(--ink-2);font-size:15px}
+.stat-row{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.stat-row div{background:var(--surface);padding:24px}
+.stat-row strong{display:block;font:800 44px/1 var(--display);font-variant-numeric:tabular-nums}
+.stat-row span{font-size:14px;color:var(--ink-2)}
+.trained{margin-top:56px;border-top:1px solid var(--line);padding-top:28px;display:grid;grid-template-columns:1fr 2fr;gap:32px;align-items:start}
+.trained p.small{color:var(--ink-2);font-size:14px;margin-top:8px}
+.names{display:flex;flex-wrap:wrap;gap:10px 28px;font:700 20px var(--display);letter-spacing:-.01em;color:var(--ink-2)}
+@media (max-width:820px){.case,.trained{grid-template-columns:1fr}}
+
+/* about */
+.about{display:grid;grid-template-columns:1.2fr 1fr;gap:48px}
+.about .story{display:grid;gap:18px;font-size:17px;max-width:38em}
+.about .story p{color:var(--ink-2)}
+.about .story p:first-child{color:var(--ink);font:600 24px/1.3 var(--display)}
+.founder{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:26px;display:grid;gap:12px;align-content:start}
+.founder h3{font-size:22px}
+.founder .role{font:500 12px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.founder p{font-size:15px;color:var(--ink-2)}
+.person{display:flex;align-items:center;gap:16px}
+.photo{width:88px;height:88px;flex:none;border-radius:50%;overflow:hidden;background:var(--sand);display:grid;place-items:center;font:800 26px var(--display);color:var(--ink)}
+.photo img{width:100%;height:100%;object-fit:cover;max-width:none}
+.bio{margin:0;padding-left:18px;display:grid;gap:6px;font-size:14.5px;color:var(--ink)}
+.tree{margin-top:40px;display:grid;gap:0;justify-items:center}
+.tree .parent,.tree .kid{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:18px 22px;display:grid;gap:4px;text-align:center}
+.tree .parent{min-width:min(100%,380px);position:relative}
+.tree b{font:700 19px var(--display)}
+.tree span{font-size:14px;color:var(--ink-2)}
+.tree .kids{display:grid;grid-template-columns:1fr 1fr;gap:20px;width:100%;margin-top:28px;position:relative}
+.tree .kids::before{content:"";position:absolute;top:-28px;left:25%;right:25%;height:14px;border:2px solid var(--line);border-bottom:0;border-radius:6px 6px 0 0}
+.tree .kids::after{content:"";position:absolute;top:-28px;left:50%;height:14px;border-left:2px solid var(--line)}
+.tree .kid.hl{border:2px solid var(--accent)}
+.tree-note{margin-top:18px;max-width:46em;text-align:center;font-size:14px;color:var(--ink-2)}
+@media (max-width:620px){.tree .kids{grid-template-columns:1fr}.tree .kids::before{left:50%;right:auto;width:0;border-radius:0;border-width:0 0 0 2px}}
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-top:36px}
+.facts div{background:var(--paper);padding:18px 20px}
+.facts dt{font:500 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+.facts dd{margin:4px 0 0;font-weight:600}
+@media (max-width:820px){.about{grid-template-columns:1fr}.facts{grid-template-columns:1fr}}
+
+/* contact */
+.contact{display:grid;grid-template-columns:1fr 1.2fr;gap:48px}
+.contact h2{font-size:clamp(32px,4.2vw,54px)}
+.contact .info{display:flex;flex-direction:column;gap:22px}
+.contact .info p{color:var(--ink-2)}
+.kv{display:grid;gap:14px;font-size:15px;margin:0}
+.kv div{display:grid;gap:2px}
+.kv dt{font:500 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+.kv dd{margin:0;user-select:all}
+form{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:28px;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+form .full{grid-column:1/-1}
+label{display:grid;gap:6px;font-size:13px;font-weight:500}
+input,select,textarea{font:15px var(--body);color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:4px;padding:11px 12px;width:100%}
+textarea{min-height:100px;resize:vertical}
+.checks{display:flex;flex-wrap:wrap;gap:8px}
+.checks label{display:inline-flex;align-items:center;gap:8px;font-weight:400;border:1px solid var(--line);border-radius:99px;padding:6px 12px;cursor:pointer}
+.checks input{width:auto;accent-color:var(--accent)}
+.ok{grid-column:1/-1;background:color-mix(in srgb,var(--live) 14%,var(--surface));border:1px solid var(--live);border-radius:4px;padding:12px 14px;font-size:14px}
+@media (max-width:820px){.contact{grid-template-columns:1fr}}
+@media (max-width:520px){form{grid-template-columns:1fr;padding:20px}}
+
+footer{border-top:1px solid var(--line);padding-block:28px;font-size:13px;color:var(--ink-2)}
+footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
+
+/* warm pastel layer: yavru ağzı, su yeşili, lila + beyaz */
+.btn{border-radius:99px;padding:14px 24px}
+.btn.ghost{border-color:var(--ink-2)}
+.hero-band{background:var(--paper)}
+.roles li{color:var(--ink);text-decoration:none}
+.roles li span{color:var(--accent);background:var(--lilac);border-radius:99px;padding:2px 8px}
+.ad{background:var(--surface)}
+.disc li:nth-child(3n+1){background:var(--peach)}
+.disc li{border:0;background:var(--surface)}
+.disc li:nth-child(3n+1){background:var(--peach)} .disc li:nth-child(3n+2){background:var(--mint)} .disc li:nth-child(3n){background:var(--lilac)}
+.ad,.founder,.pk article,.tree .parent,.tree .kid,form{border-radius:18px}
+.ad{border-color:var(--line);box-shadow:0 18px 40px -24px color-mix(in srgb,var(--accent) 40%,transparent)}
+.ad-top .cnt{background:var(--peach)}
+section{border-top:0}
+#paketler,#surec{background:var(--tint)}
+.cmp,.svc,.stat-row,.facts{border-radius:18px;border:0;background:transparent;gap:14px}
+.cmp > div{border-radius:18px;background:var(--surface);border:1px solid var(--line)}
+.cmp > div.us{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.cmp .us li{color:color-mix(in srgb,var(--accent-ink) 88%,var(--accent))}
+.svc article{border-radius:18px;background:var(--surface);border:1px solid var(--line)}
+.svc article:nth-child(4n+1){background:var(--peach);border-color:transparent}
+.svc article:nth-child(4n+4){background:var(--mint);border-color:transparent}
+.svc article.extra{background:var(--lilac);border-color:transparent}
+.svc .tag{color:var(--accent)}
+.svc li::before{background:var(--accent);border-radius:2px}
+.pk article{border-color:var(--line)}
+.pk article.hl{border:2px solid var(--accent);background:var(--lilac)}
+.steps li{border-top:4px solid var(--accent);border-radius:2px}
+.stat-row div{border-radius:18px;background:var(--mint)}
+.stat-row div:nth-child(2){background:var(--peach)} .stat-row div:nth-child(3){background:var(--lilac)} .stat-row div:nth-child(4){background:var(--surface);border:1px solid var(--line)}
+.names span{background:var(--tint);border:1px solid var(--line);border-radius:99px;padding:6px 14px;font-size:16px;color:var(--ink)}
+.names{gap:10px}
+.photo{background:var(--peach);color:var(--accent)}
+.tree .kid.hl{background:var(--lilac);border-color:var(--accent)}
+input,select,textarea{border-radius:12px;background:var(--tint)}
+.checks label{background:var(--tint);border-color:var(--line)}
+footer{background:var(--mint);border-top:0}
+header{background:color-mix(in srgb,var(--paper) 88%,transparent)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="logo" href="#top">Unityverse Ajans <small>Unityverse Academy ailesinden</small></a>
+    <ul>
+      <li><a href="#hizmetler">Hizmetler</a></li>
+      <li><a href="#akademi">Kurumsal akademi</a></li>
+      <li><a href="#paketler">Paketler</a></li>
+      <li><a href="#surec">Nasıl çalışır</a></li>
+      <li><a href="#referanslar">Referanslar</a></li>
+      <li><a href="#hakkimizda">Hakkımızda</a></li>
+    </ul>
+    <a class="btn" href="#teklif">Teklif isteyin</a>
+  </div>
+</header>
+
+<main id="top">
+  <div class="hero-band">
+  <div class="wrap hero">
+    <div>
+      <p class="eyebrow">Semantik Teknoloji ve Yazılım A.Ş. markası · Unityverse Academy ile birlikte</p>
+      <h1 style="margin-top:18px">Marka iletişimi, sosyal medya ve dijital pazarlama. <em>Tek ekip.</em></h1>
+      <ul class="disc">
+        <li>Marka ve kurumsal iletişim</li>
+        <li>Görsel iletişim ve tasarım</li>
+        <li>Sosyal medya içerik ve yönetimi</li>
+        <li>Reklam ve tanıtım filmi</li>
+        <li>Dijital reklam ve pazarlama</li>
+        <li>İç iletişim ve kurumsal akademi</li>
+      </ul>
+      <p class="lead">Ekiplerinizi eğiten kurum, iletişiminizi de yönetiyor. Stratejiden kimliğe, sosyal medyadan reklam filmine kadar markanızın iletişimini tek ekip olarak yürütüyoruz. Tek muhatap, yazılı kapsam, aylık rapor.</p>
+      <div class="ctas">
+        <a class="btn" href="#teklif">Görüşme planlayalım →</a>
+        <a class="btn ghost" href="#hizmetler">Hizmetleri görün</a>
+      </div>
+      <p class="proof">180 markanın sosyal medyasını yönetiyoruz · LC Waikiki, Eczacıbaşı, İGA ve GE Vernova ekiplerine eğitim verdik</p>
+    </div>
+
+    <div class="ad" aria-label="Marka iletişimini oluşturan uzmanlıklar">
+      <div class="ad-top">
+        <div><b>Marka iletişimi tek bir uzmanlık değildir</b><span>Her biri ayrı bir meslek</span></div>
+      </div>
+      <ul class="roles">
+        <li>Marka stratejisi ve marka dili <span>stratejist</span></li>
+        <li>Kurumsal metin ve basın bülteni <span>metin yazarı</span></li>
+        <li>Kimlik, kampanya ve basılı tasarım <span>grafik tasarımcı</span></li>
+        <li>Reklam filmi, tanıtım videosu, Reels <span>prodüksiyon ekibi</span></li>
+        <li>Sosyal medya içerik ve yayın <span>içerik yöneticisi</span></li>
+        <li>Google, Meta ve LinkedIn reklamları <span>reklam uzmanı</span></li>
+        <li>Web sitesi ve dijital altyapı <span>yazılım ekibi</span></li>
+        <li>İç iletişim ve eğitim <span>eğitim ekibi</span></li>
+      </ul>
+      <p class="ad-foot">Unityverse Ajans'ta bu uzmanlıkların hepsi <strong>aynı ekipte, tek muhatapla.</strong></p>
+    </div>
+  </div>
+  </div>
+
+  <section id="neden">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>İletişim ekibiniz varsa onu güçlendiriyoruz, yoksa o ekip oluyoruz</h2>
+        <p>Çoğu şirkette marka iletişimini tek bir kişi ya da küçük bir ekip yürütüyor. Strateji, metin, tasarım, video ve reklam ise ayrı uzmanlıklar istiyor. Biz bu uzmanlıkları tek çatı altında sunuyoruz; kararlar sizde kalıyor, üretim bizde.</p>
+      </div>
+      <div class="cmp">
+        <div>
+          <p class="eyebrow">İletişim sorumlunuz varsa</p>
+          <h3>Onun ekibi oluyoruz</h3>
+          <ul>
+            <li>Brief'i sizin sorumlunuz verir, üretimi biz yaparız</li>
+            <li>Tasarım, video, metin ve reklam için ayrı ajans aramazsınız</li>
+            <li>Yoğun dönemlerde kapasite sorunu yaşanmaz</li>
+            <li>Raporlar sorumlunuzun yönetime sunacağı şekilde hazırlanır</li>
+          </ul>
+        </div>
+        <div class="us">
+          <p class="eyebrow" style="color:inherit;opacity:.75">Henüz bir ekibiniz yoksa</p>
+          <h3>İletişim departmanınız oluyoruz</h3>
+          <ul>
+            <li>Yıllık plan, aylık takvim ve onay akışını birlikte kurarız</li>
+            <li>Size atanmış tek bir müşteri temsilcisi olur</li>
+            <li>Kapsam ve aylık ücret baştan yazılı olarak belirlenir</li>
+            <li>Her ay rapor ve planlama toplantısı yaparız</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="hizmetler">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>Hizmetler</h2>
+        <p>Tüm alanları tek paket olarak alabilir ya da ihtiyacınız olan alanlarla başlayabilirsiniz. Kapsamı hesap sayınıza ve aylık iş hacminize göre belirliyoruz.</p>
+      </div>
+      <div class="svc">
+        <article>
+          <p class="tag">Strateji</p>
+          <h3>Marka stratejisi ve kimlik</h3>
+          <ul>
+            <li>Marka konumlandırma atölyesi</li>
+            <li>Marka dili rehberi: ton, sözlük, örnek metinler</li>
+            <li>Kurumsal kimlik ve marka kitabı</li>
+            <li>Bayi, şube ve partner materyallerinin denetimi</li>
+            <li>Yıllık iletişim planı ve takvim</li>
+          </ul>
+        </article>
+        <article>
+          <p class="tag">İçerik</p>
+          <h3>Sosyal medya içerik ve yönetimi</h3>
+          <ul>
+            <li>Aylık içerik takvimi ve onay akışı</li>
+            <li>Post, carousel ve story tasarımı</li>
+            <li>Reels ve kısa video kurgusu</li>
+            <li>Ürün, fabrika, saha ve etkinlik çekimleri</li>
+            <li>Kurumsal LinkedIn ve yönetici profili içerikleri</li>
+            <li>Yorum ve mesaj yönetimi</li>
+            <li>Şube, AVM ve alt marka hesaplarının tek merkezden yönetimi</li>
+            <li>Influencer iş birlikleri</li>
+            <li>Aylık performans raporu</li>
+          </ul>
+        </article>
+        <article>
+          <p class="tag">Büyüme</p>
+          <h3>Dijital reklam</h3>
+          <ul>
+            <li>Google Ads kurulum ve yönetimi</li>
+            <li>Meta ve LinkedIn reklamları</li>
+            <li>Kampanya görselleri ve reklam metinleri</li>
+            <li>Kampanya açılış sayfaları</li>
+          </ul>
+        </article>
+        <article>
+          <p class="tag">Kurumsal</p>
+          <h3>Kurumsal iletişim ve PR</h3>
+          <ul>
+            <li>Basın bülteni, haber metni ve kurumsal duyurular</li>
+            <li>Yönetici konuşma metinleri ve sunumları</li>
+            <li>Medya takibi ve aylık basın raporu</li>
+            <li>Basın ilişkileri ve bülten dağıtımı</li>
+          </ul>
+        </article>
+        <article>
+          <p class="tag">Çalışanlar</p>
+          <h3>İç iletişim ve işveren markası</h3>
+          <ul>
+            <li>Yıllık iç iletişim planı ve takvimi</li>
+            <li>İç bülten, duyuru, intranet ve ekran tasarımları</li>
+            <li>Genel müdür ve yönetici mesajları: metin ve video</li>
+            <li>Çalışan hikâyeleri ve röportaj videoları</li>
+            <li>Değerler ve kurum kültürü kampanyaları</li>
+            <li>Yıl sonu, ödül töreni ve özel gün iletişimi</li>
+            <li>İşe alış (onboarding) kiti ve hoş geldin videosu</li>
+            <li>Kariyer sayfası, LinkedIn, staj ve kampüs programı iletişimi</li>
+          </ul>
+        </article>
+        <article>
+          <p class="tag">Saha</p>
+          <h3>Basılı, fuar ve etkinlik</h3>
+          <ul>
+            <li>Katalog, broşür ve sunum şablonları</li>
+            <li>Fuar standı görselleri ve fuar içerikleri</li>
+            <li>Lansman, açılış ve AVM etkinliği iletişimi</li>
+            <li>Matbaa ve prodüksiyon koordinasyonu</li>
+          </ul>
+        </article>
+        <article>
+          <p class="tag">Dijital</p>
+          <h3>Web ve dijital varlıklar</h3>
+          <ul>
+            <li>Kurumsal web sitesi tasarımı ve geliştirme</li>
+            <li>Web sitesi içerik güncelleme (WordPress dahil)</li>
+            <li>E-posta bülteni ve mailing tasarımı</li>
+          </ul>
+        </article>
+        <article>
+          <p class="tag">Prodüksiyon</p>
+          <h3>Reklam filmi, tanıtım filmi ve video</h3>
+          <ul>
+            <li>Reklam filmi: senaryo, çekim, kurgu</li>
+            <li>Kurumsal tanıtım filmi</li>
+            <li>Ürün ve hizmet tanıtım videoları</li>
+            <li>Reklam kampanyaları için video ve görsel içerik</li>
+            <li>Reels ve kısa video serileri</li>
+            <li>Animasyon ve motion graphics</li>
+            <li>Ürün, mekân ve etkinlik fotoğraf çekimi</li>
+          </ul>
+        </article>
+        <article class="extra" id="akademi">
+          <p class="tag" style="color:var(--ink)">Kurumsal akademi</p>
+          <h3>Şirketinizin akademisini kuruyor, eğitimlerini organize ediyor ve veriyoruz</h3>
+          <p>2010'dan beri eğitim veren bir akademi olarak, kendi içinde eğitim birimi kurmak isteyen şirketlere bu yapıyı baştan sona kuruyoruz.</p>
+          <div class="acad">
+            <div>
+              <b>Kurulum</b>
+              <ul>
+                <li>Eğitim ihtiyacı analizi ve yetkinlik haritası</li>
+                <li>Akademi adı, logosu ve kimliği</li>
+                <li>Yıllık eğitim takvimi ve bütçesi</li>
+              </ul>
+            </div>
+            <div>
+              <b>Organizasyon</b>
+              <ul>
+                <li>Eğitmen seçimi ve yönetimi</li>
+                <li>Yüz yüze ve online eğitim düzeni</li>
+                <li>Katılım takibi, sınav ve raporlama</li>
+                <li>Eğitim duyuruları ve akademi iletişimi</li>
+              </ul>
+            </div>
+            <div>
+              <b>Eğitimler</b>
+              <ul>
+                <li>Tasarım, video ve Adobe programları</li>
+                <li>Yazılım, veri, Excel ve SQL</li>
+                <li>Yapay zekâ ve siber güvenlik</li>
+                <li>CAD/CAM ve teknik eğitimler</li>
+                <li>Kısa video eğitimler ve e-öğrenme içerikleri</li>
+                <li>Pazarlama ekiplerine Adobe, sosyal medya ve yapay zekâ ile içerik üretimi</li>
+                <li>Yıldız Teknik Üniversitesi onaylı sertifika</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="paketler">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>Paketler</h2>
+        <p>Aylık sabit ücretle çalışıyoruz. Fiyat, yönetilecek hesap sayısına ve aylık iş hacmine göre belirlenir.</p>
+      </div>
+      <div class="pk">
+        <article>
+          <p class="eyebrow">Paket 1</p>
+          <h3>İletişim Desteği</h3>
+          <p class="who">İletişim sorumlunuz var, üretim desteği istiyorsunuz.</p>
+          <ul>
+            <li>2–3 sosyal medya hesabı</li>
+            <li>Aylık içerik takvimi</li>
+            <li>Tasarım ve video üretimi</li>
+            <li>Aylık rapor</li>
+          </ul>
+        </article>
+        <article class="hl">
+          <p class="eyebrow" style="color:var(--accent)">Paket 2</p>
+          <h3>Dış İletişim Departmanı</h3>
+          <p class="who">Henüz bir iletişim ekibiniz yok.</p>
+          <ul>
+            <li>Paket 1'deki her şey</li>
+            <li>Kurumsal metinler ve basın bültenleri</li>
+            <li>İç iletişim ve işveren markası</li>
+            <li>Basılı, fuar ve etkinlik materyali</li>
+            <li>Web sitesi güncelleme</li>
+            <li>Tedarikçi koordinasyonu</li>
+            <li>Size atanmış müşteri temsilcisi</li>
+          </ul>
+        </article>
+        <article>
+          <p class="eyebrow">Paket 3</p>
+          <h3>Çok Markalı Yapı</h3>
+          <p class="who">Holding, zincir ya da çok şubeli şirketsiniz.</p>
+          <ul>
+            <li>Hesap sayısına göre ölçeklenen yönetim</li>
+            <li>Merkezi onay akışı</li>
+            <li>Marka ve şube bazlı raporlama</li>
+            <li>Tüm hesaplarda kimlik tutarlılığı</li>
+          </ul>
+        </article>
+      </div>
+      <p class="note">Reklam bütçesi, çekim ve baskı giderleri ayrıca faturalanır. Sözleşme süresi ve kapsam teklifte birlikte belirlenir. Kurumsal akademi kurulumu ve eğitim programları yıllık proje olarak ayrıca fiyatlanır.</p>
+    </div>
+  </section>
+
+  <section id="surec">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>Nasıl çalışır</h2>
+        <p>İlk görüşmeden ilk yayına kadar olan süreç genelde üç ila dört hafta sürer.</p>
+      </div>
+      <ol class="steps">
+        <li><h3>Keşif görüşmesi</h3><p>Markalarınızı, kanallarınızı ve onay süreçlerinizi dinliyoruz.</p><span class="t">1. hafta</span></li>
+        <li><h3>Ön değerlendirme ve teklif</h3><p>Mevcut iletişiminizi inceliyor, ihtiyacınıza uygun kapsamı yazılı olarak öneriyoruz.</p><span class="t">1–2. hafta</span></li>
+        <li><h3>Kurulum</h3><p>Marka dili, şablonlar, içerik takvimi ve onay akışı hazırlanıyor.</p><span class="t">2–3. hafta</span></li>
+        <li><h3>Aylık döngü</h3><p>Üretim ve yayın başlıyor. Her ay rapor ve planlama toplantısı yapıyoruz.</p><span class="t">4. hafta ve sonrası</span></li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="referanslar">
+    <div class="wrap">
+      <div class="case">
+        <div>
+          <p class="eyebrow">Çok markalı yönetim</p>
+          <blockquote style="margin-top:18px">180 markanın sosyal medyasını tek ekip olarak yönetiyoruz.</blockquote>
+          <p class="meta">Her markanın içeriği kendi takviminde hazırlanır, onaylanır ve belirlenen saatte yayınlanır. Markaların kimlikleri birbirine karışmaz, raporlar marka bazında hazırlanır.</p>
+        </div>
+        <div class="stat-row">
+          <div><strong>180</strong><span>yönetilen marka</span></div>
+          <div><strong>Planlı</strong><span>saatli ve onaylı yayın</span></div>
+          <div><strong>Tek merkez</strong><span>tüm markalar için onay akışı</span></div>
+          <div><strong>Aylık</strong><span>marka bazlı rapor</span></div>
+        </div>
+      </div>
+      <div class="trained">
+        <div>
+          <p class="eyebrow">Çalıştığımız kurumlar</p>
+          <p class="small">Unityverse Academy ve Semantik Teknoloji olarak kurumsal eğitim, danışmanlık ve iletişim hizmeti verdiğimiz kurumlar.</p>
+        </div>
+        <div class="names">
+          <span>LC Waikiki</span><span>Eczacıbaşı</span><span>Özdilek Holding</span><span>İGA İstanbul Havalimanı</span><span>İBB</span><span>MEB</span><span>GE Vernova</span><span>Vakıf Katılım</span><span>VakıfBank</span><span>Acarsan Holding</span><span>Baydöner</span><span>Gençler Kablo</span><span>Turan Plastik</span><span>DC Bank (Kanada)</span><span>Habitat Derneği</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="hakkimizda">
+    <div class="wrap">
+      <div class="about">
+        <div class="story">
+          <p>2010'dan beri kurumların pazarlama ve tasarım ekiplerini eğitiyoruz. Artık o işi doğrudan biz yapıyoruz.</p>
+          <p>Unityverse Academy 2010'dan beri grafik tasarım, video ve dijital üretim eğitimi veriyor; bugün Adobe yetkili bir eğitim merkezi. 2022'den beri Semantik Teknoloji ve Yazılım A.Ş. çatısı altında faaliyet gösteriyor. Eğitim verdiğimiz kurumlar zamanla bizden içerik ve iletişim desteği de istemeye başladı. Bu birikimi Unityverse Ajans markası altında topladık: bugün 180 markanın sosyal medyasını yöneten bir ekibiz.</p>
+          <p>Ekibimiz, eğitimlerimizi veren tasarımcılar, video editörleri ve içerik üreticilerinden oluşuyor. Yazılım tarafımız Semantik Teknoloji, web ve dijital altyapıyı aynı çatı altında geliştiriyor.</p>
+        </div>
+        <aside class="founder">
+          <div class="person">
+            <div class="photo" aria-hidden="true"><span>NE</span><!-- Fotoğraf gelince: <img src="nevin-eryilmaz.jpg" alt="Nevin Eryılmaz"> --></div>
+            <div>
+              <p class="role">Ajans Direktörü</p>
+              <h3>Nevin Eryılmaz</h3>
+            </div>
+          </div>
+          <ul class="bio">
+            <li>Unityverse Academy'nin kurucularından</li>
+            <li>İstinye Üniversitesi'nde Dijital Oyun Tasarımı bölümünü, Bilgisayar Destekli Tasarım ve Animasyon programını ve Dijital Oyun Geliştirme ve Animasyon Teknolojileri Merkezi'ni kurdu</li>
+            <li>Üniversitede grafik tasarım, halkla ilişkiler ve reklamcılık dersleri verdi</li>
+            <li>Uluslararası reklam ajanslarında çalıştı</li>
+          </ul>
+          <p>Üniversitede bölüm ve merkez kurma deneyimini bugün şirketlere taşıyor: kurum içi akademiler kuruyor, marka ve iletişim ekiplerini yönetiyor.</p>
+        </aside>
+      </div>
+      <div class="tree" aria-label="Kurumsal yapı">
+        <div class="parent">
+          <p class="eyebrow">Şirket</p>
+          <b>Semantik Teknoloji ve Yazılım A.Ş.</b>
+          <span>2022 · Yıldız Teknik Üniversitesi Teknopark</span>
+        </div>
+        <div class="kids">
+          <div class="kid hl">
+            <p class="eyebrow">Marka</p>
+            <b>Unityverse Ajans</b>
+            <span>Marka ve kurumsal iletişim, iç iletişim, dijital reklam, kurumsal akademi</span>
+          </div>
+          <div class="kid">
+            <p class="eyebrow">Marka</p>
+            <b>Unityverse Academy</b>
+            <span>2010'dan beri eğitim · Adobe yetkili eğitim merkezi · YTÜ onaylı sertifika</span>
+          </div>
+        </div>
+        <p class="tree-note">Unityverse Ajans, Semantik Teknoloji ve Yazılım A.Ş.'nin markasıdır ve Unityverse Academy ile aynı ekip ve aynı çatı altında çalışır. Sözleşme ve faturalar Semantik Teknoloji ve Yazılım A.Ş. adına düzenlenir.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="teklif">
+    <div class="wrap contact">
+      <div class="info">
+        <p class="eyebrow">Teklif ve görüşme</p>
+        <h2>İletişim departmanınızı konuşalım</h2>
+        <p>Formu doldurun, iki iş günü içinde sizi arayalım. İlk görüşme ve ön değerlendirme ücretsizdir. Talep ederseniz görüşme öncesinde gizlilik sözleşmesi imzalıyoruz.</p>
+        <dl class="kv">
+          <div><dt>E-posta</dt><dd>ajans@unityverseacademy.com</dd></div>
+          <div><dt>Ofis</dt><dd>Merter, İstanbul</dd></div>
+          <div><dt>Hizmet bölgesi</dt><dd>İstanbul yüz yüze · İzmir, Ankara ve diğer şehirler uzaktan</dd></div>
+        </dl>
+      </div>
+      <form id="f" novalidate>
+        <label>Ad soyad<input id="ad" name="ad" required autocomplete="name"></label>
+        <label>Şirket<input id="sirket" name="sirket" required autocomplete="organization"></label>
+        <label>Kurumsal e-posta<input id="eposta" name="eposta" type="email" required autocomplete="email"></label>
+        <label>Telefon<input id="tel" name="tel" type="tel" autocomplete="tel"></label>
+        <label>Sektör
+          <select id="sektor" name="sektor">
+            <option>Üretim ve sanayi</option><option>Perakende</option><option>Sağlık</option><option>Gayrimenkul</option><option>Holding / çok markalı</option><option>Diğer</option>
+          </select>
+        </label>
+        <label>Sosyal medya hesap sayısı
+          <select id="hesap" name="hesap">
+            <option>1–5</option><option selected>6–20</option><option>21–100</option><option>100+</option>
+          </select>
+        </label>
+        <label class="full">İletişim işlerinizi şu an kim yürütüyor?
+          <select id="uzman" name="uzman">
+            <option>Kendi iletişim ekibimiz</option><option>Tek bir sorumlu</option><option>Başka bir ajans</option><option>Henüz kimse</option>
+          </select>
+        </label>
+        <div class="full">
+          <p style="font-size:13px;font-weight:500;margin-bottom:8px">İlgilendiğiniz alanlar</p>
+          <div class="checks">
+            <label><input type="checkbox" id="h1" checked> Sosyal medya</label>
+            <label><input type="checkbox" id="h2"> Marka ve kimlik</label>
+            <label><input type="checkbox" id="h3"> Dijital reklam</label>
+            <label><input type="checkbox" id="h4"> Kurumsal iletişim</label>
+            <label><input type="checkbox" id="h5"> İç iletişim</label>
+            <label><input type="checkbox" id="h6"> Fuar ve basılı</label>
+            <label><input type="checkbox" id="h10"> Reklam ve tanıtım filmi</label>
+            <label><input type="checkbox" id="h7"> Web sitesi</label>
+            <label><input type="checkbox" id="h8"> Ekip eğitimi</label>
+            <label><input type="checkbox" id="h9"> Kurumsal akademi</label>
+          </div>
+        </div>
+        <label class="full">Notunuz<textarea id="not" name="not" placeholder="Markalarınız, mevcut ajans durumu, başlangıç tarihi…"></textarea></label>
+        <div class="full"><button class="btn" type="submit">Görüşme talebini gönder</button></div>
+        <p class="ok" id="ok" hidden>Talebiniz alındı. İki iş günü içinde sizi arayacağız.</p>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 Unityverse Ajans, Semantik Teknoloji ve Yazılım A.Ş. markasıdır · Unityverse Academy ile birlikte · Yıldız Teknik Üniversitesi Teknopark</span>
+    <a href="https://unityverseacademy.com">unityverseacademy.com</a>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var f=document.getElementById('f');
+  f.addEventListener('submit',function(e){
+    e.preventDefault();
+    var bad=['ad','sirket','eposta'].filter(function(id){var el=document.getElementById(id);return !el.value.trim()||(el.type==='email'&&!/.+@.+\..+/.test(el.value))});
+    if(bad.length){document.getElementById(bad[0]).focus();return}
+    document.getElementById('ok').hidden=false;
+  });
+})();
+</script>
+</body>
+</html>
