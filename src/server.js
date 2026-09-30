@@ -78,6 +78,7 @@ const staticRootFiles = new Map([
   ['/sitemap.xml', 'sitemap.xml']
 ]);
 const legacyStaticDirectories = [
+  'ajans',
   'ajax',
   'blog',
   'blog-detay',
