@@ -82,6 +82,35 @@ assert.match(sarmalayiciSonuc, /class="uv-ov-media"/, 'metinli sarmalayici icind
 assert.match(sarmalayiciSonuc, /A{120}/, 'sarmalayicidaki metin korunmali');
 assert.equal(say(sarmalayiciSonuc, /<img/g), 2);
 
+// --- 8d) "Basari Hikayeleri" CTA kutusu (div.alert-success) icerigin EN SONUNDA kaliyordu;
+// Mimar istegi (2026-10-01): galeri bolumunun ONUNE alinsin, ustteki metne de alttaki
+// "Egitimimizden kareler" basligina da yapismasin (bosluk CSS'te verilir).
+const ctaHtml = '<p>Etiketler: a b c</p>'
+  + `<h2>Egitimimizden kareler:${'<img src="g.jpg">'.repeat(6)}</h2>`
+  + '<div class="alert alert-success"><span>Ogrencilerimizin Basari Hikayeleri</span>'
+  + '<a href="/blog/10/" class="btn btn-success">Oku</a></div>';
+const ctaSonuc = applyOverviewLayout(ctaHtml);
+const ctaIndeks = ctaSonuc.indexOf('alert-success');
+const galeriIndeks = ctaSonuc.indexOf('uv-ov-gallery');
+assert.ok(ctaIndeks > -1, 'CTA kutusu kaybolmamali');
+assert.ok(ctaIndeks < galeriIndeks, 'CTA galeri bolumunun ONUNDE olmali');
+assert.match(ctaSonuc, /Etiketler: a b c/, 'ustteki metin korunmali');
+assert.ok(ctaSonuc.indexOf('Etiketler') < ctaIndeks, 'CTA ustteki metnin ALTINDA kalmali');
+
+// Birden fazla galeri varsa CTA SONUNCU galerinin onune alinir (sertifika galerisi degil).
+const ikiGaleri = applyOverviewLayout(
+  `<p>${'<img src="s.jpg">'.repeat(6)}</p>`
+  + `<h2>Egitimimizden kareler:${'<img src="f.jpg">'.repeat(6)}</h2>`
+  + '<div class="alert alert-success">CTA</div>'
+);
+const sonGaleri = ikiGaleri.lastIndexOf('uv-ov-gallery"');
+assert.ok(ikiGaleri.indexOf('alert-success') < sonGaleri, 'CTA son galerinin onune alinmali');
+assert.ok(ikiGaleri.indexOf('alert-success') > ikiGaleri.indexOf('uv-ov-gallery"'), 'ilk galeri (sertifikalar) CTA\'dan once kalmali');
+
+// Galeri yoksa CTA yerinde kalir (davranis degismez).
+const galerisiz = '<p>Metin</p><div class="alert alert-success">CTA</div>';
+assert.equal(applyOverviewLayout(galerisiz), galerisiz, 'galeri yoksa CTA tasinmamali');
+
 // --- 9) KORUMA: gorsel kaynaklari ve sirasi birebir korunur.
 const karisik = '<p><img src="1.jpg"></p><p><a href="/x"><img src="2.jpg"></a><img src="3.jpg"></p>';
 const sonuc = applyOverviewLayout(karisik);

@@ -75,6 +75,14 @@
   border-radius: 9px;
 }
 
+/* --- "Basari Hikayeleri" CTA kutusu: galeri bolumunun onune tasinir (bkz. legacy-overview-layout.js).
+ * Ustteki metne de alttaki "Egitimimizden kareler" basligina da yapismamasi icin nefes payi. */
+:is(#tab-info, #tab-additional-content2, #tab-additional-content3, .jodit-wysiwyg):not(.uv-course-overview)
+  .alert-success {
+  margin-top: 32px;
+  margin-bottom: 32px;
+}
+
 /* --- Mobil: tek sutun, daha alcak gorseller. */
 @media (max-width: 767px) {
   :is(#tab-info, #tab-additional-content2, #tab-additional-content3, .jodit-wysiwyg):not(.uv-course-overview)

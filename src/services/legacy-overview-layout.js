@@ -125,14 +125,32 @@ function applyOverviewLayout(html) {
     kayit.kap.addClass('uv-ov-media');
   });
 
+  // 5) "Basari Hikayeleri" CTA kutusu icerigin en sonunda kaliyordu (galerinin altinda).
+  // Mimar istegi (2026-10-01): SON galeri bolumunun onune alinir — boylece ustteki metin ile
+  // "Egitimimizden kareler" basligi arasinda durur. Ust/alt bosluklar CSS'te verilir.
+  // Galeri yoksa veya CTA zaten ondeyse hicbir sey yapilmaz.
+  const cta = $('.alert-success').first();
+  const sonGaleri = $('.uv-ov-gallery').last();
+  if (cta.length && sonGaleri.length) {
+    const galeriBlogu = sonGaleri.parent();
+    const hedef = galeriBlogu.length ? galeriBlogu : sonGaleri;
+    const ctaSonra = cta.prevAll().toArray().includes(hedef.get(0))
+      || $(hedef).nextAll().toArray().includes(cta.get(0));
+    if (ctaSonra) hedef.before(cta);
+  }
+
   const sonuc = $.html();
 
   // 5) Guvenlik sozu: gorsel sirasi ve gorunen metin degismemeli; ihlalde ORIJINAL dondurulur.
   const onceGorsel = gorselKaynaklari(html);
   const sonraGorsel = gorselKaynaklari(sonuc);
+  // Gorsel sirasi AYNEN korunmalidir (gorseller tasinmaz, yalnizca kaba alinir).
+  // Metin icin sira degil KAYIP kontrol edilir: CTA kutusu bilerek tasindigi icin metnin
+  // sirasi degisebilir, ancak tek bir kelime bile kaybolmamalidir (2026-10-01).
+  const kelimeler = (metin) => metin.split(' ').filter(Boolean).sort().join(' ');
   const korunuyor = onceGorsel.length === sonraGorsel.length
     && onceGorsel.every((kaynak, indeks) => kaynak === sonraGorsel[indeks])
-    && gorunenMetin(html) === gorunenMetin(sonuc);
+    && kelimeler(gorunenMetin(html)) === kelimeler(gorunenMetin(sonuc));
 
   return korunuyor ? sonuc : html;
 }

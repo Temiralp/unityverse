@@ -67,6 +67,8 @@ assert.match(withoutComments, /\.uv-ov-gallery\b/, 'uv-ov-gallery sinifi stillen
 assert.match(withoutComments, /\.uv-ov-gallery-item\b/, 'uv-ov-gallery-item sinifi stillenmeli');
 // Mobil davranis zorunlu (Mimar: taşma olmayacak).
 assert.match(withoutComments, /@media \(max-width:\s*767px\)/, 'mobil kurallari bulunmali');
+// CTA kutusu galeri onune tasiniyor; iki yandan da nefes payi almali (Mimar, 2026-10-01).
+assert.match(withoutComments, /\.alert-success/, 'CTA kutusu icin bosluk kurali olmali');
 assert.match(withoutComments, /flex-wrap:\s*wrap/, 'coklu gorsel bloklari sarmalayarak hizalanmali');
 assert.match(withoutComments, /display:\s*grid/, '5+ gorsel kartli grid olmali');
 // Cember 22: :has() tahminine son verildi. Blok siniflandirmasi SUNUCUDA yapilir

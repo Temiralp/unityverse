@@ -135,6 +135,9 @@ saf CSS denemesi 534 karakterlik bir paragrafı flex'e çevirdi (yükseklik 497�
 `legacy-overview-layout.js`'e taşındı; metinli bloklar artık asla dokunulmuyor.
 
 ## Yapılmaması gerekenler (git geçmişinden öğrenilen dersler)
+- Kendi koruma kuralın işi engelleyebilir: metin **sırası** eşitliği arayan bir güvenlik kontrolü,
+  bilerek yapılan bir blok taşımasını "bozulma" sayıp tüm dönüşümü geri aldı (2026-10-01). Taşıma
+  içeren dönüşümlerde metin **kaybı** (kelime çoklu kümesi) denetlenir, sıra değil.
 - **HTML dönüşümünde yalnız üst seviye çocuklara bakma.** Gerçek içerikte görsel paragrafları uzun
   metinli bir sarmalayıcı `<div>` içinde olabilir; dış blok "metinli" sayılıp atlanınca içindeki saf
   görsel blokları da atlanır (2026-10-01, 1454 numaralı kurs). **En içteki** bloğa inilmelidir.
@@ -221,6 +224,7 @@ saf CSS denemesi 534 karakterlik bir paragrafı flex'e çevirdi (yükseklik 497�
 ## Çember geçmişi
 | # | Tarih | Çember | Sonuç |
 |---|---|---|---|
+| 22c | 2026-10-01 | **"Başarı Hikayeleri" CTA kutusu konumu.** Kutu (`div.alert-success`) içeriğin en sonunda, fotoğrafların altında kalıyordu; Mimar isteğiyle **son galeri bölümünün önüne** taşındı (üstteki metin ile "Eğitimimizden kareler" arasına), CSS'te 32px alt/üst nefes payı verildi | 4 dosya, +4 senaryo (21 senaryo); 30/30 test PASS; 6 gerçek kursta doğrulandı: CTA önde, görsel 24→24/21→21, metin kaybı yok. **Koruma kuralı güncellendi:** metin artık sıra değil **kayıp** olarak denetlenir (CTA bilerek taşındığı için sıra değişir); görsel sırası hâlâ birebir denetleniyor |
 | 22b | 2026-10-01 | **Çember 22 düzeltmesi.** Canlı kontrolde 1454/1455 kurslarında 7 görsel bloğu sınıfsız kalmıştı: servis yalnız **üst seviye** blokları sınıflandırıyordu, görseller uzun metinli bir `<div>` içinde olduğu için dış blok "metinli" sayılıp atlanıyordu. Çözüm: **en içteki** görsel blokları seçilir; birleştirme için ayrıca **DOM'da bitişik kardeş** şartı eklendi (araya metin paragrafı girerse birleşmez) | 2 dosya, +3 senaryo (17 senaryo); 30/30 test PASS; canlı önizleme: 1454 → 5 medya + 1 galeri, hepsi ortalanmış, 21 görsel korundu; 668 → 2 galeri + 3 medya, sertifikalar **2+2 kart** düzeninde, 24 görsel korundu |
 | 22 | 2026-10-01 | **"Eğitime İlk Bakış" görsel düzeni.** `legacy-overview-layout.js` (render anında blok sınıflandırma: metin>60 karakter → DOKUNULMAZ, 1–4 görsel → `uv-ov-media`, 5+ → `uv-ov-gallery`; ardışık **metinsiz** bloklar birleştirilir → sertifikalar 2+2), `legacy-product-tabs.js` hook (yalnız OVERVIEW, yalnız statik yol), `course-content.css` referans ölçülerle yeniden yazıldı | 7 dosya, ~430 satır; 30/30 test PASS; **DB'ye yazılmaz** → admin editöründe içerik ham/düzenlenebilir kalır (testle kilitli); canlı önizleme (668): 2 medya kabı + 1 galeri (10 kart), 24 görsel korundu, taşma 0, galeri 2 sütun (607px), sertifikalar yan yana eşit yükseklikte |
 | 20 | 2026-09-30 | **B4 Adım 3 — 10 öncelikli kursun overview normalizasyonu.** `course-overview-normalize.js` (N1: 3+ `<br>`→1, N2: 2+ `&nbsp;`→boşluk, N3: boş blok kaldırma; metin/görsel kaybında **hata fırlatır**), plan JSON, `normalize-course-overview.js` CLI (dry-run/apply/revert, Çember 9 deseni) | 5 yeni + 2 değişen dosya, ~500 satır; 29/29 test PASS; **yerel tam döngü:** dry-run 10/10 DEGISECEK → apply 10/10 doğrulandı → ikinci dry-run **0 değişecek** (idempotent) → revert **10/10 bayt-bayt orijinal**. Uzunluk −%9…−%24; görsel sayısı ve görünen metin **her kursta aynı**. Production'da uygulama Mimar'da (önce `pg_dump`) |
