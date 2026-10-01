@@ -134,6 +134,13 @@ Statik sayfalarda `minmax(420px, 1fr)` ile 2 sütun elde edilir (280px denendi �
 saf CSS denemesi 534 karakterlik bir paragrafı flex'e çevirdi (yükseklik 497→321). Sınıflandırma
 `legacy-overview-layout.js`'e taşındı; metinli bloklar artık asla dokunulmuyor.
 
+## "Eğitimimizden kareler" ile görseller arasındaki boşluk (2026-10-01)
+Ölçüldü: etiket metni ile ilk görsel arasında DB içeriğinde **3 `<br>` + 9 `&nbsp;`** duruyor
+(örnek: `oyun-gelistirme` kategorisi). Düzen servisi görselleri kaba alır ama bu artıkları
+**kaldırmaz** — onlar içerik temizliğinin (N1/N2) işidir. Bu yüzden görsel düzeni uygulanmış ama
+içeriği temizlenmemiş kurslarda boşluk büyük görünür. Çözüm sırası: önce layout (her yerde aktif),
+sonra kategori kategori içerik temizliği.
+
 ## Yapılmaması gerekenler (git geçmişinden öğrenilen dersler)
 - Kendi koruma kuralın işi engelleyebilir: metin **sırası** eşitliği arayan bir güvenlik kontrolü,
   bilerek yapılan bir blok taşımasını "bozulma" sayıp tüm dönüşümü geri aldı (2026-10-01). Taşıma
@@ -224,6 +231,7 @@ saf CSS denemesi 534 karakterlik bir paragrafı flex'e çevirdi (yükseklik 497�
 ## Çember geçmişi
 | # | Tarih | Çember | Sonuç |
 |---|---|---|---|
+| 23 | 2026-10-01 | **Kalan `yazilim` kurslarinin icerik temizligi.** Plan dosyasi artik **kategori** ile de verilebiliyor: slug listesi **calisma aninda DB'den** cozulur (`planKurslariniCoz`), `haricTutulan` ile Cember 20'de islenen 10 kurs disarida birakilir. Yerel DB production'dan eski oldugu icin elle liste yazilmaz (Cember 9 dersi) | 4 dosya (+2 yeni), ~70 satir; 31/31 test PASS; eski 10'luk plan **geriye uyumlu** calisiyor; yerel tam dongu: dry-run **111 kurs → 104 degisecek / 7 dokunulmayacak / 0 koruma ihlali** → apply 104/104 dogrulandi → ikinci dry-run **0 degisecek** → revert **118/118 bayt-bayt orijinal** |
 | 22c | 2026-10-01 | **"Başarı Hikayeleri" CTA kutusu konumu.** Kutu (`div.alert-success`) içeriğin en sonunda, fotoğrafların altında kalıyordu; Mimar isteğiyle **son galeri bölümünün önüne** taşındı (üstteki metin ile "Eğitimimizden kareler" arasına), CSS'te 32px alt/üst nefes payı verildi | 4 dosya, +4 senaryo (21 senaryo); 30/30 test PASS; 6 gerçek kursta doğrulandı: CTA önde, görsel 24→24/21→21, metin kaybı yok. **Koruma kuralı güncellendi:** metin artık sıra değil **kayıp** olarak denetlenir (CTA bilerek taşındığı için sıra değişir); görsel sırası hâlâ birebir denetleniyor |
 | 22b | 2026-10-01 | **Çember 22 düzeltmesi.** Canlı kontrolde 1454/1455 kurslarında 7 görsel bloğu sınıfsız kalmıştı: servis yalnız **üst seviye** blokları sınıflandırıyordu, görseller uzun metinli bir `<div>` içinde olduğu için dış blok "metinli" sayılıp atlanıyordu. Çözüm: **en içteki** görsel blokları seçilir; birleştirme için ayrıca **DOM'da bitişik kardeş** şartı eklendi (araya metin paragrafı girerse birleşmez) | 2 dosya, +3 senaryo (17 senaryo); 30/30 test PASS; canlı önizleme: 1454 → 5 medya + 1 galeri, hepsi ortalanmış, 21 görsel korundu; 668 → 2 galeri + 3 medya, sertifikalar **2+2 kart** düzeninde, 24 görsel korundu |
 | 22 | 2026-10-01 | **"Eğitime İlk Bakış" görsel düzeni.** `legacy-overview-layout.js` (render anında blok sınıflandırma: metin>60 karakter → DOKUNULMAZ, 1–4 görsel → `uv-ov-media`, 5+ → `uv-ov-gallery`; ardışık **metinsiz** bloklar birleştirilir → sertifikalar 2+2), `legacy-product-tabs.js` hook (yalnız OVERVIEW, yalnız statik yol), `course-content.css` referans ölçülerle yeniden yazıldı | 7 dosya, ~430 satır; 30/30 test PASS; **DB'ye yazılmaz** → admin editöründe içerik ham/düzenlenebilir kalır (testle kilitli); canlı önizleme (668): 2 medya kabı + 1 galeri (10 kart), 24 görsel korundu, taşma 0, galeri 2 sütun (607px), sertifikalar yan yana eşit yükseklikte |

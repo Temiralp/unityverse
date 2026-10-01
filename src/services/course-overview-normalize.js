@@ -100,7 +100,32 @@ function normalizeOverviewContent(html) {
   return { content: sonuc, degisti: sonuc !== html, sayaclar };
 }
 
+// Plan dosyasindaki kapsami gercek slug listesine cevirir.
+// Kategori verilirse liste CALISMA ANINDA DB'den cozulur — yerel DB production'dan eski oldugu
+// icin elle yazilan liste production'da eksik kalirdi (Cember 9 dersi). Prisma disaridan verilir.
+async function planKurslariniCoz(prisma, plan = {}) {
+  const sonuc = [];
+
+  if (plan.kategori) {
+    const urunler = await prisma.product.findMany({
+      where: {
+        category: { slug: plan.kategori },
+        tabs: { some: { systemKey: 'OVERVIEW' } }
+      },
+      select: { slug: true },
+      orderBy: { id: 'asc' }
+    });
+    urunler.forEach((urun) => { if (urun.slug) sonuc.push(urun.slug); });
+  }
+
+  (plan.kurslar || []).forEach((slug) => { if (slug) sonuc.push(slug); });
+
+  const haric = new Set(plan.haricTutulan || []);
+  return [...new Set(sonuc)].filter((slug) => !haric.has(slug));
+}
+
 module.exports = {
+  planKurslariniCoz,
   normalizeOverviewContent,
   gorselKaynaklari,
   gorunenMetin,

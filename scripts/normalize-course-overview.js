@@ -12,7 +12,12 @@ const fs = require('fs');
 const path = require('path');
 
 const prisma = require('../src/db');
-const { normalizeOverviewContent, gorunenMetin, gorselKaynaklari } = require('../src/services/course-overview-normalize');
+const {
+  normalizeOverviewContent,
+  planKurslariniCoz,
+  gorunenMetin,
+  gorselKaynaklari
+} = require('../src/services/course-overview-normalize');
 
 const VARSAYILAN_PLAN = path.join(__dirname, 'data', 'overview-normalize-2026-09-30.json');
 
@@ -42,9 +47,9 @@ async function overviewTabiniGetir(slug) {
   return { slug, durum: 'HAZIR', productId: urun.id, baslik: urun.title, tabId: urun.tabs[0].id, icerik: urun.tabs[0].content };
 }
 
-async function dryRun(plan) {
+async function dryRun(slugler) {
   const satirlar = [];
-  for (const slug of plan.kurslar) {
+  for (const slug of slugler) {
     const kayit = await overviewTabiniGetir(slug);
     if (kayit.durum !== 'HAZIR') { satirlar.push({ ...kayit, atlandi: true }); continue; }
 
@@ -145,10 +150,14 @@ async function main() {
   }
 
   const plan = JSON.parse(fs.readFileSync(secenekler.plan, 'utf8'));
+  const slugler = await planKurslariniCoz(prisma, plan);
   console.log(`=== Overview normalizasyonu — ${secenekler.apply ? 'APPLY' : 'DRY-RUN (yazma yok)'} ===`);
-  console.log(`Plan: ${path.relative(process.cwd(), secenekler.plan)} (${plan.kurslar.length} kurs)\n`);
+  console.log(`Plan: ${path.relative(process.cwd(), secenekler.plan)}`);
+  console.log(`Kapsam: ${plan.kategori ? `kategori = ${plan.kategori}` : 'acik slug listesi'}`
+    + `${plan.haricTutulan && plan.haricTutulan.length ? ` (haric: ${plan.haricTutulan.length})` : ''}`
+    + ` → ${slugler.length} kurs\n`);
 
-  const satirlar = await dryRun(plan);
+  const satirlar = await dryRun(slugler);
   tabloYaz(satirlar);
 
   const degisecek = satirlar.filter((s) => s.durum === 'DEGISECEK').length;
