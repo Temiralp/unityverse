@@ -59,6 +59,29 @@ const bolunmus = applyOverviewLayout(
 assert.equal(say(bolunmus, /class="uv-ov-media"/g), 2, 'metinli blok iki kabi ayirmali');
 assert.match(bolunmus, /B{80}/);
 
+// --- 8b) IC ICE YAPI (2026-10-01 canli hatasi): bloklar bir sarmalayici <div> icindeyse de
+// siniflandirilmali. Yalnizca ust seviyeye bakan surum, 1454 numarali kursta 7 gorsel blogunu
+// atlamis ve hepsi sola yapisik kalmisti.
+const icIce = applyOverviewLayout('<div><p><img src="1.jpg"></p><p><img src="2.jpg"></p></div>');
+assert.match(icIce, /class="uv-ov-media"/, 'sarmalayici icindeki bloklar da siniflandirilmali');
+assert.equal(say(icIce, /<img/g), 2);
+
+const derin = applyOverviewLayout('<div><section><p><img src="a.jpg"></p></section></div>');
+assert.match(derin, /class="uv-ov-media"/, 'derin ic ice yapi da siniflandirilmali');
+
+// Ic ice yapida da metinli blok korunur.
+const icIceMetinli = `<div><p>${'A'.repeat(80)}<img src="a.jpg"></p></div>`;
+assert.equal(applyOverviewLayout(icIceMetinli), icIceMetinli, 'ic ice metinli blok dokunulmamali');
+
+// --- 8c) METINLI SARMALAYICI icindeki gorsel bloklari (1454'teki gercek yapi):
+// dis <div> hem uzun metin hem gorsel tasiyor. Dis blok "metinli" sayilip atlanirsa, icindeki
+// SAF GORSEL paragraflari da atlanir ve sola yapisik kalir. En ICTEKI bloga inilmelidir.
+const metinliSarmalayici = `<div><p>${'A'.repeat(120)}</p><p><img src="1.jpg"></p><p><img src="2.jpg"></p></div>`;
+const sarmalayiciSonuc = applyOverviewLayout(metinliSarmalayici);
+assert.match(sarmalayiciSonuc, /class="uv-ov-media"/, 'metinli sarmalayici icindeki gorsel bloklari siniflandirilmali');
+assert.match(sarmalayiciSonuc, /A{120}/, 'sarmalayicidaki metin korunmali');
+assert.equal(say(sarmalayiciSonuc, /<img/g), 2);
+
 // --- 9) KORUMA: gorsel kaynaklari ve sirasi birebir korunur.
 const karisik = '<p><img src="1.jpg"></p><p><a href="/x"><img src="2.jpg"></a><img src="3.jpg"></p>';
 const sonuc = applyOverviewLayout(karisik);

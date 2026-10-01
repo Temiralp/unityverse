@@ -61,17 +61,23 @@ function applyOverviewLayout(html) {
 
   const $ = cheerio.load(html, { decodeEntities: false }, false);
 
-  // 1) Her ust seviye blogu siniflandir.
-  const bloklar = $.root().children(BLOK_SECICI).toArray().map((element) => {
-    const blok = $(element);
+  // 1) EN ICTEKI gorsel bloklarini bul. Yalnizca ust seviyeye bakmak yetmez: 2026-10-01'de
+  // 1454 numarali kursta gorsel paragraflari uzun metinli bir <div> icindeydi; dis blok
+  // "metinli" sayilip atlaninca icindeki 7 gorsel blogu da atlandi ve sola yapisik kaldi.
+  const adaylar = $(BLOK_SECICI).toArray()
+    .map((element) => $(element))
+    .filter((blok) => blok.find('img').length > 0)
+    .filter((blok) => blok.find(BLOK_SECICI).filter((unusedIndex, ic) => $(ic).find('img').length > 0).length === 0);
+
+  const bloklar = adaylar.map((blok) => {
     const gorselSayisi = blok.find('img').length;
     const metin = blokMetni($, blok);
     return {
       blok,
       gorselSayisi,
       metinUzunlugu: metin.length,
-      medyaBlogu: gorselSayisi > 0 && metin.length <= METIN_ESIGI,
-      metinsiz: gorselSayisi > 0 && metin.length === 0
+      medyaBlogu: metin.length <= METIN_ESIGI,
+      metinsiz: metin.length === 0
     };
   });
 
@@ -89,8 +95,14 @@ function applyOverviewLayout(html) {
   // 3) Ardisik METINSIZ bloklari tek kapta birlestir (sertifikalar 2+2 dizilsin).
   for (let i = 0; i < bloklar.length; i += 1) {
     if (!bloklar[i].metinsiz) continue;
+    // Birlestirme icin iki sart: ayni ebeveyn VE DOM'da bitisik kardes olmak. Aralarinda
+    // metin paragrafi varsa birlestirme yapilmaz (metnin sirasi bozulmasin).
+    // Her turda bloklar[i] DOM'da yerinde kalir; birlesen blok kaldirildigi icin bir sonraki
+    // aday yine bloklar[i]'nin bitisik kardesi olur.
     let j = i + 1;
-    while (j < bloklar.length && bloklar[j].metinsiz) {
+    while (j < bloklar.length
+      && bloklar[j].metinsiz
+      && bloklar[i].blok.next().get(0) === bloklar[j].blok.get(0)) {
       bloklar[i].kap.append(bloklar[j].kap.children());
       bloklar[i].gorselSayisi += bloklar[j].gorselSayisi;
       bloklar[j].blok.remove();
