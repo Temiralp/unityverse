@@ -1,64 +1,90 @@
-/* Kurs sekmesi icerigi — ortak hizalama stili (B4-a, 2026-09-23)
+/* Kurs sekmesi icerigi — gorsel duzeni (Cember 17 → 21 → 22)
  *
- * Kapsam BILEREK dardir: yalnizca kurs detay sayfasinin uc sekmesi ve admin editor
- * onizlemesi. Global secici (img{}, p{}) yazilmaz — sekme disina tasarsa tum siteyi
- * etkiler; scripts/test-course-content-styles.js bunu makineyle dogrular.
+ * KAPSAM BILEREK DARDIR: yalnizca kurs sekmeleri + admin editor onizlemesi ve yalnizca
+ * `course-overview.js`'in ELE ALMADIGI sayfalar. Global secici yazilmaz;
+ * scripts/test-course-content-styles.js bunu makineyle dogrular.
  *
- * Olculen iki sorun (438 statik kurs sayfasi tarandi):
- *   1) 3764 gorselin 27'si kaptan genis (en buyuk 1200px, kap ~1076px) + 425'inde width
- *      atributu yok -> tasma.
- *   2) 618 blokta 2+ gorsel yan yana; sarmalayici/bosluk olmadigi icin sola yigiliyor.
- *      Gercek yapi olculdu: 269 blokta gorseller dogrudan kardes, 190 blokta biri dogrudan
- *      digeri <span> icinde, 159 blokta hepsi sarmalayici icinde. Bu yuzden asagidaki dort
- *      desen birlikte kullanilir; "img + img" (bitisik kardes) gercek yapiyi TUTMAZ.
- *      Dorduncu desen, gorsellerin AYRI <span>'lar icinde oldugu durumu karsilar
- *      (canli sayfada olculdu: <h2><span><img></span><span><img></span></h2>).
+ * Asagidaki sayilar TAHMIN DEGIL: canli referans galeriden (dinamik kurs sayfasi,
+ * course-overview.js) 2026-10-01'de olculmustur — gap 22px, kart padding 10px,
+ * radius 14px, kart fonu #f8f9fc, galeri gorseli 440px + object-fit:contain,
+ * gorsel tavani min(100%, 600px). Amac: statik sayfalar ayni dizayn diliyle gorunsun.
  *
- * Mimar karari (2026-09-23): TEK gorselli paragraflar ortalanmaz — asagidaki dort desenin
- * hicbiri tek gorselli bloga uymaz, boylece bugun duzgun gorunen kurslar degismez.
+ * Siniflari `src/services/legacy-overview-layout.js` RENDER aninda ekler; DB'ye yazilmaz,
+ * admin editorunde icerik ham ve duzenlenebilir kalir.
  */
 
-/* Kurs sekmeleri + admin editor onizlemesi. :is() ile tek yerde tanimlanir. */
-:is(#tab-info, #tab-additional-content2, #tab-additional-content3, .jodit-wysiwyg) img {
-  max-width: 100%;
+/* --- Ortak gorsel tavani: hicbir gorsel kabini asmaz, asiri buyuk duramaz.
+ * `width: auto` KULLANILMAZ — o, gorseli dogal boyutuna cikarir (199px rozet 420px olurdu). */
+:is(#tab-info, #tab-additional-content2, #tab-additional-content3, .jodit-wysiwyg):not(.uv-course-overview) img {
+  max-width: min(100%, 600px);
   height: auto;
 }
 
-/* 2+ gorsel iceren blok: sarmalayan, bosluklu, ortalanmis bir siraya doner.
- * :has() desteklenmeyen tarayicida kural yok sayilir -> bugunku gorunum korunur. */
-:is(#tab-info, #tab-additional-content2, #tab-additional-content3, .jodit-wysiwyg)
-  :is(p, h1, h2, h3, h4, div):is(
-    :has(> img ~ img),
-    :has(> img):has(> :is(span, strong, em, a) img),
-    :has(> :is(span, strong, em, a):has(> img ~ img)),
-    :has(> :is(span, strong, em, a):has(img) ~ :is(span, strong, em, a):has(img))
-  ) {
+/* --- Baslik nefes payi: Mimar istegi "en az 2 <br> kadar bosluk".
+ * Yalnizca dikey margin — metin yeniden akmaz. */
+:is(#tab-info, #tab-additional-content2, #tab-additional-content3, .jodit-wysiwyg):not(.uv-course-overview)
+  :is(h1, h2, h3, h4) {
+  margin-top: 36px;
+}
+
+/* --- 1-4 gorsel: esit yukseklikte, ortalanmis, bosluklu sira.
+ * Esit yukseklik, farkli en-boy oranlarina ragmen hizali bir gorunum verir. */
+:is(#tab-info, #tab-additional-content2, #tab-additional-content3, .jodit-wysiwyg):not(.uv-course-overview)
+  .uv-ov-media {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 22px;
   align-items: center;
   justify-content: center;
+  margin: 28px auto;
+  padding: 0 16px;
 }
 
-/* Flex kabinda <br> bos bir satir ogesi uretir; bu bloklarda gizlenir. */
-:is(#tab-info, #tab-additional-content2, #tab-additional-content3, .jodit-wysiwyg)
-  :is(p, h1, h2, h3, h4, div):is(
-    :has(> img ~ img),
-    :has(> img):has(> :is(span, strong, em, a) img),
-    :has(> :is(span, strong, em, a):has(> img ~ img)),
-    :has(> :is(span, strong, em, a):has(img) ~ :is(span, strong, em, a):has(img))
-  ) br {
-  display: none;
+:is(#tab-info, #tab-additional-content2, #tab-additional-content3, .jodit-wysiwyg):not(.uv-course-overview)
+  .uv-ov-media img {
+  height: clamp(200px, 26vw, 320px);
+  width: auto;
+  max-height: 320px;
+  object-fit: contain;
+  border-radius: 9px;
 }
 
-/* Gorseli saran satir ici etiketler flex ogesi olurken kendi boyutlarini korumali. */
-:is(#tab-info, #tab-additional-content2, #tab-additional-content3, .jodit-wysiwyg)
-  :is(p, h1, h2, h3, h4, div):is(
-    :has(> img ~ img),
-    :has(> img):has(> :is(span, strong, em, a) img),
-    :has(> :is(span, strong, em, a):has(> img ~ img)),
-    :has(> :is(span, strong, em, a):has(img) ~ :is(span, strong, em, a):has(img))
-  ) > :is(span, strong, em, a) {
-  display: inline-flex;
-  align-items: center;
+/* --- 5+ gorsel: kartli grid. Referans galerinin olculeri birebir kullanilir. */
+:is(#tab-info, #tab-additional-content2, #tab-additional-content3, .jodit-wysiwyg):not(.uv-course-overview)
+  .uv-ov-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  gap: 22px;
+  margin: 28px 0;
+  padding: 0 16px;
+}
+
+:is(#tab-info, #tab-additional-content2, #tab-additional-content3, .jodit-wysiwyg):not(.uv-course-overview)
+  .uv-ov-gallery-item {
+  padding: 10px;
+  border-radius: 14px;
+  background: #f8f9fc;
+}
+
+:is(#tab-info, #tab-additional-content2, #tab-additional-content3, .jodit-wysiwyg):not(.uv-course-overview)
+  .uv-ov-gallery-item img {
+  width: 100%;
+  height: clamp(220px, 30vw, 400px);
+  max-width: none;
+  object-fit: contain;
+  border-radius: 9px;
+}
+
+/* --- Mobil: tek sutun, daha alcak gorseller. */
+@media (max-width: 767px) {
+  :is(#tab-info, #tab-additional-content2, #tab-additional-content3, .jodit-wysiwyg):not(.uv-course-overview)
+    .uv-ov-gallery {
+    grid-template-columns: 1fr;
+  }
+
+  :is(#tab-info, #tab-additional-content2, #tab-additional-content3, .jodit-wysiwyg):not(.uv-course-overview)
+    .uv-ov-media img {
+    height: auto;
+    max-height: 240px;
+  }
 }

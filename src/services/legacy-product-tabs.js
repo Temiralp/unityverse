@@ -1,4 +1,5 @@
 const cheerio = require('cheerio');
+const { applyOverviewLayout } = require('./legacy-overview-layout');
 const { DEFAULT_PRODUCT_TABS } = require('./product-tabs');
 const {
   normalizeCurriculumAccordionContent,
@@ -87,12 +88,19 @@ function renderLegacyTabSection(sectionHtml, tabs, origin) {
     const panel = $('<div>')
       .attr('id', tab.id)
       .addClass(`tab-pane fade${active ? ' active in' : ''}`)
-      .html(normalizeYoutubeEmbeds(tab.content, origin));
+      .html(overviewIcerigi(tab, origin));
     if (tab.systemKey === 'OVERVIEW') panel.attr('data-course-overview', '');
     tabContent.append(panel);
   });
 
   return $.html();
+}
+
+// Gorsel duzeni YALNIZCA "Egitime Ilk Bakis" (OVERVIEW) sekmesine ve yalnizca STATIK sayfa
+// yolunda uygulanir; dinamik sayfalarda bu isi course-overview.js yapiyor (cift uygulama olmaz).
+function overviewIcerigi(tab, origin) {
+  const icerik = normalizeYoutubeEmbeds(tab.content, origin);
+  return tab.systemKey === 'OVERVIEW' ? applyOverviewLayout(icerik) : icerik;
 }
 
 function mergeStoredLegacyTabs(sectionHtml, tabs, origin) {
@@ -124,7 +132,7 @@ function mergeStoredLegacyTabs(sectionHtml, tabs, origin) {
       tabContent.append(pane);
     }
     pane.attr('id', tab.id);
-    pane.html(normalizeYoutubeEmbeds(tab.content, origin));
+    pane.html(overviewIcerigi(tab, origin));
     if (tab.systemKey === 'OVERVIEW') pane.attr('data-course-overview', '');
   });
 

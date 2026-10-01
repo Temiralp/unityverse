@@ -17,7 +17,10 @@ assert.ok(fs.existsSync(cssPath), 'course-content.css olusturulmali');
 const css = fs.readFileSync(cssPath, 'utf8');
 
 // --- 1) Kapsam kilidi: her secici yalnizca izinli koklerden biriyle baslamali.
-const ALLOWED_ROOT = ':is(#tab-info, #tab-additional-content2, #tab-additional-content3, .jodit-wysiwyg)';
+// Cember 21: kapsam daraltildi — overview script'inin (course-overview.js) ele aldigi dinamik
+// sayfalara DOKUNULMAZ, aksi halde iki sistem ayni gorselleri ayri ayri yerlestirir.
+// Canli olcum (2026-10-01): bu daraltma olmadan temiz ornek sayfada 18 gorselin 5'i kayiyordu.
+const ALLOWED_ROOT = ':is(#tab-info, #tab-additional-content2, #tab-additional-content3, .jodit-wysiwyg):not(.uv-course-overview)';
 const withoutComments = css.replace(/\/\*[\s\S]*?\*\//g, '');
 const selectorGroups = [...withoutComments.matchAll(/(^|[};])\s*([^{};@]+)\{/g)]
   .map((m) => m[2].replace(/\s+/g, ' ').trim());
@@ -51,20 +54,30 @@ selectorGroups.forEach((group) => {
 });
 
 // --- 2) Olculen iki sorunu da karsilamali (kanit: 27 tasan gorsel, 46 coklu gorsel blogu).
-assert.match(withoutComments, /max-width:\s*100%/, 'gorseller konteynerden tasmamali');
+// Cember 22: olculer TAHMIN DEGIL — canli referans galeriden (course-overview.js) alindi.
+assert.match(withoutComments, /max-width:\s*min\(100%,\s*600px\)/, 'gorsel genislik tavani');
+assert.match(withoutComments, /gap:\s*22px/, 'olculen referans bosluk: 22px');
+assert.match(withoutComments, /padding:\s*10px/, 'olculen kart ic bosluğu: 10px');
+assert.match(withoutComments, /border-radius:\s*14px/, 'olculen kart kose yaricapi: 14px');
+assert.match(withoutComments, /#f8f9fc/i, 'olculen kart arka plani');
+assert.match(withoutComments, /object-fit:\s*contain/, 'gorseller kirpilmadan sigmali');
+// Siniflar render aninda eklenir; CSS yalnizca onlari hedefler.
+assert.match(withoutComments, /\.uv-ov-media\b/, 'uv-ov-media sinifi stillenmeli');
+assert.match(withoutComments, /\.uv-ov-gallery\b/, 'uv-ov-gallery sinifi stillenmeli');
+assert.match(withoutComments, /\.uv-ov-gallery-item\b/, 'uv-ov-gallery-item sinifi stillenmeli');
+// Mobil davranis zorunlu (Mimar: taşma olmayacak).
+assert.match(withoutComments, /@media \(max-width:\s*767px\)/, 'mobil kurallari bulunmali');
 assert.match(withoutComments, /flex-wrap:\s*wrap/, 'coklu gorsel bloklari sarmalayarak hizalanmali');
-assert.match(withoutComments, /:has\(/, 'coklu gorsel bloklari :has() ile secilmeli');
-// Canli kanit (2026-09-23): gercek yapi <p><img><span>..</span><img></p> — bitisik kardes
-// secicisi bu blogu TUTMAZ, genel kardes gerekir.
-assert.match(withoutComments, /:has\(>\s*img\s*~\s*img\)/, 'genel kardes secicisi (img ~ img) kullanilmali');
+assert.match(withoutComments, /display:\s*grid/, '5+ gorsel kartli grid olmali');
+// Cember 22: :has() tahminine son verildi. Blok siniflandirmasi SUNUCUDA yapilir
+// (legacy-overview-layout.js) — CSS metin olup olmadigini goremez, bu yuzden 2026-10-01'de
+// 534 karakterlik bir paragraf yanlislikla flex'e donusmustu.
+assert.doesNotMatch(withoutComments, /:has\(/, 'metin tespiti CSS ile degil sunucuda yapilmali');
 assert.doesNotMatch(withoutComments, /img\s*\+\s*img/, 'bitisik kardes secicisi gercek yapiyi tutmuyor');
 
-// Mimar karari (2026-09-23): TEK gorselli paragraflar ortalanmaz (B4-b'de tekrar bakilacak).
-assert.doesNotMatch(
-  withoutComments,
-  /:has\(\s*>\s*img:only-child\s*\)/,
-  'tek gorselli paragraflar bu cemberde hedeflenmemeli'
-);
+// Mimar karari GUNCELLENDI (2026-10-01): tek gorselli bloklar da ortalanir. Gerekce: olcumde
+// en kotu gorunum tam da bunlardaydi (180px gorselin sagında 1088px bosluk). Yeni kapsam
+// daraltmasi sayesinde temiz ornek sayfada 0 degisiklik olculdu.
 
 // --- 3) Enjeksiyon: yalnizca kurs detay sayfalarina, tek sefer.
 const linkPattern = new RegExp(

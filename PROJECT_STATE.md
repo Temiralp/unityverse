@@ -122,6 +122,17 @@ normalizasyon kapsamı kategoriye değil, **Mimar'ın onayladığı slug listesi
 derinliği 7–8. Aynı kaynaktan kopyalanmış içerikler → birinde doğrulanan düzeltme diğerlerinde aynı
 davranır (test yükü düşük, risk öngörülebilir).
 
+## Görsel düzeni: ölçülen referans değerler (2026-10-01)
+Kaynak: dinamik kurs sayfasındaki `course-overview.js` galerisi, sekme genişliği 1268px.
+Bu sayılar **tahmin değil**, canlı ölçümdür ve `course-content.css` bunları birebir kullanır:
+grid **gap 22px** · kart **padding 10px**, **radius 14px**, fon **#f8f9fc** · galeri görseli
+**object-fit: contain**, radius 9px · görsel tavanı **max-width: min(100%, 600px)**.
+Statik sayfalarda `minmax(420px, 1fr)` ile 2 sütun elde edilir (280px denendi → 4 sütun çıktı).
+
+**Neden sunucu tarafı sınıflandırma:** CSS bir blokta metin olup olmadığını göremez. 2026-10-01'de
+saf CSS denemesi 534 karakterlik bir paragrafı flex'e çevirdi (yükseklik 497→321). Sınıflandırma
+`legacy-overview-layout.js`'e taşındı; metinli bloklar artık asla dokunulmuyor.
+
 ## Yapılmaması gerekenler (git geçmişinden öğrenilen dersler)
 - **Tek geçişli metin dönüşümü idempotent olmayabilir.** Boş blok silinince iki yanındaki `<br>`
   yan yana gelir ve YENİ bir zincir doğar; N1 çoktan çalışmıştır. Dönüşümler **değişiklik durana
@@ -201,6 +212,7 @@ davranır (test yükü düşük, risk öngörülebilir).
 ## Çember geçmişi
 | # | Tarih | Çember | Sonuç |
 |---|---|---|---|
+| 22 | 2026-10-01 | **"Eğitime İlk Bakış" görsel düzeni.** `legacy-overview-layout.js` (render anında blok sınıflandırma: metin>60 karakter → DOKUNULMAZ, 1–4 görsel → `uv-ov-media`, 5+ → `uv-ov-gallery`; ardışık **metinsiz** bloklar birleştirilir → sertifikalar 2+2), `legacy-product-tabs.js` hook (yalnız OVERVIEW, yalnız statik yol), `course-content.css` referans ölçülerle yeniden yazıldı | 7 dosya, ~430 satır; 30/30 test PASS; **DB'ye yazılmaz** → admin editöründe içerik ham/düzenlenebilir kalır (testle kilitli); canlı önizleme (668): 2 medya kabı + 1 galeri (10 kart), 24 görsel korundu, taşma 0, galeri 2 sütun (607px), sertifikalar yan yana eşit yükseklikte |
 | 20 | 2026-09-30 | **B4 Adım 3 — 10 öncelikli kursun overview normalizasyonu.** `course-overview-normalize.js` (N1: 3+ `<br>`→1, N2: 2+ `&nbsp;`→boşluk, N3: boş blok kaldırma; metin/görsel kaybında **hata fırlatır**), plan JSON, `normalize-course-overview.js` CLI (dry-run/apply/revert, Çember 9 deseni) | 5 yeni + 2 değişen dosya, ~500 satır; 29/29 test PASS; **yerel tam döngü:** dry-run 10/10 DEGISECEK → apply 10/10 doğrulandı → ikinci dry-run **0 değişecek** (idempotent) → revert **10/10 bayt-bayt orijinal**. Uzunluk −%9…−%24; görsel sayısı ve görünen metin **her kursta aynı**. Production'da uygulama Mimar'da (önce `pg_dump`) |
 | 19b | 2026-09-30 | **Birleştirme:** paralel çalışan diğer ajanın audit implementasyonu yanlışlıkla üzerine yazıldı (commit'lenmemişti, git'ten dönülemedi); testi sağlamdı → **26 senaryonun tamamı** birleşik teste taşındı, `satirIciSarmalayiciDerinligi` + `countConsecutiveBr`/`countNbsp`/`classifyImageBlocks`/`maxInlineWrapperDepth` servise eklendi, `analyseOverviewHtml` giriş noktası açıldı, CLI'ye `--kategori` filtresi geldi | 28/28 test PASS; `scripts/test-audit-course-overview.js` kaldırıldı (senaryoları korunarak); tek doğruluk kaynağı: `src/services/course-overview-audit.js` |
 | 19 | 2026-09-30 | B4 Adım 1 — "Eğitime İlk Bakış" denetim raporu: `course-overview-audit.js` saf servisi (blok tarayıcı ile **en içteki** blok sayımı), `audit-course-overview.js` CLI (`--json`, `--limit`), test | 3 yeni + 2 değişen dosya, ~320 satır; 28/28 test PASS; **DB'ye yazmaz** (sahte prisma ile kanıtlandı); yerel çalıştırma: 435 kurs / 412 OVERVIEW tab / 389 problemli / 2 temiz; mevcut kod zincirine bağlanmadı (grep ile doğrulandı) |
