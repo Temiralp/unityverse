@@ -6,6 +6,7 @@ const {
   synchronizeLegacyProductDetailTitle
 } = require('./legacy-product-visibility');
 const { ensureLegacyAssetVersions } = require('../services/legacy-assets');
+const { removeLegacyFooterLink } = require('../services/legacy-footer-links');
 const { ensureLegacyHeaderLayout } = require('../services/legacy-header-layout');
 const { ensureLegacyHomepageLocalAssets } = require('../services/legacy-homepage');
 const { synchronizeLegacyProductDetailImage } = require('../services/legacy-product-image');
@@ -82,7 +83,8 @@ function enhanceLegacyHtml(
         `<link rel="canonical" href="${canonicalUrl}" />`
       )
     : withLocalHomepageAssets;
-  return ensureLegacyHeaderLayout(withCanonical);
+  // Footer'dan kaldirilan sozlesme linki (Cember 24) — 629 statik dosyaya dokunulmaz.
+  return removeLegacyFooterLink(ensureLegacyHeaderLayout(withCanonical));
 }
 
 function injectLegacyWhatsappIntoHtmlResponses(req, res, next) {

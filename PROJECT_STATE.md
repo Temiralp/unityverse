@@ -141,6 +141,19 @@ saf CSS denemesi 534 karakterlik bir paragrafı flex'e çevirdi (yükseklik 497�
 içeriği temizlenmemiş kurslarda boşluk büyük görünür. Çözüm sırası: önce layout (her yerde aktif),
 sonra kategori kategori içerik temizliği.
 
+## ⚠️ Açık karar — "Üyelik Sözleşmesi ve Gizlilik Politikası" sayfası (2026-10-02)
+Mimar'ın verdiği PDF yalnızca **Gizlilik Politikası ve KVKK Aydınlatma Metni**'ni içeriyor; ancak
+`sayfa/uyelik-sozlesmesi-ve-gizlilik-politikasi-27/` sayfasında **üç ayrı belge** bir arada:
+Üyelik Sözleşmesi (ayrı "ÜYELİK" başlığı), Gizlilik Politikası, Çerez politikası (10 geçiş) ve
+"Google ile Giriş Hakkında Bilgilendirme" bölümü.
+Sayfayı olduğu gibi değiştirmek üyelik sözleşmesini, çerez politikasını ve Google bildirimini
+**silerdi** → hukuki içerik kaybı. Bu yüzden bu sayfa **güncellenmedi**, Mimar kararı bekleniyor.
+Seçenekler: (A) yeni metin başa, mevcut bölümler altta korunur · (B) tam değiştir (3 bölüm silinir)
+· (C) yeni metin ayrı sayfaya (`sayfa/kvkk-aydinlatma-metni/` zaten var), bu sayfa korunur.
+
+Ayrıca: ödeme sayfası (`iframe.ejs:131,137`) **Mesafeli Satış** ve **Üyelik+Gizlilik** sayfalarına
+onay kutusuyla bağlı; **İptal ve İade** linki orada YOK — eklenip eklenmeyeceği Mimar kararı.
+
 ## Yapılmaması gerekenler (git geçmişinden öğrenilen dersler)
 - Kendi koruma kuralın işi engelleyebilir: metin **sırası** eşitliği arayan bir güvenlik kontrolü,
   bilerek yapılan bir blok taşımasını "bozulma" sayıp tüm dönüşümü geri aldı (2026-10-01). Taşıma
@@ -231,6 +244,7 @@ sonra kategori kategori içerik temizliği.
 ## Çember geçmişi
 | # | Tarih | Çember | Sonuç |
 |---|---|---|---|
+| 24 | 2026-10-02 | **Hukuki sayfa guncellemesi + footer link temizligi.** `legal-page-content.js` (duz metin → sayfa HTML'i; "N." → h2, "N.N." → p, madde → ul, sarilan satirlar birlestirilir, `< > &` kacisli), `update-legal-pages.js` CLI (dry-run/apply, yalnizca `#content` kabinin ici degisir), `legacy-footer-links.js` (istenmeyen footer linki render aninda tek yerden kaldirilir — **629 statik dosyaya dokunulmaz**) | 6 dosya (+3 yeni), ~320 satir; 32/32 test PASS; **Mesafeli Satis** ve **Iptal/Iade** sayfalari guncellendi (icerik kabi disinda fark YOK, `<title>` degismedi); yerel e2e: silinen link 4 sayfa tipinde 0, kalan 4 footer linki 4/4 duruyor. **Gizlilik sayfasi bilerek ERTELENDI** — bkz. acik karar |
 | 23 | 2026-10-01 | **Kalan `yazilim` kurslarinin icerik temizligi.** Plan dosyasi artik **kategori** ile de verilebiliyor: slug listesi **calisma aninda DB'den** cozulur (`planKurslariniCoz`), `haricTutulan` ile Cember 20'de islenen 10 kurs disarida birakilir. Yerel DB production'dan eski oldugu icin elle liste yazilmaz (Cember 9 dersi) | 4 dosya (+2 yeni), ~70 satir; 31/31 test PASS; eski 10'luk plan **geriye uyumlu** calisiyor; yerel tam dongu: dry-run **111 kurs → 104 degisecek / 7 dokunulmayacak / 0 koruma ihlali** → apply 104/104 dogrulandi → ikinci dry-run **0 degisecek** → revert **118/118 bayt-bayt orijinal** |
 | 22c | 2026-10-01 | **"Başarı Hikayeleri" CTA kutusu konumu.** Kutu (`div.alert-success`) içeriğin en sonunda, fotoğrafların altında kalıyordu; Mimar isteğiyle **son galeri bölümünün önüne** taşındı (üstteki metin ile "Eğitimimizden kareler" arasına), CSS'te 32px alt/üst nefes payı verildi | 4 dosya, +4 senaryo (21 senaryo); 30/30 test PASS; 6 gerçek kursta doğrulandı: CTA önde, görsel 24→24/21→21, metin kaybı yok. **Koruma kuralı güncellendi:** metin artık sıra değil **kayıp** olarak denetlenir (CTA bilerek taşındığı için sıra değişir); görsel sırası hâlâ birebir denetleniyor |
 | 22b | 2026-10-01 | **Çember 22 düzeltmesi.** Canlı kontrolde 1454/1455 kurslarında 7 görsel bloğu sınıfsız kalmıştı: servis yalnız **üst seviye** blokları sınıflandırıyordu, görseller uzun metinli bir `<div>` içinde olduğu için dış blok "metinli" sayılıp atlanıyordu. Çözüm: **en içteki** görsel blokları seçilir; birleştirme için ayrıca **DOM'da bitişik kardeş** şartı eklendi (araya metin paragrafı girerse birleşmez) | 2 dosya, +3 senaryo (17 senaryo); 30/30 test PASS; canlı önizleme: 1454 → 5 medya + 1 galeri, hepsi ortalanmış, 21 görsel korundu; 668 → 2 galeri + 3 medya, sertifikalar **2+2 kart** düzeninde, 24 görsel korundu |
