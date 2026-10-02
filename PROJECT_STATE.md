@@ -1,7 +1,7 @@
 # PROJECT_STATE.md — canlı durum günlüğü
 
 > Her çember (circle) bittiğinde güncellenir. Yeni oturum/agent buradan başlar. Tarihler mutlak (YYYY-MM-DD).
-> Son güncelleme: **2026-09-30** — Çember 19 (kurs arama motoru: sırasız sözcük/etiket eşleşmesi + sembol desteği) tamamlandı; testler 24/24 PASS.
+> Son güncelleme: **2026-10-02** — Çember 28 (galeri boşluğu: artık `<br>` temizliği + içerik `<table>`/`<iframe>` CSS'i) tamamlandı; 71 test betiğinin 68'i PASS, 3 FAIL **HEAD'de de kırık** (R9, R17, PayTR env).
 
 ## Devir belgeleri (2026-09-30)
 - `docs/AI-AJAN-DEVIR-PROMPTU.md` — **devralan AI ajanına verilecek ilk mesaj**: roller, dil kuralı,
@@ -26,7 +26,7 @@
 
 ## Nerede kaldık
 - Kod: `main` — Çember #0…#7 Mimar tarafından commit/deploy edildi ve canlıda doğrulandı (2026-09-15/16).
-- **Aktif çember:** yok. Çember 19 (kurs arama motoru: sırasız sözcük/etiket eşleşmesi + sembol desteği, LEGACY_CATALOG_JS_VERSION bump) tamamlandı, commit/deploy bekliyor. Çember 14 (R14) **canlıda doğrulandı** (2026-09-23: `POST /ajax/cookieselection` → 200 `{"status":"ok"}`). Çember 15 (R13) **canlıda doğrulandı** (2026-09-23: `window.eapps` object, delightchat JS+CSS yüklendi; render edilen EJS sayfasında — `/admin/login` — widget host'u yok). Çember 16 **canlıda doğrulandı** (2026-09-23: 7 sayfa tipinde buton 0, tek widget kaldı). Çember 17 (B4-a) canlıda. Çember 18 (`94e2d36d`) farklı kurs içeriklerini aynı düzene zorladığı için 2026-09-24 Mimar kararıyla yerelde geri alındı; yeni commit/deploy ve canlı doğrulama bekliyor. Sıradaki ana görev: **B4 — içerik hizalama** ("Eğitime İlk Bakış" bölümü). Çember #8b deploy edildi ve canlıda doğrulandı (2026-09-17). Çember 10 ve 11 canlıda/terminalde doğrulandı (2026-09-17). Çember 13 canlıda doğrulandı. Sıradaki: **B3 HubSpot planı**. Ardından Backlog B1…B6.
+- **Aktif çember:** yok. **Çember 28** (galeri boşluğu + içerik `table`/`iframe` CSS'i) tamamlandı, commit/deploy bekliyor. Çember 14/15/16/17, #8b, 10, 11, 13 canlıda doğrulandı. Çember 18 geri alındı (2026-09-24 Mimar kararı). Çember 20 + 23 + 25b/26/27 ile **yazilim, oyun-gelistirme, grafik-tasarim, 3d-modelleme** kategorilerinin içerik temizliği production'da uygulandı ve canlıda doğrulandı. Çember 24/24b hukuki sayfalar canlıda. Sıradaki aday: kalan kategorilerin (animasyon vb.) içerik temizliği, sonra **B3 HubSpot planı**; ardından Backlog B2/B6/B7, R12.
 - Çember #8a ve #8b tamamlandı (2026-09-16).
 - Gerçek örnek docx repo dışında: `~/unityverse-private-fixtures/Siber_Guvenlik_Mufredati_AI_Guncellemesi.docx` (WhatsApp tmp klasöründen kopyalandı).
 - Yerelde `uploads/products/1789467*.jpg` (3 dosya, 2026-09-15 yerel admin testi) izlenmiyor — commit'e eklenmemeli.
@@ -54,6 +54,7 @@
 | R12 | `npm audit` (2026-09-16): 11 bulgu (6 high, 5 moderate) — **hepsi önceden mevcut**, `mammoth` zincirinde değil: `prisma/@prisma/config` (deepmerge-ts), `express/body-parser/qs`, `jodit` (admin editör XSS), `sanitize-html` (SVG SMIL bypass), `undici`, `nanoid`, `brace-expansion` | `npm audit` çıktısı | Ayrı çember: sürüm yükseltmeleri tek tek, testlerle (jodit + sanitize-html admin/public içerik güvenliği için öncelikli) | Backlog (orta) |
 | R14 | Çerez banner'ı (`uploads/f/uvcookie.js:23,39`) `POST /ajax/cookieselection` yapıyordu, route yoktu → her onay `src/server.js:287` genel 404'üne düşüyordu (kullanıcıya görünmez, access log gürültüsü, onay sunucuda kayıtlı değil) | Çember 14 ile kapatıldı: yan etkisiz 200 JSON uç noktası | Sunucu tarafı KVKK onay kaydı istenirse ayrı çember (tablo + saklama süresi) | Kapatıldı |
 | R16 | **1206 numaralı kursta 4 görsel sunucuda YOK (HTTP 404)**: `WhatsApp_Image_2025-02-25_at_12_02_26_(1)3.jpg`, `WhatsApp_Image_2025-02-20_at_17_31_196.jpg`, `WhatsApp_Image_2025-02-20_at_16_28_2712.jpg`, `blobid073.jpg`. Diğer 9 öncelikli kursta kırık görsel **yok** | canlı HTTP taraması 2026-10-01 | İçerik sorunu, kod değil: dosyalar admin üzerinden yeniden yüklenmeli veya içerikten çıkarılmalı. Not: sabit yükseklik kuralı kırık görsele 320px yer ayırdığı için boşluk daha görünür hâle geldi | Backlog (Mimar) |
+| R17 | `scripts/test-member-profile-layout.js` HEAD'de kırık: `src/views/payments/result.ejs:67` render edilirken `ga4MeasurementId` tanımsız — test sahte locals'ına Çember 13'te eklenen GA4 değişkenlerini vermiyor. **Ürün hatası değil, test eksiği** (route her zaman gönderiyor) | `node scripts/test-member-profile-layout.js` 2026-10-02; `git stash` ile HEAD'de de FAIL doğrulandı | Teste `ga4MeasurementId: null, ga4Purchase: null` eklenecek — küçük çember | Backlog (küçük) |
 | R15 | Kurs sayfalarinda konsola dusen `TypeError: Cannot read properties of null (reading 'style')` — kaynak **GTM konteynerindeki bir custom HTML tag'i** (`gtm.js` stack'i), bizim kodumuz degil. Bu oturumun ilk sayfa yuklemesinde (hicbir degisiklik yapilmadan once) de vardi → **onceden mevcut** | canlı Chrome konsolu 2026-09-23 | GTM'de ilgili tag bulunup duzeltilmeli veya kaldirilmali (Mimar / GTM erisimi gerekir); site islevini bozmuyor | Backlog (düşük) |
 | R8 | Ana kurs görseli değiştirilen üründe statik sayfadaki çoklu galeri (9 sayfa) tek görsele iner | Çember #1 tasarım kararı | Admin tek görsel yönetir; kabul edilen davranış | Kabul edildi |
 
@@ -134,12 +135,17 @@ Statik sayfalarda `minmax(420px, 1fr)` ile 2 sütun elde edilir (280px denendi �
 saf CSS denemesi 534 karakterlik bir paragrafı flex'e çevirdi (yükseklik 497→321). Sınıflandırma
 `legacy-overview-layout.js`'e taşındı; metinli bloklar artık asla dokunulmuyor.
 
-## "Eğitimimizden kareler" ile görseller arasındaki boşluk (2026-10-01)
-Ölçüldü: etiket metni ile ilk görsel arasında DB içeriğinde **3 `<br>` + 9 `&nbsp;`** duruyor
-(örnek: `oyun-gelistirme` kategorisi). Düzen servisi görselleri kaba alır ama bu artıkları
-**kaldırmaz** — onlar içerik temizliğinin (N1/N2) işidir. Bu yüzden görsel düzeni uygulanmış ama
-içeriği temizlenmemiş kurslarda boşluk büyük görünür. Çözüm sırası: önce layout (her yerde aktif),
-sonra kategori kategori içerik temizliği.
+## "Eğitimimizden kareler" ile görseller arasındaki boşluk — ÇÖZÜLDÜ (Çember 28, 2026-10-02)
+İlk teşhis (2026-10-01) **eksikti**: boşluğun kaynağı DB'deki `&nbsp;` dolgusu değil, düzen
+servisinin kendi davranışıydı. Görseller kaba (`uv-ov-media` / `uv-ov-gallery`) taşınınca
+aralarındaki `<br>`'ler blokta öğede kalıyor, yan yana geliyor ve kabın üstünde boşluk yaratıyordu —
+canlı ölçüm: **18 `<br>` = 493px**. Bu yüzden içeriği temizlenmiş kurslarda da boşluk duruyordu.
+Çözüm: `legacy-overview-layout.js` kap oluşturduğu blokta `blok.find('br').remove()` yapar.
+**Kapsam kilidi:** yalnızca kap oluşturulan bloklarda; metinli ve görselsiz bloklarda `<br>` satır
+sonudur, dokunulmaz (testle kilitli). Ölçülen sonuç: **493 → 73px**; 412 kursta 10 582 `<br>`
+kaldırıldı, görsel sayısı değişen kurs 0, metin kaybı 0.
+**Ölçüm tuzağı:** kalıntıyı `kap.parent().find('br')` ile saymak komşu metin paragraflarının
+`<br>`'lerini de sayar (142 kurs yanlış pozitif); doğru ölçüm `kap.parent().children('br')`.
 
 ## "Üyelik Sözleşmesi ve Gizlilik Politikası" sayfası — ÇÖZÜLDÜ (2026-10-02)
 Mimar kararı: ilgili bölüm güncellensin, ilgisizler kalsın. Kesim işareti **"GİZLİLİK POLİTİKASI"**;
@@ -161,6 +167,18 @@ Ayrıca: ödeme sayfası (`iframe.ejs:131,137`) **Mesafeli Satış** ve **Üyeli
 onay kutusuyla bağlı; **İptal ve İade** linki orada YOK — eklenip eklenmeyeceği Mimar kararı.
 
 ## Yapılmaması gerekenler (git geçmişinden öğrenilen dersler)
+- **Toplam (aggregate) ölçümde `parent()` yanıltır.** Bir kabın `<br>` kalıntısını sayarken
+  `kap.parent().find('br')` kullanılırsa, kap `<td>` gibi birkaç blok barındıran bir hücrenin içindeyse
+  **komşu metin paragraflarının** `<br>`'leri de sayılır. 2026-10-02'de bu yolla 142 kurs "kalıntılı"
+  göründü; doğru ölçüm `kap.parent().children('br')` ile 0 çıktı. Kabın **kendi** bloğuna bakılmalıdır.
+- **Görselleri kaba alırken bloktaki `<br>`'leri de kaldır.** Kap oluşturulunca görseller DOM'dan çıkar
+  ama aralarındaki `<br>`'ler blokta kalır, yan yana gelir ve kabın üstünde devasa bir boşluk doğar
+  (ölçüldü: 18 `<br>` = 493px). Kaldırma **yalnızca kap oluşturulan bloklarda** yapılır — metinli
+  bloklarda `<br>` satır sonudur, silinirse metin birbirine girer (2026-10-02).
+- **Dar bir `<table>` videoyu yok eder.** Jodit'ten gelen içerikte `<iframe>`'ler 144px genişliğinde bir
+  tablonun hücresine konmuştu; iframe 40×23 piksele düşüp pratikte görünmez oluyordu. "Video yok" diye
+  bildirilen sorunun kaynağı iframe değil **kabı** idi: önce elemanın `getBoundingClientRect()` ölçüsüne
+  bak, sonra kabının genişliğine (2026-10-02, animasyon kategorisi).
 - Kendi koruma kuralın işi engelleyebilir: metin **sırası** eşitliği arayan bir güvenlik kontrolü,
   bilerek yapılan bir blok taşımasını "bozulma" sayıp tüm dönüşümü geri aldı (2026-10-01). Taşıma
   içeren dönüşümlerde metin **kaybı** (kelime çoklu kümesi) denetlenir, sıra değil.
@@ -223,6 +241,7 @@ onay kutusuyla bağlı; **İptal ve İade** linki orada YOK — eklenip eklenmey
 - Statik kurs sayfası (`urun/<slug>/index.html`) varsa dinamik route çalışmaz; DB→sayfa senkronu `enhanceLegacyHtml` zincirine eklenir (`src/middleware/legacy-whatsapp.js`). Yeni bir alan senkronlanacaksa aynı desen: visibility middleware `res.locals` → `enhanceLegacyHtml` parametresi → `src/services/legacy-*.js` saf fonksiyon.
 
 ## Karar günlüğü (ADR-mini)
+| 2026-10-02 | **C1:** küçük görseller zorla büyütülmez. Boşluk `<br>` temizliğiyle, videolar `table`/`iframe` CSS'iyle çözülür; `max-width` tavanı korunur, `min-width`/`width:100%` **verilmez** | Mimar kararı: düşük çözünürlüklü logo/sertifika zorla büyütülürse bulanıklaşır. Küçük görsel büyütme kararı ayrıca değerlendirilecek |
 | 2026-09-30 | Kurs ve katalog arama motoru (server & client) kelime sırasından bağımsız token tabanlı (`tokens.every`) yapıldı; `normalizeSearchText` içine sembol desteği eklendi (`+`, `#`, `&`, `.`, `/`, `-` vb. korunur, noktalama boşluğa döner); asset version bump (`20260930-1`) | Admin ve kullanıcıların etiketlerle ve programlama sembolleriyle (C#, C++, .NET, UI/UX, 40 Saat + 40 Saat) kurs bulabilmesi sağlandı; sıfır DB/şema etkisi |
 | 2026-09-24 | Çember 18 genel overview script enjeksiyonu geri alındı; önceden var olan dinamik davranış ve Çember 17 korundu | Mimar: kursların farklı içerikleri aynı düzene zorlanmamalı; yeni çözüm ayrı iş olarak seçilecek |
 | 2026-09-23 | Kurs sekmesi görsel hizalaması **CSS ile** yapılır (DB içeriğine dokunulmaz); kapsam yalnızca üç sekme id'si + `.jodit-wysiwyg`; 2+ görselli bloklar flex ile sarmalanıp ortalanır, **tek görselli paragraflara dokunulmaz** | Mimar kararı: bugün düzgün görünen kurslarda sıfır değişiklik; DB'ye dokunmadan 438 sayfaya anında ulaşır; yeni kurs otomatik kapsanır |
@@ -250,6 +269,9 @@ onay kutusuyla bağlı; **İptal ve İade** linki orada YOK — eklenip eklenmey
 ## Çember geçmişi
 | # | Tarih | Çember | Sonuç |
 |---|---|---|---|
+| 28 | 2026-10-02 | **Galeri boşluğu + görünmeyen videolar.** (a) `legacy-overview-layout.js`: görseller kaba alındıktan sonra blokta öğede kalan `<br>`'ler kaldırılır — **yalnızca kap oluşturulan bloklarda** (metinli ve görselsiz bloklar dokunulmaz, testle kilitli). (b) `course-content.css`: içerikteki `table` tam genişliğe açılır, `iframe` 16:9 / max 600px / ortalanır | 6 dosya, +63 satır (28'i test); 68/71 PASS (3 FAIL HEAD'de de kırık); **ölçülen sonuç:** boşluk **493 → 73px**, iframe **40×23 → 600×338**; 412 kursta **10 582 `<br>` kaldırıldı**, görsel sayısı değişen kurs **0**, metin kaybı **0**; dinamik sayfalarda **0 değişiklik** (asset sürümü `20261002-1`) |
+| 27 | 2026-10-02 | `3d-modelleme` kategorisi içerik temizliği — **production'da Mimar uyguladı** (önce `pg_dump`) | plan: 50 kurs → 46 değişecek / 4 dokunulmayacak / 0 MANUAL; canlı doğrulama başarılı |
+| 26 | 2026-10-02 | `grafik-tasarim` kategorisi içerik temizliği — **production'da Mimar uyguladı** | plan: 78 kurs → 74 değişecek / 4 dokunulmayacak / 0 MANUAL; canlı doğrulama başarılı. **Not:** bu kategoride `pg_dump` önce başarısız olmuştu (`role ... does not exist` — kabuktaki eski `DB_URL`), düzeltilmiş komutla alındı |
 | 25a | 2026-10-02 | **Ucus oncesi koruma.** `layoutBarmakIzi` (gorsel / galeri / kart / **hizalanan gorsel** sayisi) + `barmakIziRiski`: icerik temizligi duzen sonucunu KOTULESTIRIYORSA kurs **MANUAL** isaretlenir ve yazilmaz. Yalnizca kotulesme risktir; kap birlesmesi gibi iyilesmeler normaldir | 3 dosya (+1 yeni test), ~70 satir; 33/33 test PASS; mevcut planlarda **0 MANUAL** → temizlik hicbir kursta duzeni bozmuyor. oyun-gelistirme olcumu: 52 kursun **52'sinde parmak izi ONCE/SONRA ayni** → degisiklik yalnizca fazla boslugu topluyor |
 | 25b | 2026-10-02 | 3 kategori plan dosyasi hazir: **oyun-gelistirme** (52 kurs → 48 degisecek), **grafik-tasarim** (78 → 74), **3d-modelleme** (50 → 46); hepsinde 0 MANUAL / 0 koruma ihlali. Yerel tam dongu (oyun): apply 48/48 dogrulandi → ikinci dry-run 0 degisecek → revert **52/52 bayt bayt orijinal** | Production'da sirayla Mimar uygulayacak (her birinden once `pg_dump`) |
 | 24b | 2026-10-02 | **Gizlilik sayfasi kismi guncelleme.** `kismiIcerikDegistir` servisi: "GİZLİLİK POLİTİKASI" isaretinden ONCEKI kisim (sayfa basligi + Google ile Giriş bildirimi + Üyelik Sözleşmesi) **bayt bayt korunur**, sonrasi yeni KVKK/Gizlilik metniyle degistirilir. Isaret bulunamazsa hicbir sey degismez | 3 dosya, +12 senaryo; 32/32 test PASS; metin 33 398 → **29 246** (tam degistirmede 10 404 olurdu); korunanlar: ÜYELİK SÖZLEŞMESİ 1→1, Google ile Giriş 2→4; yenilenenler: Veri Sorumlusu 0→2, Ticari Elektronik İleti 0→1, Çerezler 9→1; icerik kabi disinda fark YOK, `<title>` degismedi |

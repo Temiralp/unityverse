@@ -89,6 +89,11 @@ function applyOverviewLayout(html) {
       kap.append(gorselBirimi($, $(element)));
     });
     kayit.blok.append(kap);
+    // Gorseller kaba alinca aralarindaki <br>'ler blokta ogede kalir, yan yana gelir ve
+    // devasa bir bosluk yaratir (2026-10-02 canli olcumu: 18 <br> = 493px bosluk).
+    // Blok zaten "yalnizca gorsel" blogudur (metni <= 60 karakter), bu <br>'ler bosluk
+    // dolgusudur; kaba tasinan gorsellerin arasinda <br> bulunmaz, bu yuzden hepsi kaldirilir.
+    kayit.blok.find('br').remove();
     kayit.kap = kap;
   });
 

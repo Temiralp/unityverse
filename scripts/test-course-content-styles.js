@@ -67,6 +67,12 @@ assert.match(withoutComments, /\.uv-ov-gallery\b/, 'uv-ov-gallery sinifi stillen
 assert.match(withoutComments, /\.uv-ov-gallery-item\b/, 'uv-ov-gallery-item sinifi stillenmeli');
 // Mobil davranis zorunlu (Mimar: taşma olmayacak).
 assert.match(withoutComments, /@media \(max-width:\s*767px\)/, 'mobil kurallari bulunmali');
+// Cember 28: icerikteki dar <table>'lar video ve metni 144px'e sikistiriyordu (olculdu:
+// tablo 144px, hucre 71px, iframe 40x23). Sekme icindeki tablolar tam genislige acilir,
+// iframe'ler 16:9 oraniyla gorunur hale gelir.
+assert.match(withoutComments, /table\s*\{[^}]*width:\s*100%/, 'sekme icindeki tablolar tam genislige acilmali');
+assert.match(withoutComments, /iframe/, 'iframe olcu kurali bulunmali');
+assert.match(withoutComments, /aspect-ratio:\s*16\s*\/\s*9/, 'video 16:9 oraninda olmali');
 // CTA kutusu galeri onune tasiniyor; iki yandan da nefes payi almali (Mimar, 2026-10-01).
 assert.match(withoutComments, /\.alert-success/, 'CTA kutusu icin bosluk kurali olmali');
 assert.match(withoutComments, /flex-wrap:\s*wrap/, 'coklu gorsel bloklari sarmalayarak hizalanmali');

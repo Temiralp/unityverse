@@ -83,6 +83,34 @@
   margin-bottom: 32px;
 }
 
+/* --- Icerikteki <table> ve <iframe> (Cember 28).
+ * Olculdu (2026-10-02, animasyon kursu): videolar 144px genisligindeki bir tablonun icindeydi,
+ * hucre 71px kaliyor ve iframe 40x23 piksele dusuyordu — yani video pratikte gorunmuyordu.
+ * Tablolar tam genislige acilir, iframe'ler 16:9 oraniyla ortalanir. */
+:is(#tab-info, #tab-additional-content2, #tab-additional-content3, .jodit-wysiwyg):not(.uv-course-overview)
+  table {
+  width: 100% !important;
+  max-width: 100%;
+  table-layout: auto;
+}
+
+:is(#tab-info, #tab-additional-content2, #tab-additional-content3, .jodit-wysiwyg):not(.uv-course-overview)
+  :is(td, th) {
+  width: auto !important;
+  vertical-align: top;
+}
+
+:is(#tab-info, #tab-additional-content2, #tab-additional-content3, .jodit-wysiwyg):not(.uv-course-overview)
+  iframe {
+  display: block;
+  width: 100%;
+  max-width: 600px;
+  aspect-ratio: 16 / 9;
+  height: auto;
+  margin: 22px auto;
+  border-radius: 9px;
+}
+
 /* --- Mobil: tek sutun, daha alcak gorseller. */
 @media (max-width: 767px) {
   :is(#tab-info, #tab-additional-content2, #tab-additional-content3, .jodit-wysiwyg):not(.uv-course-overview)

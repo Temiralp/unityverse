@@ -111,6 +111,28 @@ assert.ok(ikiGaleri.indexOf('alert-success') > ikiGaleri.indexOf('uv-ov-gallery"
 const galerisiz = '<p>Metin</p><div class="alert alert-success">CTA</div>';
 assert.equal(applyOverviewLayout(galerisiz), galerisiz, 'galeri yoksa CTA tasinmamali');
 
+// --- 8e) ARTIK <br> TEMIZLIGI (2026-10-02 canli olcumu):
+// Gorseller kaba alininca aralarindaki <br>'ler blokta kalir, yan yana gelir ve devasa bir
+// bosluk yaratir — olculdu: 18 <br> = 493px. Blok zaten "yalnizca gorsel" blogu oldugundan
+// bu <br>'ler bosluk dolgusudur ve kaldirilir. METINLI bloklara DOKUNULMAZ.
+const brliMedya = applyOverviewLayout('<p><img src="1.jpg"><br><br><img src="2.jpg"><br></p>');
+assert.equal(say(brliMedya, /<br/g), 0, 'konteyner alan blokta <br> kalmamali');
+assert.equal(say(brliMedya, /<img/g), 2, 'gorseller korunmali');
+
+// Derinde, <span> icinde duran <br>'ler de temizlenmeli (gercek yapi boyle).
+const derinBr = applyOverviewLayout('<h2>Egitimimizden kareler:<span><br><br>' + '<img src="x.jpg">'.repeat(6) + '<br></span></h2>');
+assert.equal(say(derinBr, /<br/g), 0, 'span icindeki <br> de temizlenmeli');
+assert.match(derinBr, /Egitimimizden kareler:/, 'etiket metni korunmali');
+assert.equal(say(derinBr, /<img/g), 6);
+
+// METINLI blokta <br> KORUNUR (satir sonu anlamli olabilir).
+const metinliBr = `<p>${'A'.repeat(80)}<br>${'B'.repeat(80)}<img src="a.jpg"></p>`;
+assert.equal(applyOverviewLayout(metinliBr), metinliBr, 'metinli blok hic degismemeli');
+
+// Gorselsiz blokta <br> KORUNUR.
+const gorselsizBr = '<p>Kisa metin<br>ikinci satir</p>';
+assert.equal(applyOverviewLayout(gorselsizBr), gorselsizBr);
+
 // --- 9) KORUMA: gorsel kaynaklari ve sirasi birebir korunur.
 const karisik = '<p><img src="1.jpg"></p><p><a href="/x"><img src="2.jpg"></a><img src="3.jpg"></p>';
 const sonuc = applyOverviewLayout(karisik);
