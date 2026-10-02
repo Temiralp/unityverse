@@ -9,6 +9,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
+    "test:normalize-preflight": "node scripts/test-normalize-preflight.js",
     "test:legal-pages": "node scripts/test-legal-pages.js",
     "test:overview-normalize-plan": "node scripts/test-overview-normalize-plan.js",
     "test:legacy-overview-layout": "node scripts/test-legacy-overview-layout.js",

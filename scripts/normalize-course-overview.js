@@ -15,6 +15,8 @@ const prisma = require('../src/db');
 const {
   normalizeOverviewContent,
   planKurslariniCoz,
+  layoutBarmakIzi,
+  barmakIziRiski,
   gorunenMetin,
   gorselKaynaklari
 } = require('../src/services/course-overview-normalize');
@@ -61,13 +63,21 @@ async function dryRun(slugler) {
       continue;
     }
 
+    // Ucus oncesi koruma: temizlik duzen sonucunu kotulestiriyorsa kursa DOKUNMA.
+    const izOnce = layoutBarmakIzi(kayit.icerik);
+    const izSonra = layoutBarmakIzi(sonuc.content);
+    const riskler = sonuc.degisti ? barmakIziRiski(izOnce, izSonra) : [];
+
     satirlar.push({
       slug,
       productId: kayit.productId,
       tabId: kayit.tabId,
       baslik: kayit.baslik,
-      durum: sonuc.degisti ? 'DEGISECEK' : 'DEGISIKLIK_YOK',
-      atlandi: !sonuc.degisti,
+      durum: riskler.length ? 'MANUAL' : (sonuc.degisti ? 'DEGISECEK' : 'DEGISIKLIK_YOK'),
+      atlandi: riskler.length ? true : !sonuc.degisti,
+      riskler,
+      izOnce,
+      izSonra,
       oncekiUzunluk: kayit.icerik.length,
       sonrakiUzunluk: sonuc.content.length,
       sayaclar: sonuc.sayaclar,
@@ -83,6 +93,11 @@ async function dryRun(slugler) {
 function tabloYaz(satirlar) {
   console.log('durum            uzunluk        br  nbsp bos  gorsel metin  slug');
   satirlar.forEach((satir) => {
+    if (satir.durum === 'MANUAL') {
+      console.log(`${'MANUAL'.padEnd(17)}${'-'.padEnd(35)}${satir.slug}`);
+      satir.riskler.forEach((sebep) => console.log(`                   ! ${sebep}`));
+      return;
+    }
     if (satir.durum !== 'DEGISECEK' && satir.durum !== 'DEGISIKLIK_YOK') {
       console.log(`${satir.durum.padEnd(17)}${'-'.padEnd(35)}${satir.slug}`);
       return;
@@ -162,7 +177,9 @@ async function main() {
 
   const degisecek = satirlar.filter((s) => s.durum === 'DEGISECEK').length;
   const ihlal = satirlar.filter((s) => s.durum === 'KORUMA_IHLALI').length;
-  console.log(`\nOzet: ${degisecek} degisecek | ${satirlar.length - degisecek - ihlal} dokunulmayacak | ${ihlal} koruma ihlali`);
+  const manuel = satirlar.filter((s) => s.durum === 'MANUAL').length;
+  console.log(`\nOzet: ${degisecek} degisecek | ${satirlar.length - degisecek - ihlal - manuel} dokunulmayacak`
+    + ` | ${manuel} MANUAL (ucus oncesi koruma) | ${ihlal} koruma ihlali`);
   if (ihlal) { console.error('Koruma ihlali var — APPLY calistirilmamali.'); process.exitCode = 1; return; }
 
   if (!secenekler.apply) {

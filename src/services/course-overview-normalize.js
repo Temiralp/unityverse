@@ -12,6 +12,9 @@
 // GUVENLIK SOZU: metin ve gorsel asla kaybolmaz. Donusumden sonra ikisi de dogrulanir; ihlal
 // varsa bozuk icerik DONDURULMEZ, hata firlatilir.
 
+const cheerio = require('cheerio');
+const { applyOverviewLayout } = require('./legacy-overview-layout');
+
 const BOS_BLOK_TAGLARI = 'p|div|h1|h2|h3|h4|h5|h6|span|strong|em|b|i|u|font|small';
 
 function isText(value) {
@@ -124,7 +127,39 @@ async function planKurslariniCoz(prisma, plan = {}) {
   return [...new Set(sonuc)].filter((slug) => !haric.has(slug));
 }
 
+// --- Ucus oncesi koruma (Cember 25-a) --------------------------------------------------
+// Icerik temizligi, duzen (layout) sonucunu bozmamalidir. Her kurs icin temizlik ONCESI ve
+// SONRASI duzen parmak izi karsilastirilir; kotulesme varsa kurs MANUAL isaretlenir ve
+// DOKUNULMAZ. Mimar endisesi: "birini duzeltirken digeri bozulabilir" (2026-10-02).
+
+function layoutBarmakIzi(html) {
+  const cikti = applyOverviewLayout(typeof html === 'string' ? html : '');
+  const $ = cheerio.load(cikti || '', { decodeEntities: false }, false);
+  return {
+    gorsel: $('img').length,
+    qalereya: $('.uv-ov-gallery').length,
+    kart: $('.uv-ov-gallery-item').length,
+    // Bir kaba alinip hizalanan gorsel sayisi — asil olcut budur.
+    duzenlenenGorsel: $('.uv-ov-media img, .uv-ov-gallery img').length
+  };
+}
+
+// Yalnizca KOTULESME risktir; iyilesme (daha cok gorselin hizalanmasi, bos bloklarin
+// kaldirilmasiyla kaplarin birlesmesi) beklenen davranistir.
+function barmakIziRiski(once, sonra) {
+  const sebepler = [];
+  if (once.gorsel !== sonra.gorsel) sebepler.push(`gorsel sayisi degisti (${once.gorsel}→${sonra.gorsel})`);
+  if (sonra.qalereya < once.qalereya) sebepler.push(`galeri kayboldu (${once.qalereya}→${sonra.qalereya})`);
+  if (sonra.kart < once.kart) sebepler.push(`galeri karti azaldi (${once.kart}→${sonra.kart})`);
+  if (sonra.duzenlenenGorsel < once.duzenlenenGorsel) {
+    sebepler.push(`hizalanan gorsel azaldi (${once.duzenlenenGorsel}→${sonra.duzenlenenGorsel})`);
+  }
+  return sebepler;
+}
+
 module.exports = {
+  layoutBarmakIzi,
+  barmakIziRiski,
   planKurslariniCoz,
   normalizeOverviewContent,
   gorselKaynaklari,
