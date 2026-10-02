@@ -14,6 +14,7 @@
     "test:overview-normalize-plan": "node scripts/test-overview-normalize-plan.js",
     "test:legacy-overview-layout": "node scripts/test-legacy-overview-layout.js",
     "test:course-overview-normalize": "node scripts/test-course-overview-normalize.js",
+    "test:course-overview-duplicate-gallery": "node scripts/test-course-overview-duplicate-gallery.js",
     "test:course-overview-audit": "node scripts/test-course-overview-audit.js",
     "test:legacy-course-overview-script": "node scripts/test-legacy-course-overview-script.js",
     "test:course-content-styles": "node scripts/test-course-content-styles.js",

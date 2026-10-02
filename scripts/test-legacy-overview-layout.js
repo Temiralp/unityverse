@@ -248,6 +248,44 @@ assert.match(uzunSonuc, /Bu bolumde egitmenlerimizin/, 'uzun metin yerinde kalma
 // --- 20) Dogrudan gorsel donusumu idempotent.
 assert.equal(applyOverviewLayout(dogrudanSonuc), dogrudanSonuc, 'ikinci cagri degisiklik yapmamali');
 
+// --- 21) EGITMEN KARTI hucresi: gorsel ustte, etiket ALTTA (Cember 30c).
+// Olculdu (2026-10-02, canli 1116): iki hucreden birinde etiket gorselin altinda (ust 2483),
+// digerinde USTUNDE (ust 2072) ve gorseller farkli yukseklikte basliyordu (2061 / 2131).
+// Sebep: kap bir yolda ilk gorselin yerine, diger yolda blogun SONUNA konuyordu.
+// Kapsam olculdu: bu desen 23 kurs / 27 hucre, etiketlerin TAMAMI "Egitmen: ..." —
+// "Egitimimizden kareler" basligi bu desene hic girmiyor (bolum basligi ters cevrilmez).
+const etiketUstte = [
+  '<table><tbody><tr>',
+  '<td><div>Egitmen: Emir Hakan Gul<img src="/uploads/fm/e2.jpg" /></div></td>',
+  '<td><div><img src="/uploads/fm/e1.jpg" /></div><br /><br /><strong>Egitmen: Hasan Mert Oz</strong></td>',
+  '</tr></tbody></table>'
+].join('');
+const kartSonuc = applyOverviewLayout(etiketUstte);
+const hucreler = kartSonuc.split('<td').slice(1);
+assert.equal(hucreler.length, 2, 'iki hucre korunmali');
+hucreler.forEach((h, i) => {
+  const kapYeri = h.indexOf('uv-ov-media');
+  const etiketYeri = h.search(/Egitmen:/);
+  assert.ok(kapYeri > -1, 'hucre ' + i + ': kap olmali');
+  assert.ok(kapYeri < etiketYeri, 'hucre ' + i + ': gorsel kabi etiketten ONCE gelmeli');
+});
+assert.deepEqual(gorselKaynaklari(kartSonuc), gorselKaynaklari(etiketUstte), 'gorsel sirasi korunmali');
+assert.equal(gorunenMetin(kartSonuc), gorunenMetin(etiketUstte), 'metin korunmali');
+assert.equal(say(kartSonuc, /<br/g), 0, 'kap ile etiket arasindaki artik <br> kaldirilmali (hucre yukseklikleri esitlensin)');
+
+// --- 22) BOLUM BASLIGI ters cevrilmez: galeri etiketin ALTINDA kalir.
+const bolumBasligi = '<p>Egitimimizden kareler:</p><p>' + Array.from({ length: 6 }, (unused, i) => '<img src="/uploads/fm/g' + i + '.jpg" />').join('') + '</p>';
+const bolumSonuc = applyOverviewLayout(bolumBasligi);
+assert.ok(bolumSonuc.indexOf('Egitimimizden kareler') < bolumSonuc.indexOf('uv-ov-gallery'), 'bolum basligi galerinin USTUNDE kalmali');
+
+// --- 23) Cok gorselli hucre (galeri) ve uzun metinli hucre DOKUNULMAZ.
+const galeriHucresi = '<table><tbody><tr><td><p>Sertifikalar</p><p>' + Array.from({ length: 6 }, (unused, i) => '<img src="/uploads/fm/s' + i + '.jpg" />').join('') + '</p></td><td><p>yan</p></td></tr></tbody></table>';
+const galeriSonuc = applyOverviewLayout(galeriHucresi);
+assert.ok(galeriSonuc.indexOf('Sertifikalar') < galeriSonuc.indexOf('uv-ov-gallery'), 'galeri hucresinde etiket ustte kalmali');
+
+// --- 24) Egitmen karti donusumu idempotent.
+assert.equal(applyOverviewLayout(kartSonuc), kartSonuc, 'ikinci cagri degisiklik yapmamali');
+
 // --- 13) ENTEGRASYON: donusum RENDER aninda, yalnizca statik sayfa yolunda.
 const fs = require('fs');
 const path = require('path');

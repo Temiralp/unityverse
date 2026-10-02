@@ -1,0 +1,7 @@
+{
+  "aciklama": "Cember 30b — 'Egitimimizden kareler' bolumunun tekrarlarinin kaldirilmasi. Ilk bolum korunur; kaldirilan her gorsel kalan bolumde ayni src VEYA ayni dosya imzasi (boyut+md5) ile karsilanmak zorundadir, aksi halde kurs MANUAL isaretlenir ve yazilmaz.",
+  "tarih": "2026-10-02",
+  "kategori": null,
+  "kapsamNotu": "Kapsam TUM kurslardir; hedef liste calisma aninda DB'den cozulur (etiketi 1'den fazla gecen OVERVIEW tablari). Yerel DB production'dan eski oldugu icin elle slug listesi yazilmaz (Cember 9 dersi).",
+  "haricTutulan": []
+}

@@ -1,7 +1,7 @@
 # PROJECT_STATE.md — canlı durum günlüğü
 
 > Her çember (circle) bittiğinde güncellenir. Yeni oturum/agent buradan başlar. Tarihler mutlak (YYYY-MM-DD).
-> Son güncelleme: **2026-10-02** — Çember 30a (bloğun doğrudan sahip olduğu görselin sınıflandırılması) tamamlandı; 71 test betiğinin 68'i PASS, 3 FAIL **HEAD'de de kırık** (R9, R17, PayTR env). Çember 29 **canlıda doğrulandı**.
+> Son güncelleme: **2026-10-02** — Çember 30a/30b/30c tamamlandı; 72 test betiğinin 69'u PASS, 3 FAIL **HEAD'de de kırık** (R9, R17, PayTR env). Çember 29 **canlıda doğrulandı**.
 
 ## Devir belgeleri (2026-09-30)
 - `docs/AI-AJAN-DEVIR-PROMPTU.md` — **devralan AI ajanına verilecek ilk mesaj**: roller, dil kuralı,
@@ -167,6 +167,19 @@ Ayrıca: ödeme sayfası (`iframe.ejs:131,137`) **Mesafeli Satış** ve **Üyeli
 onay kutusuyla bağlı; **İptal ve İade** linki orada YOK — eklenip eklenmeyeceği Mimar kararı.
 
 ## Yapılmaması gerekenler (git geçmişinden öğrenilen dersler)
+- **Bölüm başlığı ile kart etiketi aynı kural olamaz.** "Eğitimimizden kareler:" galerinin
+  **üstünde** durmalı, ama "Eğitmen: Ad Soyad" fotoğrafın **altında**. Kabı genel olarak metnin
+  önüne almak bölüm başlıklarını galerinin altına düşürürdü. Ayırt edici ölçüt ölçümle bulundu:
+  kart deseni `<td>` + **tek** görsel + kısa etiket (23 kurs / 27 hücre, etiketlerin tamamı
+  "Eğitmen: …"); bölüm başlıkları bu desene hiç girmiyor (2026-10-02).
+- **Aynı tabloda iki hücre farklı kod yolundan geçebilir.** 1116'da bir hücre Çember 30a yolundan
+  (kap ilk görselin yerine), diğeri klasik yoldan (kap bloğun sonuna) geçiyordu; sonuç bir hücrede
+  etiket altta, diğerinde üstte oldu. İki yolu olan bir dönüşümde **her iki yolun** çıktısını aynı
+  sayfada karşılaştır (2026-10-02).
+- **İçerik silen bir iş için src eşitliği yetmez.** Silinecek bölümdeki görsellerin korunan bölümde
+  karşılığı olduğunu kanıtlamak için **dosya imzası (boyut + md5)** karşılaştırıldı: 9 farklı src'nin
+  9'u da korunan birinin bayt-bayt kopyası çıktı. Kanıt olmadan içerik silinmez; karşılıksız tek bir
+  görsel varsa kurs MANUAL işaretlenip yazılmaz (2026-10-02).
 - **"En içteki blok" kuralı tek başına yetmez.** Çember 22b dış metin bloğunu atlama hatasını
   düzeltti, ama tersini açık bıraktı: bir blok hem **doğrudan** görsel taşıyor hem de içinde
   görselli bir alt blok varsa, dış blok aday olmaktan çıkar ve doğrudan duran görsel hiçbir
@@ -274,6 +287,7 @@ onay kutusuyla bağlı; **İptal ve İade** linki orada YOK — eklenip eklenmey
 - Statik kurs sayfası (`urun/<slug>/index.html`) varsa dinamik route çalışmaz; DB→sayfa senkronu `enhanceLegacyHtml` zincirine eklenir (`src/middleware/legacy-whatsapp.js`). Yeni bir alan senkronlanacaksa aynı desen: visibility middleware `res.locals` → `enhanceLegacyHtml` parametresi → `src/services/legacy-*.js` saf fonksiyon.
 
 ## Karar günlüğü (ADR-mini)
+| 2026-10-02 | Tekrarlanan galeri bölümleri **DB'de** temizlenir (render anında gizlenmez): plan JSON + CLI (dry-run/apply/revert), kaldırılan her görsel için `src` veya **dosya imzası** karşılığı zorunlu | Mimar A seçeneğini seçti. Render anında gizlemek admin editöründe 3 kopyayı bırakır ve gerçek içerik hatasını saklardı; DB tek doğruluk kaynağıdır ve iş geri alınabilir |
 | 2026-10-02 | Düzüm amaçlı tablolar **sunucuda** (render anında) blok akışına açılır; DB içeriğine ve admin editörüne dokunulmaz. Kapsam dar: 1 satır, 2 hücre, `<th>` yok, iç içe tablo yok, iframe'li hücre yok, bir hücre yalnız görsel / diğeri yalnız metin | Mimar A seçeneğini onayladı. CSS ile 4 varyant ölçüldü, hiçbiri temiz sonuç vermedi; gerçek veri tabloları ve yan yana videolar kapsam dışı bırakılarak risk sıfıra yakın tutuldu |
 | 2026-10-02 | **C1:** küçük görseller zorla büyütülmez. Boşluk `<br>` temizliğiyle, videolar `table`/`iframe` CSS'iyle çözülür; `max-width` tavanı korunur, `min-width`/`width:100%` **verilmez** | Mimar kararı: düşük çözünürlüklü logo/sertifika zorla büyütülürse bulanıklaşır. Küçük görsel büyütme kararı ayrıca değerlendirilecek |
 | 2026-09-30 | Kurs ve katalog arama motoru (server & client) kelime sırasından bağımsız token tabanlı (`tokens.every`) yapıldı; `normalizeSearchText` içine sembol desteği eklendi (`+`, `#`, `&`, `.`, `/`, `-` vb. korunur, noktalama boşluğa döner); asset version bump (`20260930-1`) | Admin ve kullanıcıların etiketlerle ve programlama sembolleriyle (C#, C++, .NET, UI/UX, 40 Saat + 40 Saat) kurs bulabilmesi sağlandı; sıfır DB/şema etkisi |
@@ -303,6 +317,8 @@ onay kutusuyla bağlı; **İptal ve İade** linki orada YOK — eklenip eklenmey
 ## Çember geçmişi
 | # | Tarih | Çember | Sonuç |
 |---|---|---|---|
+| 30c | 2026-10-02 | **"Eğitmen kartı" hücrelerinde görsel üstte, etiket altta.** Canlı ölçüm (1116): iki hücreden birinde etiket görselin altında (üst 2483), diğerinde **üstünde** (2072) ve görseller farklı yükseklikte başlıyordu (2061 / 2131) — çünkü kap bir yolda ilk görselin yerine, diğerinde bloğun sonuna konuyor. `egitmenKartlariniDuzenle()`: `<td>` içinde **tek görselli** kap + kısa etiket varsa kap hücrenin başına alınır, hücrenin doğrudan `<br>`'leri kaldırılır (yükseklikler eşitlensin); aralık CSS'ten (`margin: 28px auto`) | 2 dosya, ~45 satır; 69/72 PASS; **kapsam ölçüldü: 23 kurs / 27 hücre**, etiketlerin tamamı "Eğitmen: …" → bölüm başlıkları (`Eğitimimizden kareler`) bu desene **girmiyor**, testle kilitli. Canlı sonuç: görseller **2061 / 2061 (aynı satır)**, etiketler 2413 / 2409 (ikisi de altta), hücre yüksekliği 512 → **441/441**, taşma 0 |
+| 30b | 2026-10-02 | **Tekrarlanan "Eğitimimizden kareler" bölümlerinin kaldırılması** (Çember 9 deseni). `course-overview-duplicate-gallery.js` (saf servis: ilk bölüm korunur, sonraki **kök seviye** etiket blokları + onları izleyen **metinsiz** kardeşler kaldırılır; metinli blokta durur → CTA kutusu korunur), `normalize-duplicate-gallery.js` CLI (dry-run/apply/revert), plan JSON, test (8 senaryo) | 4 yeni + 1 değişen dosya, ~330 satır; 69/72 PASS; **güvenlik:** kaldırılan her görsel kalan bölümde aynı `src` **veya aynı dosya imzası (boyut+md5)** ile karşılanmak zorunda, aksi halde MANUAL ve yazılmaz. Yerel tam döngü: dry-run **1 kurs DEGISECEK** (etiket 3→1, görsel 61→26, tekrarsız 35→26) → apply **1/1 DB'den doğrulandı** → ikinci dry-run **0** → revert **1/1 bayt-bayt orijinal**. Silinen 9 farklı src'nin **9'u da** korunan birinin md5 kopyası → görsel kaybı **0**. Production uygulaması Mimar'da (önce `pg_dump`) |
 | 30a | 2026-10-02 | **Bloğun DOĞRUDAN sahip olduğu görsel de sınıflandırılır.** Çember 22b'nin "en içteki blok" kuralı, hem doğrudan görsel hem görselli alt blok taşıyan bir bloğu aday olmaktan çıkarıyor, doğrudan duran görsel **hiçbir kaba girmiyordu** → metnin yanında 150×204 kalıp komşusundaki 236×320 ile orantısız görünüyordu (admin bildirimi, 1116). `dogrudanGorseller()` + kabın **ilk görselin yerine** konması (sonuna eklenirse src sırası bozulup güvenlik sözü tüm dönüşümü geri alırdı) | 2 dosya, ~35 satır; 68/71 PASS; **ölçülen kapsam: 4 kurs / 412** (unreal-engine 1116/1336/1411/1028), görsel sayısı ve görünen metin değişmeyen: 412/412; canlı ölçüm (1116): orphan görsel **150×204 → 235×320**, komşusu 236×320 ile **eşit yükseklik**. Uzun metinli bloklardaki 153 görsel **dokunulmadı** (metni yeniden akıtmama kuralı) |
 | 29 ✓ | 2026-10-02 | Çember 29 canlıda doğrulandı: 1365 ve 1364'te düzüm tablosu **0**, yalnız video tablosu duruyor, görsel sayısı 18/20 korundu, CSS `20261002-2` servis ediliyor | — |
 | 29 | 2026-10-02 | **Düzüm tablolarının açılması (animasyon, 6 kurs).** İçerikte yalnızca hizalama için kullanılan tablolar (1 satır / 2 hücre, biri yalnız görsel, diğeri yalnız metin) `legacy-overview-layout.js` içinde **blok akışına açılır** (`duzumCedvelleriniAc`); görseller normal `uv-ov-media` kabına girer, metin tam genişliğe yayılır. Çember 28'de eklenen `vertical-align: top` **geri alındı** (metni hücrenin tepesine yapıştırıyordu) | 5 dosya, ~95 satır (50'si test); 68/71 PASS (3 FAIL HEAD'de de kırık); **canlı ölçüm:** 1365 görsel **60×320 → 589×320** (doğal boyut 600×326), 1364 görseller **144×320 → 248×320 / 209×320**, metin boşluğu **741 → 28px**; yerel DB: 6/6 kursta düzüm tablosu açıldı, **406 kursta 0 değişiklik**, görsel sırası ve metin farkı 0; video tablosu (iframe) **dokunulmadı** |

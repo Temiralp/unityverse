@@ -115,6 +115,34 @@ function duzumCedvelleriniAc($) {
   });
 }
 
+// "Egitmen karti" hucrelerini duzenler: <td> icinde TEK gorselli bir kap ve kisa bir etiket
+// varsa kap hucrenin basina alinir, etiket altinda kalir.
+// Gerekce (2026-10-02, canli 1116 olcumu): iki hucreden birinde etiket gorselin altindaydi
+// (ust 2483), digerinde USTUNDE (ust 2072) ve gorseller farkli yukseklikte basliyordu
+// (2061 / 2131) — cunku kap bir yolda ilk gorselin yerine, diger yolda blogun SONUNA konuyor.
+// Artik <br>'ler de kaldirilir; aksi halde hucre yukseklikleri esit olmaz ve gorseller ayni
+// satirda hizalanmaz. Aralik CSS'ten gelir (`.uv-ov-media { margin: 28px auto }`).
+//
+// Kapsam olculdu: 23 kurs / 27 hucre; etiketlerin TAMAMI "Egitmen: ..." biciminde.
+// "Egitimimizden kareler" gibi BOLUM BASLIKLARI bu desene girmez (tek gorsel + <td> sarti),
+// bu yuzden bolum basliklari galerinin ustunde kalmaya devam eder.
+function egitmenKartlariniDuzenle($) {
+  $('td').toArray().forEach((element) => {
+    const hucre = $(element);
+    const kap = hucre.find('.uv-ov-media');
+    if (kap.length !== 1 || hucre.find('img').length !== 1) return;
+
+    const kopya = hucre.clone();
+    kopya.find('img').remove();
+    const etiket = gorunenMetin($.html(kopya));
+    if (!etiket || etiket.length > METIN_ESIGI) return;
+
+    // Kap hucre icinde tasinir; hucreler arasi gorsel sirasi degismez.
+    if (hucre.children().first().get(0) !== kap.get(0)) hucre.prepend(kap);
+    hucre.children('br').remove();
+  });
+}
+
 function applyOverviewLayout(html) {
   if (!isText(html) || !html.trim()) return isText(html) ? html : '';
   if (html.includes('uv-ov-media') || html.includes('uv-ov-gallery')) return html; // idempotent
@@ -202,6 +230,9 @@ function applyOverviewLayout(html) {
     }
     kayit.kap.addClass('uv-ov-media');
   });
+
+  // 4b) Egitmen karti hucrelerinde gorsel uste, etiket alta alinir.
+  egitmenKartlariniDuzenle($);
 
   // 5) "Basari Hikayeleri" CTA kutusu icerigin en sonunda kaliyordu (galerinin altinda).
   // Mimar istegi (2026-10-01): SON galeri bolumunun onune alinir — boylece ustteki metin ile
