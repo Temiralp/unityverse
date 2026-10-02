@@ -153,6 +153,69 @@ assert.equal(applyOverviewLayout(birinci), birinci);
   assert.equal(r, typeof girdi === 'string' ? girdi : '');
 });
 
+// --- 15) DUZUM CEDVELI acilir (Cember 29).
+// Olculdu (2026-10-02, animasyon kategorisi, 6 kurs): 1 satir / 2 hucreli bir cedvelin bir
+// hucresinde yalnizca gorsel, digerinde yalnizca metin duruyor. Cedvelin otomatik duzeni
+// genis metin hucresine yer verip gorsel hucresini sikistiriyor: 600x326'lik bir gorsel
+// 60x320 render ediliyordu, metin hucresinde 741px bosluk kaliyordu.
+const duzumCedveli = [
+  '<table><tbody><tr>',
+  '<td><p><img src="/uploads/fm/a.jpg" width="600" /></p></td>',
+  '<td><p>' + 'Bu kurs hakkinda uzun bir aciklama metni. '.repeat(4) + '</p></td>',
+  '</tr></tbody></table>'
+].join('');
+const duzumSonuc = applyOverviewLayout(duzumCedveli);
+assert.doesNotMatch(duzumSonuc, /<table/i, 'duzum cedveli blok akisina acilmali');
+assert.equal(say(duzumSonuc, /class="uv-ov-media"/g), 1, 'gorsel normal medya kabina alinmali');
+assert.deepEqual(gorselKaynaklari(duzumSonuc), gorselKaynaklari(duzumCedveli), 'gorsel sirasi korunmali');
+assert.equal(gorunenMetin(duzumSonuc), gorunenMetin(duzumCedveli), 'metin korunmali');
+
+// Iki gorselli hucre de ayni sekilde acilir (1364/553 deseni).
+const ikiGorselli = [
+  '<table><tbody><tr>',
+  '<td><p><img src="/uploads/fm/b1.jpg" /><img src="/uploads/fm/b2.jpg" /></p></td>',
+  '<td><p>' + 'Karakter tasarimi egitimi aciklamasi. '.repeat(4) + '</p></td>',
+  '</tr></tbody></table>'
+].join('');
+const ikiSonuc = applyOverviewLayout(ikiGorselli);
+assert.doesNotMatch(ikiSonuc, /<table/i, 'iki gorselli duzum cedveli de acilmali');
+assert.equal(say(ikiSonuc, /<img/g), 2, 'iki gorsel de korunmali');
+
+// --- 16) GERCEK VERI TABLOLARI DOKUNULMAZ (kapsam kilidi).
+// (a) Birden fazla satir
+const veriTablosu = [
+  '<table><tbody>',
+  '<tr><td><p><img src="/uploads/fm/c.jpg" /></p></td><td><p>' + 'Satir bir aciklamasi uzun metin. '.repeat(3) + '</p></td></tr>',
+  '<tr><td>Ikinci satir</td><td>Deger</td></tr>',
+  '</tbody></table>'
+].join('');
+assert.match(applyOverviewLayout(veriTablosu), /<table/i, 'cok satirli tablo dokunulmamali');
+
+// (b) <th> tasiyan tablo
+const basliklitablo = '<table><tbody><tr><th>Baslik</th><td><p><img src="/uploads/fm/d.jpg" /></p></td></tr></tbody></table>';
+assert.match(applyOverviewLayout(basliklitablo), /<table/i, 'th tasiyan tablo dokunulmamali');
+
+// (c) iframe'li hucre (video tablosu) — videolar yan yana 600x338 goruntulenir, bozulmamali
+const videoTablosu = [
+  '<table><tbody><tr>',
+  '<td><iframe src="https://www.youtube.com/embed/x"></iframe></td>',
+  '<td><p>' + 'Video aciklamasi uzun metin olarak burada. '.repeat(3) + '</p></td>',
+  '</tr></tbody></table>'
+].join('');
+assert.match(applyOverviewLayout(videoTablosu), /<table/i, 'iframe tasiyan tablo dokunulmamali');
+
+// (d) Iki hucresi de metinli tablo (karsilastirma tablosu)
+const metinTablosu = [
+  '<table><tbody><tr>',
+  '<td><p>' + 'Sol hucre metni burada duruyor. '.repeat(3) + '</p></td>',
+  '<td><p>' + 'Sag hucre metni burada duruyor. '.repeat(3) + '</p></td>',
+  '</tr></tbody></table>'
+].join('');
+assert.match(applyOverviewLayout(metinTablosu), /<table/i, 'iki metinli tablo dokunulmamali');
+
+// --- 17) Duzum cedveli donusumu idempotent.
+assert.equal(applyOverviewLayout(duzumSonuc), duzumSonuc, 'ikinci cagri degisiklik yapmamali');
+
 // --- 13) ENTEGRASYON: donusum RENDER aninda, yalnizca statik sayfa yolunda.
 const fs = require('fs');
 const path = require('path');

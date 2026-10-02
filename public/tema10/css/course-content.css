@@ -97,7 +97,9 @@
 :is(#tab-info, #tab-additional-content2, #tab-additional-content3, .jodit-wysiwyg):not(.uv-course-overview)
   :is(td, th) {
   width: auto !important;
-  vertical-align: top;
+  /* vertical-align BILEREK verilmez (Cember 29): Cember 28'de eklenen `top` degeri, gorsel
+   * hucresi uzun oldugunda metni hucrenin tepesine yapistiriyordu ve altinda 741px bosluk
+   * kaliyordu. Tarayici varsayilani `middle` korunur. */
 }
 
 :is(#tab-info, #tab-additional-content2, #tab-additional-content3, .jodit-wysiwyg):not(.uv-course-overview)

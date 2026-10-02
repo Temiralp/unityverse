@@ -55,11 +55,59 @@ function blokMetni($, blok) {
   return gorunenMetin($.html(kopya));
 }
 
+// Yalnizca DUZUM icin kullanilan cedvelleri blok akisina acar.
+// Olculdu (2026-10-02, animasyon kategorisi, 6 kurs): 1 satir / 2 hucreli bir cedvelin bir
+// hucresinde yalnizca gorsel, digerinde yalnizca metin duruyordu. Cedvelin otomatik duzeni
+// genis metin hucresine yer verip gorsel hucresini sikistiriyor: 600x326 piksellik bir gorsel
+// 60x320 olarak render ediliyor (1365 ve ayni icerikli 3 kurs), iki gorselli varyantta ise
+// gorseller 144x320'ye dusup metin hucresinde 741px bosluk kaliyordu (1364, 553).
+// Cedvel kaldirilinca gorsel 589px'e cikiyor ve bosluk 28px'e dusuyor.
+//
+// Kapsam BILEREK dar: gercek veri tablolari dokunulmaz. Disarida kalanlar: 2+ satir, <th>,
+// ic ice tablo, iframe tasiyan hucre (yan yana videolar 600x338 ile zaten dogru goruntulenir)
+// ve iki hucresi de metinli tablolar.
+function duzumCedvelleriniAc($) {
+  $('table').toArray().forEach((element) => {
+    const tablo = $(element);
+    if (tablo.find('th, iframe, table').length) return;
+
+    const satirlar = tablo.find('tr');
+    if (satirlar.length !== 1) return;
+    const hucreler = $(satirlar.get(0)).children('td');
+    if (hucreler.length !== 2) return;
+
+    const bilgi = hucreler.toArray().map((hucreElementi) => {
+      const hucre = $(hucreElementi);
+      return {
+        hucre,
+        gorselSayisi: hucre.find('img').length,
+        metinUzunlugu: gorunenMetin($.html(hucre)).length
+      };
+    });
+    const gorselHucresi = bilgi.find((kayit) => kayit.gorselSayisi > 0 && kayit.metinUzunlugu <= METIN_ESIGI);
+    const metinHucresi = bilgi.find((kayit) => kayit.gorselSayisi === 0 && kayit.metinUzunlugu > METIN_ESIGI);
+    if (!gorselHucresi || !metinHucresi) return;
+
+    // Hucre icerikleri DOM sirasiyla blok akisina alinir — gorsel sirasi ve metin korunur.
+    const sarmal = $('<div>');
+    bilgi.forEach((kayit) => {
+      const parca = $('<div>');
+      parca.append(kayit.hucre.contents());
+      sarmal.append(parca);
+    });
+    tablo.replaceWith(sarmal);
+  });
+}
+
 function applyOverviewLayout(html) {
   if (!isText(html) || !html.trim()) return isText(html) ? html : '';
   if (html.includes('uv-ov-media') || html.includes('uv-ov-gallery')) return html; // idempotent
 
   const $ = cheerio.load(html, { decodeEntities: false }, false);
+
+  // 0) Duzum cedvelleri blok akisina acilir (siniflandirmadan ONCE: acilan hucreler
+  // normal blok olarak siniflandirilsin).
+  duzumCedvelleriniAc($);
 
   // 1) EN ICTEKI gorsel bloklarini bul. Yalnizca ust seviyeye bakmak yetmez: 2026-10-01'de
   // 1454 numarali kursta gorsel paragraflari uzun metinli bir <div> icindeydi; dis blok

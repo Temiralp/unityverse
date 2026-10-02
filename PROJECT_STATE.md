@@ -1,7 +1,7 @@
 # PROJECT_STATE.md — canlı durum günlüğü
 
 > Her çember (circle) bittiğinde güncellenir. Yeni oturum/agent buradan başlar. Tarihler mutlak (YYYY-MM-DD).
-> Son güncelleme: **2026-10-02** — Çember 28 (galeri boşluğu: artık `<br>` temizliği + içerik `<table>`/`<iframe>` CSS'i) tamamlandı; 71 test betiğinin 68'i PASS, 3 FAIL **HEAD'de de kırık** (R9, R17, PayTR env).
+> Son güncelleme: **2026-10-02** — Çember 29 (animasyon: düzüm tablolarının blok akışına açılması) tamamlandı; 71 test betiğinin 68'i PASS, 3 FAIL **HEAD'de de kırık** (R9, R17, PayTR env).
 
 ## Devir belgeleri (2026-09-30)
 - `docs/AI-AJAN-DEVIR-PROMPTU.md` — **devralan AI ajanına verilecek ilk mesaj**: roller, dil kuralı,
@@ -167,6 +167,25 @@ Ayrıca: ödeme sayfası (`iframe.ejs:131,137`) **Mesafeli Satış** ve **Üyeli
 onay kutusuyla bağlı; **İptal ve İade** linki orada YOK — eklenip eklenmeyeceği Mimar kararı.
 
 ## Yapılmaması gerekenler (git geçmişinden öğrenilen dersler)
+- **Düzüm için kullanılan `<table>` görseli yok eder.** Jodit içeriğinde hizalama amaçlı
+  1 satır / 2 hücreli tablolar var: bir hücrede görsel, diğerinde metin. Tablonun otomatik
+  düzeni geniş metin hücresine yer verip görsel hücresini sıkıştırıyor — 600×326 piksellik bir
+  görsel **60×320** render ediliyordu (yani neredeyse görünmez) ve metin hücresinde 741px boşluk
+  kalıyordu. CSS ile düzeltilemez: `vertical-align`, `width: %`, `grid-template-columns` ve
+  `height: auto` varyantlarının **dördü de** ölçüldü, hiçbiri temiz sonuç vermedi (satır ya daha
+  da uzadı ya da görsel küçük kaldı). Çözüm tabloyu **sunucuda kaldırmaktır** (2026-10-02).
+- **`vertical-align: top` masum değildir.** Bir hücre komşusundan uzunsa metin tepeye yapışır ve
+  altında boşluk kalır; tarayıcı varsayılanı `middle` bunu kendiliğinden dengeler. Tablo hücresine
+  hizalama verirken komşu hücrenin yüksekliğini de düşün (2026-10-02, Çember 28'in düzeltmesi).
+- **Otomatik tarayıcı sekmesinde `loading="lazy"` görseller hiç yüklenmez.** Sekme ön plana
+  gelmediği için istek gönderilmez: `naturalWidth === 0`, `currentSrc` boş, `performance`
+  kayıtlarında yalnızca kendi `fetch`'leriniz görünür. Bu durumda "görsel 404" sonucuna varmak
+  hatadır — aynı URL `fetch` ile 200 döner. Ölçümden önce `loading='eager'` atayıp `src`'yi
+  yeniden set et ve `load` olayını bekle (2026-10-02).
+- **Simülasyonu gerçek çıktının yapısıyla kur.** Canlı sayfada dönüşümü denerken uydurma bir
+  sarmalayıcı sınıf (`uv-ov-media-item`) kullanıldı; CSS `.uv-ov-media img` seçtiği için sonuç
+  tesadüfen aynı çıktı. Önce servisin **gerçek** çıktısını okuyup sınıf yapısını doğrula
+  (2026-10-02).
 - **Toplam (aggregate) ölçümde `parent()` yanıltır.** Bir kabın `<br>` kalıntısını sayarken
   `kap.parent().find('br')` kullanılırsa, kap `<td>` gibi birkaç blok barındıran bir hücrenin içindeyse
   **komşu metin paragraflarının** `<br>`'leri de sayılır. 2026-10-02'de bu yolla 142 kurs "kalıntılı"
@@ -241,6 +260,7 @@ onay kutusuyla bağlı; **İptal ve İade** linki orada YOK — eklenip eklenmey
 - Statik kurs sayfası (`urun/<slug>/index.html`) varsa dinamik route çalışmaz; DB→sayfa senkronu `enhanceLegacyHtml` zincirine eklenir (`src/middleware/legacy-whatsapp.js`). Yeni bir alan senkronlanacaksa aynı desen: visibility middleware `res.locals` → `enhanceLegacyHtml` parametresi → `src/services/legacy-*.js` saf fonksiyon.
 
 ## Karar günlüğü (ADR-mini)
+| 2026-10-02 | Düzüm amaçlı tablolar **sunucuda** (render anında) blok akışına açılır; DB içeriğine ve admin editörüne dokunulmaz. Kapsam dar: 1 satır, 2 hücre, `<th>` yok, iç içe tablo yok, iframe'li hücre yok, bir hücre yalnız görsel / diğeri yalnız metin | Mimar A seçeneğini onayladı. CSS ile 4 varyant ölçüldü, hiçbiri temiz sonuç vermedi; gerçek veri tabloları ve yan yana videolar kapsam dışı bırakılarak risk sıfıra yakın tutuldu |
 | 2026-10-02 | **C1:** küçük görseller zorla büyütülmez. Boşluk `<br>` temizliğiyle, videolar `table`/`iframe` CSS'iyle çözülür; `max-width` tavanı korunur, `min-width`/`width:100%` **verilmez** | Mimar kararı: düşük çözünürlüklü logo/sertifika zorla büyütülürse bulanıklaşır. Küçük görsel büyütme kararı ayrıca değerlendirilecek |
 | 2026-09-30 | Kurs ve katalog arama motoru (server & client) kelime sırasından bağımsız token tabanlı (`tokens.every`) yapıldı; `normalizeSearchText` içine sembol desteği eklendi (`+`, `#`, `&`, `.`, `/`, `-` vb. korunur, noktalama boşluğa döner); asset version bump (`20260930-1`) | Admin ve kullanıcıların etiketlerle ve programlama sembolleriyle (C#, C++, .NET, UI/UX, 40 Saat + 40 Saat) kurs bulabilmesi sağlandı; sıfır DB/şema etkisi |
 | 2026-09-24 | Çember 18 genel overview script enjeksiyonu geri alındı; önceden var olan dinamik davranış ve Çember 17 korundu | Mimar: kursların farklı içerikleri aynı düzene zorlanmamalı; yeni çözüm ayrı iş olarak seçilecek |
@@ -269,6 +289,7 @@ onay kutusuyla bağlı; **İptal ve İade** linki orada YOK — eklenip eklenmey
 ## Çember geçmişi
 | # | Tarih | Çember | Sonuç |
 |---|---|---|---|
+| 29 | 2026-10-02 | **Düzüm tablolarının açılması (animasyon, 6 kurs).** İçerikte yalnızca hizalama için kullanılan tablolar (1 satır / 2 hücre, biri yalnız görsel, diğeri yalnız metin) `legacy-overview-layout.js` içinde **blok akışına açılır** (`duzumCedvelleriniAc`); görseller normal `uv-ov-media` kabına girer, metin tam genişliğe yayılır. Çember 28'de eklenen `vertical-align: top` **geri alındı** (metni hücrenin tepesine yapıştırıyordu) | 5 dosya, ~95 satır (50'si test); 68/71 PASS (3 FAIL HEAD'de de kırık); **canlı ölçüm:** 1365 görsel **60×320 → 589×320** (doğal boyut 600×326), 1364 görseller **144×320 → 248×320 / 209×320**, metin boşluğu **741 → 28px**; yerel DB: 6/6 kursta düzüm tablosu açıldı, **406 kursta 0 değişiklik**, görsel sırası ve metin farkı 0; video tablosu (iframe) **dokunulmadı** |
 | 28 | 2026-10-02 | **Galeri boşluğu + görünmeyen videolar.** (a) `legacy-overview-layout.js`: görseller kaba alındıktan sonra blokta öğede kalan `<br>`'ler kaldırılır — **yalnızca kap oluşturulan bloklarda** (metinli ve görselsiz bloklar dokunulmaz, testle kilitli). (b) `course-content.css`: içerikteki `table` tam genişliğe açılır, `iframe` 16:9 / max 600px / ortalanır | 6 dosya, +63 satır (28'i test); 68/71 PASS (3 FAIL HEAD'de de kırık); **ölçülen sonuç:** boşluk **493 → 73px**, iframe **40×23 → 600×338**; 412 kursta **10 582 `<br>` kaldırıldı**, görsel sayısı değişen kurs **0**, metin kaybı **0**; dinamik sayfalarda **0 değişiklik** (asset sürümü `20261002-1`) |
 | 27 | 2026-10-02 | `3d-modelleme` kategorisi içerik temizliği — **production'da Mimar uyguladı** (önce `pg_dump`) | plan: 50 kurs → 46 değişecek / 4 dokunulmayacak / 0 MANUAL; canlı doğrulama başarılı |
 | 26 | 2026-10-02 | `grafik-tasarim` kategorisi içerik temizliği — **production'da Mimar uyguladı** | plan: 78 kurs → 74 değişecek / 4 dokunulmayacak / 0 MANUAL; canlı doğrulama başarılı. **Not:** bu kategoride `pg_dump` önce başarısız olmuştu (`role ... does not exist` — kabuktaki eski `DB_URL`), düzeltilmiş komutla alındı |
