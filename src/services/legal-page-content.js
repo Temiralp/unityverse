@@ -72,4 +72,31 @@ function textToHtml(metin) {
   return parcalar.join('\n');
 }
 
-module.exports = { textToHtml };
+// Sayfanin YALNIZCA bir bolumunu degistirir: `isaret` metninin gectigi blogun basindan
+// icerigin sonuna kadar olan kisim `yeniHtml` ile degistirilir; oncesi BIREBIR korunur.
+//
+// Neden: "Üyelik Sözleşmesi ve Gizlilik Politikası" sayfasinda uc belge bir arada duruyor
+// (Üyelik Sözleşmesi, Google ile Giriş bildirimi, Gizlilik/Çerez). Mimar karari (2026-10-02):
+// yalnizca yeni belgenin kapsadigi bolum guncellenir, digerleri oldugu gibi kalir.
+// Isaret bulunamazsa HICBIR SEY degistirilmez — sessiz icerik kaybi olmasin.
+function kismiIcerikDegistir(icerik, isaret, yeniHtml) {
+  if (typeof icerik !== 'string' || !icerik) return icerik;
+  if (typeof isaret !== 'string' || !isaret) return icerik;
+
+  const isaretIndeksi = icerik.indexOf(isaret);
+  if (isaretIndeksi === -1) return icerik;
+
+  // Isaretin icinde bulundugu blok etiketinin basina geri sar.
+  const blokBasi = Math.max(
+    icerik.lastIndexOf('<p', isaretIndeksi),
+    icerik.lastIndexOf('<h1', isaretIndeksi),
+    icerik.lastIndexOf('<h2', isaretIndeksi),
+    icerik.lastIndexOf('<h3', isaretIndeksi),
+    icerik.lastIndexOf('<h4', isaretIndeksi)
+  );
+  const kesim = blokBasi === -1 ? isaretIndeksi : blokBasi;
+
+  return `${icerik.slice(0, kesim)}${yeniHtml}\n`;
+}
+
+module.exports = { textToHtml, kismiIcerikDegistir };

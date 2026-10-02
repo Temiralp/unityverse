@@ -46,6 +46,40 @@ ornek.replace(/[•\n]/g, ' ').split(/\s+/).filter(Boolean).forEach((kelime) => 
   assert.ok(duzMetin(basliklar + liste + altBent + textToHtml(ornek)).includes(kelime), `kelime kaybolmamali: ${kelime}`);
 });
 
+// ------------------------------------------------- kismi guncelleme (kesim isareti)
+// "Üyelik Sözleşmesi ve Gizlilik Politikası" sayfasinda UC belge bir arada. Yeni PDF yalnizca
+// gizlilik/KVKK bolumunu kapsiyor; Mimar karari (2026-10-02): ilgili bolum guncellensin, ilgisiz
+// bolumler (Üyelik Sözleşmesi, Google ile Giriş) OLDUGU GIBI kalsin.
+const { kismiIcerikDegistir } = require('../src/services/legal-page-content');
+
+const sayfaIcerigi = '<h1>Baslik</h1>'
+  + '<h2>Google ile Giris Hakkinda</h2><p>Google notu burada.</p>'
+  + '<p><strong>UYELIK SOZLESMESI</strong></p><p>Uyelik kurallari burada.</p>'
+  + '<p><strong>GIZLILIK POLITIKASI</strong></p><p>Eski gizlilik metni.</p><p>Eski cerez metni.</p>';
+
+const yeniBolum = '<h2>1. Veri Sorumlusu</h2>\n<p>Yeni gizlilik metni.</p>';
+const birlesik = kismiIcerikDegistir(sayfaIcerigi, 'GIZLILIK POLITIKASI', yeniBolum);
+
+// Korunanlar aynen durmali.
+assert.match(birlesik, /Google notu burada\./, 'Google bolumu korunmali');
+assert.match(birlesik, /UYELIK SOZLESMESI/, 'Uyelik basligi korunmali');
+assert.match(birlesik, /Uyelik kurallari burada\./, 'Uyelik metni korunmali');
+assert.match(birlesik, /<h1>Baslik<\/h1>/, 'sayfa basligi korunmali');
+
+// Eski gizlilik/cerez metni GITMELI, yenisi gelmeli.
+assert.doesNotMatch(birlesik, /Eski gizlilik metni/, 'eski gizlilik metni degismeli');
+assert.doesNotMatch(birlesik, /Eski cerez metni/, 'eski cerez metni degismeli');
+assert.match(birlesik, /Yeni gizlilik metni\./);
+
+// Korunan kisim BIREBIR ayni kalmali (bayt bayt).
+const kesim = sayfaIcerigi.indexOf('GIZLILIK POLITIKASI');
+const korunanBas = sayfaIcerigi.slice(0, sayfaIcerigi.lastIndexOf('<p>', kesim));
+assert.ok(birlesik.startsWith(korunanBas), 'kesim oncesi bayt bayt korunmali');
+
+// Isaret bulunamazsa icerik DEGISTIRILMEZ (sessiz veri kaybi yasak).
+assert.equal(kismiIcerikDegistir(sayfaIcerigi, 'OLMAYAN ISARET', yeniBolum), sayfaIcerigi);
+[null, undefined, ''].forEach((girdi) => assert.equal(kismiIcerikDegistir(girdi, 'X', 'Y'), girdi));
+
 // ---------------------------------------------------------------- footer linki
 const footerHtml = '<footer><ul>'
   + '<li><a href="./sayfa/hakkimizda-25/">Hakkımızda</a></li>'

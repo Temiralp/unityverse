@@ -10,14 +10,20 @@
 
 const fs = require('fs');
 const path = require('path');
-const { textToHtml } = require('../src/services/legal-page-content');
+const { textToHtml, kismiIcerikDegistir } = require('../src/services/legal-page-content');
 
 const rootDir = path.join(__dirname, '..');
 
 // Hangi metin dosyasi hangi sayfaya gidiyor (Mimar 2026-10-01).
 const ESLESMELER = [
   { metin: 'mesafeli-satis-sozlesmesi.txt', sayfa: 'sayfa/mesafeli-satis-sozlesmesi-26/index.html' },
-  { metin: 'gizlilik-politikasi-kvkk.txt', sayfa: 'sayfa/uyelik-sozlesmesi-ve-gizlilik-politikasi-27/index.html' },
+  // Bu sayfada uc belge bir arada: isaretten ONCEKI kisim (Üyelik Sözleşmesi + Google bildirimi)
+  // korunur, isaretten sonrasi yeni gizlilik/KVKK metniyle degistirilir (Mimar, 2026-10-02).
+  {
+    metin: 'gizlilik-politikasi-kvkk.txt',
+    sayfa: 'sayfa/uyelik-sozlesmesi-ve-gizlilik-politikasi-27/index.html',
+    kesimIsareti: 'GİZLİLİK POLİTİKASI'
+  },
   { metin: 'iptal-ve-iade.txt', sayfa: 'sayfa/iptal-ve-iade-kosullari-28/index.html' }
 ];
 
@@ -46,7 +52,7 @@ function main() {
 
   console.log(`=== Hukuki sayfa guncellemesi — ${secenekler.apply ? 'APPLY' : 'DRY-RUN (yazma yok)'} ===\n`);
 
-  ESLESMELER.forEach(({ metin, sayfa }) => {
+  ESLESMELER.forEach(({ metin, sayfa, kesimIsareti }) => {
     const metinYolu = path.join(secenekler.kaynak, metin);
     const sayfaYolu = path.join(rootDir, sayfa);
 
@@ -60,15 +66,24 @@ function main() {
     const yeniIcerik = textToHtml(fs.readFileSync(metinYolu, 'utf8'));
     if (!yeniIcerik) { console.log(`ATLANDI (metin bos): ${metin}`); return; }
 
-    const eskiBaslik = /<h1[^>]*>([\s\S]*?)<\/h1>/i.exec(eslesme[2]);
-    const baslik = eskiBaslik ? eskiBaslik[0] : '';
-    const govde = `\n${baslik}\n${yeniIcerik}\n`;
+    let govde;
+    let korunanBaslik = false;
+    if (kesimIsareti) {
+      govde = kismiIcerikDegistir(eslesme[2], kesimIsareti, `\n${yeniIcerik}`);
+      if (govde === eslesme[2]) { console.log(`ATLANDI (kesim isareti bulunamadi): ${sayfa}`); return; }
+      korunanBaslik = /<h1[^>]*>/i.test(govde);
+    } else {
+      const eskiBaslik = /<h1[^>]*>([\s\S]*?)<\/h1>/i.exec(eslesme[2]);
+      const baslik = eskiBaslik ? eskiBaslik[0] : '';
+      govde = `\n${baslik}\n${yeniIcerik}\n`;
+      korunanBaslik = Boolean(baslik);
+    }
     const yeniSayfa = sayfaHtml.replace(ICERIK_KABI, (tam, acilis, eski, kapanis) => `${acilis}${govde}${kapanis}`);
 
     const oncekiUzunluk = duzMetin(eslesme[2]).length;
     const sonrakiUzunluk = duzMetin(govde).length;
     console.log(`${sayfa}`);
-    console.log(`   metin: ${oncekiUzunluk} → ${sonrakiUzunluk} karakter | h1 korundu: ${baslik ? 'evet' : 'HAYIR'}`);
+    console.log(`   metin: ${oncekiUzunluk} → ${sonrakiUzunluk} karakter | h1 korundu: ${korunanBaslik ? 'evet' : 'HAYIR'}`);
     console.log(`   dosya: ${sayfaHtml.length} → ${yeniSayfa.length} bayt | icerik disi degisiklik: `
       + `${sayfaHtml.replace(ICERIK_KABI, '#') === yeniSayfa.replace(ICERIK_KABI, '#') ? 'YOK' : 'VAR (!)'}`);
 

@@ -141,7 +141,13 @@ saf CSS denemesi 534 karakterlik bir paragrafı flex'e çevirdi (yükseklik 497�
 içeriği temizlenmemiş kurslarda boşluk büyük görünür. Çözüm sırası: önce layout (her yerde aktif),
 sonra kategori kategori içerik temizliği.
 
-## ⚠️ Açık karar — "Üyelik Sözleşmesi ve Gizlilik Politikası" sayfası (2026-10-02)
+## "Üyelik Sözleşmesi ve Gizlilik Politikası" sayfası — ÇÖZÜLDÜ (2026-10-02)
+Mimar kararı: ilgili bölüm güncellensin, ilgisizler kalsın. Kesim işareti **"GİZLİLİK POLİTİKASI"**;
+ondan önceki kısım (Üyelik Sözleşmesi + Google ile Giriş) korunur. Doğrulama: kesim öncesinde
+"Çerez" 0 / "Üyelik" 9, kesim sonrasında "Üyelik" 0 / "Çerez" 10 → sınır temiz.
+Ödeme sayfasında İptal ve İade linki **zaten var** (Mimar ekran görüntüsüyle teyit etti) — dokunulmadı.
+
+### Eski not (karar öncesi)
 Mimar'ın verdiği PDF yalnızca **Gizlilik Politikası ve KVKK Aydınlatma Metni**'ni içeriyor; ancak
 `sayfa/uyelik-sozlesmesi-ve-gizlilik-politikasi-27/` sayfasında **üç ayrı belge** bir arada:
 Üyelik Sözleşmesi (ayrı "ÜYELİK" başlığı), Gizlilik Politikası, Çerez politikası (10 geçiş) ve
@@ -244,6 +250,7 @@ onay kutusuyla bağlı; **İptal ve İade** linki orada YOK — eklenip eklenmey
 ## Çember geçmişi
 | # | Tarih | Çember | Sonuç |
 |---|---|---|---|
+| 24b | 2026-10-02 | **Gizlilik sayfasi kismi guncelleme.** `kismiIcerikDegistir` servisi: "GİZLİLİK POLİTİKASI" isaretinden ONCEKI kisim (sayfa basligi + Google ile Giriş bildirimi + Üyelik Sözleşmesi) **bayt bayt korunur**, sonrasi yeni KVKK/Gizlilik metniyle degistirilir. Isaret bulunamazsa hicbir sey degismez | 3 dosya, +12 senaryo; 32/32 test PASS; metin 33 398 → **29 246** (tam degistirmede 10 404 olurdu); korunanlar: ÜYELİK SÖZLEŞMESİ 1→1, Google ile Giriş 2→4; yenilenenler: Veri Sorumlusu 0→2, Ticari Elektronik İleti 0→1, Çerezler 9→1; icerik kabi disinda fark YOK, `<title>` degismedi |
 | 24 | 2026-10-02 | **Hukuki sayfa guncellemesi + footer link temizligi.** `legal-page-content.js` (duz metin → sayfa HTML'i; "N." → h2, "N.N." → p, madde → ul, sarilan satirlar birlestirilir, `< > &` kacisli), `update-legal-pages.js` CLI (dry-run/apply, yalnizca `#content` kabinin ici degisir), `legacy-footer-links.js` (istenmeyen footer linki render aninda tek yerden kaldirilir — **629 statik dosyaya dokunulmaz**) | 6 dosya (+3 yeni), ~320 satir; 32/32 test PASS; **Mesafeli Satis** ve **Iptal/Iade** sayfalari guncellendi (icerik kabi disinda fark YOK, `<title>` degismedi); yerel e2e: silinen link 4 sayfa tipinde 0, kalan 4 footer linki 4/4 duruyor. **Gizlilik sayfasi bilerek ERTELENDI** — bkz. acik karar |
 | 23 | 2026-10-01 | **Kalan `yazilim` kurslarinin icerik temizligi.** Plan dosyasi artik **kategori** ile de verilebiliyor: slug listesi **calisma aninda DB'den** cozulur (`planKurslariniCoz`), `haricTutulan` ile Cember 20'de islenen 10 kurs disarida birakilir. Yerel DB production'dan eski oldugu icin elle liste yazilmaz (Cember 9 dersi) | 4 dosya (+2 yeni), ~70 satir; 31/31 test PASS; eski 10'luk plan **geriye uyumlu** calisiyor; yerel tam dongu: dry-run **111 kurs → 104 degisecek / 7 dokunulmayacak / 0 koruma ihlali** → apply 104/104 dogrulandi → ikinci dry-run **0 degisecek** → revert **118/118 bayt-bayt orijinal** |
 | 22c | 2026-10-01 | **"Başarı Hikayeleri" CTA kutusu konumu.** Kutu (`div.alert-success`) içeriğin en sonunda, fotoğrafların altında kalıyordu; Mimar isteğiyle **son galeri bölümünün önüne** taşındı (üstteki metin ile "Eğitimimizden kareler" arasına), CSS'te 32px alt/üst nefes payı verildi | 4 dosya, +4 senaryo (21 senaryo); 30/30 test PASS; 6 gerçek kursta doğrulandı: CTA önde, görsel 24→24/21→21, metin kaybı yok. **Koruma kuralı güncellendi:** metin artık sıra değil **kayıp** olarak denetlenir (CTA bilerek taşındığı için sıra değişir); görsel sırası hâlâ birebir denetleniyor |
