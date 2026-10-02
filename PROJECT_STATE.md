@@ -1,7 +1,7 @@
 # PROJECT_STATE.md — canlı durum günlüğü
 
 > Her çember (circle) bittiğinde güncellenir. Yeni oturum/agent buradan başlar. Tarihler mutlak (YYYY-MM-DD).
-> Son güncelleme: **2026-10-02** — Çember 29 (animasyon: düzüm tablolarının blok akışına açılması) tamamlandı; 71 test betiğinin 68'i PASS, 3 FAIL **HEAD'de de kırık** (R9, R17, PayTR env).
+> Son güncelleme: **2026-10-02** — Çember 30a (bloğun doğrudan sahip olduğu görselin sınıflandırılması) tamamlandı; 71 test betiğinin 68'i PASS, 3 FAIL **HEAD'de de kırık** (R9, R17, PayTR env). Çember 29 **canlıda doğrulandı**.
 
 ## Devir belgeleri (2026-09-30)
 - `docs/AI-AJAN-DEVIR-PROMPTU.md` — **devralan AI ajanına verilecek ilk mesaj**: roller, dil kuralı,
@@ -167,6 +167,20 @@ Ayrıca: ödeme sayfası (`iframe.ejs:131,137`) **Mesafeli Satış** ve **Üyeli
 onay kutusuyla bağlı; **İptal ve İade** linki orada YOK — eklenip eklenmeyeceği Mimar kararı.
 
 ## Yapılmaması gerekenler (git geçmişinden öğrenilen dersler)
+- **"En içteki blok" kuralı tek başına yetmez.** Çember 22b dış metin bloğunu atlama hatasını
+  düzeltti, ama tersini açık bıraktı: bir blok hem **doğrudan** görsel taşıyor hem de içinde
+  görselli bir alt blok varsa, dış blok aday olmaktan çıkar ve doğrudan duran görsel hiçbir
+  gruba girmez. Ölçüm: 157 sınıflandırılmamış görsel; bunların 153'ü uzun metinli bloklarda
+  (dokunulmaz), 4'ü gerçek hata. Doğru kriter "en içteki blok" değil **doğrudan sahiplik**tir
+  (2026-10-02).
+- **Kabı bloğun sonuna eklemek src sırasını bozabilir.** Doğrudan görsel, alt bloktaki görselden
+  önce geliyorsa kap sona eklenince sıra değişir ve güvenlik sözü (src sırası birebir) **tüm
+  dönüşümü geri alır** — yani kurs hiç düzen almaz. Kap, ilk doğrudan görselin yerine konmalıdır
+  (2026-10-02).
+- **Aynı fotoğraf iki kez yüklenmiş olabilir.** `blobid043` ve `blobid044` farklı src'lerdir ama
+  md5'leri aynıdır (2026-10-02, blender kursu: 3 kez tekrarlanan galeride 57 görsel referansı,
+  31 tekrarsız src, görsel olarak yalnızca 22 farklı fotoğraf). "Tekrarı sil" kararı vermeden
+  önce src karşılaştırması yetmez, **dosya imzası** karşılaştırılmalıdır.
 - **Düzüm için kullanılan `<table>` görseli yok eder.** Jodit içeriğinde hizalama amaçlı
   1 satır / 2 hücreli tablolar var: bir hücrede görsel, diğerinde metin. Tablonun otomatik
   düzeni geniş metin hücresine yer verip görsel hücresini sıkıştırıyor — 600×326 piksellik bir
@@ -289,6 +303,8 @@ onay kutusuyla bağlı; **İptal ve İade** linki orada YOK — eklenip eklenmey
 ## Çember geçmişi
 | # | Tarih | Çember | Sonuç |
 |---|---|---|---|
+| 30a | 2026-10-02 | **Bloğun DOĞRUDAN sahip olduğu görsel de sınıflandırılır.** Çember 22b'nin "en içteki blok" kuralı, hem doğrudan görsel hem görselli alt blok taşıyan bir bloğu aday olmaktan çıkarıyor, doğrudan duran görsel **hiçbir kaba girmiyordu** → metnin yanında 150×204 kalıp komşusundaki 236×320 ile orantısız görünüyordu (admin bildirimi, 1116). `dogrudanGorseller()` + kabın **ilk görselin yerine** konması (sonuna eklenirse src sırası bozulup güvenlik sözü tüm dönüşümü geri alırdı) | 2 dosya, ~35 satır; 68/71 PASS; **ölçülen kapsam: 4 kurs / 412** (unreal-engine 1116/1336/1411/1028), görsel sayısı ve görünen metin değişmeyen: 412/412; canlı ölçüm (1116): orphan görsel **150×204 → 235×320**, komşusu 236×320 ile **eşit yükseklik**. Uzun metinli bloklardaki 153 görsel **dokunulmadı** (metni yeniden akıtmama kuralı) |
+| 29 ✓ | 2026-10-02 | Çember 29 canlıda doğrulandı: 1365 ve 1364'te düzüm tablosu **0**, yalnız video tablosu duruyor, görsel sayısı 18/20 korundu, CSS `20261002-2` servis ediliyor | — |
 | 29 | 2026-10-02 | **Düzüm tablolarının açılması (animasyon, 6 kurs).** İçerikte yalnızca hizalama için kullanılan tablolar (1 satır / 2 hücre, biri yalnız görsel, diğeri yalnız metin) `legacy-overview-layout.js` içinde **blok akışına açılır** (`duzumCedvelleriniAc`); görseller normal `uv-ov-media` kabına girer, metin tam genişliğe yayılır. Çember 28'de eklenen `vertical-align: top` **geri alındı** (metni hücrenin tepesine yapıştırıyordu) | 5 dosya, ~95 satır (50'si test); 68/71 PASS (3 FAIL HEAD'de de kırık); **canlı ölçüm:** 1365 görsel **60×320 → 589×320** (doğal boyut 600×326), 1364 görseller **144×320 → 248×320 / 209×320**, metin boşluğu **741 → 28px**; yerel DB: 6/6 kursta düzüm tablosu açıldı, **406 kursta 0 değişiklik**, görsel sırası ve metin farkı 0; video tablosu (iframe) **dokunulmadı** |
 | 28 | 2026-10-02 | **Galeri boşluğu + görünmeyen videolar.** (a) `legacy-overview-layout.js`: görseller kaba alındıktan sonra blokta öğede kalan `<br>`'ler kaldırılır — **yalnızca kap oluşturulan bloklarda** (metinli ve görselsiz bloklar dokunulmaz, testle kilitli). (b) `course-content.css`: içerikteki `table` tam genişliğe açılır, `iframe` 16:9 / max 600px / ortalanır | 6 dosya, +63 satır (28'i test); 68/71 PASS (3 FAIL HEAD'de de kırık); **ölçülen sonuç:** boşluk **493 → 73px**, iframe **40×23 → 600×338**; 412 kursta **10 582 `<br>` kaldırıldı**, görsel sayısı değişen kurs **0**, metin kaybı **0**; dinamik sayfalarda **0 değişiklik** (asset sürümü `20261002-1`) |
 | 27 | 2026-10-02 | `3d-modelleme` kategorisi içerik temizliği — **production'da Mimar uyguladı** (önce `pg_dump`) | plan: 50 kurs → 46 değişecek / 4 dokunulmayacak / 0 MANUAL; canlı doğrulama başarılı |

@@ -49,6 +49,22 @@ function gorselBirimi($, img) {
   return img;
 }
 
+// Blogun DOGRUDAN sahip oldugu gorseller: en yakin blok atasi bu blok olanlar.
+// Gerekce (2026-10-02, 1116 ve ayni icerikli 3 kurs): bir gorsel blogun dogrudan icinde,
+// ayni blokta ayrica gorselli bir ALT blok varsa, "en icteki blok" kurali dis blogu aday
+// olmaktan cikariyordu ve dogrudan duran gorsel hicbir adaya girmiyordu -> hic kaba
+// alinmiyor, metnin yaninda 150x204 kalip komsusundaki 236x320 ile orantisiz goruntu
+// veriyordu. Olculen kapsam: 157 siniflandirilmamis gorsel, bunlardan yalnizca 4'u kisa
+// metinli blokta (duzeltilebilir); 153'u uzun metinli bloklarda ve DOKUNULMAZ.
+function dogrudanGorseller($, blok) {
+  return blok.find('img').toArray()
+    .filter((element) => $(element).parents(BLOK_SECICI).first().get(0) === blok.get(0));
+}
+
+function icGorselBlogu($, blok) {
+  return blok.find(BLOK_SECICI).toArray().some((ic) => $(ic).find('img').length > 0);
+}
+
 function blokMetni($, blok) {
   const kopya = blok.clone();
   kopya.find('img').remove();
@@ -114,14 +130,15 @@ function applyOverviewLayout(html) {
   // "metinli" sayilip atlaninca icindeki 7 gorsel blogu da atlandi ve sola yapisik kaldi.
   const adaylar = $(BLOK_SECICI).toArray()
     .map((element) => $(element))
-    .filter((blok) => blok.find('img').length > 0)
-    .filter((blok) => blok.find(BLOK_SECICI).filter((unusedIndex, ic) => $(ic).find('img').length > 0).length === 0);
+    .filter((blok) => dogrudanGorseller($, blok).length > 0);
 
   const bloklar = adaylar.map((blok) => {
-    const gorselSayisi = blok.find('img').length;
+    const kendiGorselleri = dogrudanGorseller($, blok);
+    const gorselSayisi = kendiGorselleri.length;
     const metin = blokMetni($, blok);
     return {
       blok,
+      kendiGorselleri,
       gorselSayisi,
       metinUzunlugu: metin.length,
       medyaBlogu: metin.length <= METIN_ESIGI,
@@ -133,15 +150,23 @@ function applyOverviewLayout(html) {
   bloklar.forEach((kayit) => {
     if (!kayit.medyaBlogu) return;
     const kap = $('<div>');
-    kayit.blok.find('img').toArray().forEach((element) => {
+    const altBlokVar = icGorselBlogu($, kayit.blok);
+    // Ic blokta da gorsel varsa kap ILK dogrudan gorselin yerine konur. Aksi halde kap blogun
+    // sonuna eklenir, dogrudan gorsel alt bloktakinin ARDINA gecer ve src sirasi degisir —
+    // guvenlik sozu ihlal edilip tum donusum geri alinirdi (2026-10-02).
+    if (altBlokVar) $(kayit.kendiGorselleri[0]).before(kap);
+    kayit.kendiGorselleri.forEach((element) => {
       kap.append(gorselBirimi($, $(element)));
     });
-    kayit.blok.append(kap);
-    // Gorseller kaba alinca aralarindaki <br>'ler blokta ogede kalir, yan yana gelir ve
-    // devasa bir bosluk yaratir (2026-10-02 canli olcumu: 18 <br> = 493px bosluk).
-    // Blok zaten "yalnizca gorsel" blogudur (metni <= 60 karakter), bu <br>'ler bosluk
-    // dolgusudur; kaba tasinan gorsellerin arasinda <br> bulunmaz, bu yuzden hepsi kaldirilir.
-    kayit.blok.find('br').remove();
+    if (!altBlokVar) {
+      kayit.blok.append(kap);
+      // Gorseller kaba alinca aralarindaki <br>'ler blokta ogede kalir, yan yana gelir ve
+      // devasa bir bosluk yaratir (2026-10-02 canli olcumu: 18 <br> = 493px bosluk).
+      // Blok zaten "yalnizca gorsel" blogudur (metni <= 60 karakter), bu <br>'ler bosluk
+      // dolgusudur; kaba tasinan gorsellerin arasinda <br> bulunmaz, bu yuzden hepsi kaldirilir.
+      // Alt blok varsa <br> temizligi YAPILMAZ: o <br>'ler alt blogun metnine ait olabilir.
+      kayit.blok.find('br').remove();
+    }
     kayit.kap = kap;
   });
 

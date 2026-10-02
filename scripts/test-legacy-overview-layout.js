@@ -216,6 +216,38 @@ assert.match(applyOverviewLayout(metinTablosu), /<table/i, 'iki metinli tablo do
 // --- 17) Duzum cedveli donusumu idempotent.
 assert.equal(applyOverviewLayout(duzumSonuc), duzumSonuc, 'ikinci cagri degisiklik yapmamali');
 
+// --- 18) BLOGUN DOGRUDAN SAHIP OLDUGU GORSEL de siniflandirilir (Cember 30).
+// Olculdu (2026-10-02, 1116 ve ayni icerikli 3 kurs): bir gorsel blogun DOGRUDAN icinde,
+// ayni blogun icinde ayrica gorselli bir alt blok var. Cember 22b'nin "en icteki blok"
+// kurali dis blogu aday olmaktan cikariyor, dogrudan duran gorsel de hicbir adaya girmiyor
+// -> hic kaba alinmiyor, metnin yaninda 150x204 kaliyor, komsusu ise 236x320 (orantisiz).
+const dogrudanGorsel = [
+  '<div>Egitmen: Hasan Mert Oz',
+  '<img src="/uploads/fm/pp1.jpg" />',
+  '<div><img src="/uploads/fm/pp2.jpg" /></div>',
+  '</div>'
+].join('');
+const dogrudanSonuc = applyOverviewLayout(dogrudanGorsel);
+assert.equal(say(dogrudanSonuc, /class="uv-ov-media"/g), 2, 'hem dogrudan gorsel hem alt blok kaba alinmali');
+assert.deepEqual(gorselKaynaklari(dogrudanSonuc), gorselKaynaklari(dogrudanGorsel), 'gorsel SIRASI korunmali (kap ilk gorselin yerine konur)');
+assert.equal(gorunenMetin(dogrudanSonuc), gorunenMetin(dogrudanGorsel), 'metin korunmali');
+
+// --- 19) UZUN METINLI blokta dogrudan gorsel DOKUNULMAZ (ihlal edilemez kural).
+// 2026-10-02 olcumu: 157 siniflandirilmamis gorselin 153'u uzun metinli bloklarda; bunlara
+// dokunulmaz, aksi halde metin yeniden akar.
+const uzunMetinli = [
+  '<div>' + 'Bu bolumde egitmenlerimizin ozgecmisi ve deneyimleri detayli anlatilir. '.repeat(2),
+  '<img src="/uploads/fm/uzun1.jpg" />',
+  '<div><img src="/uploads/fm/uzun2.jpg" /></div>',
+  '</div>'
+].join('');
+const uzunSonuc = applyOverviewLayout(uzunMetinli);
+assert.equal(say(uzunSonuc, /class="uv-ov-media"/g), 1, 'yalnizca alt blok kaba alinir, uzun metinli dis blok dokunulmaz');
+assert.match(uzunSonuc, /Bu bolumde egitmenlerimizin/, 'uzun metin yerinde kalmali');
+
+// --- 20) Dogrudan gorsel donusumu idempotent.
+assert.equal(applyOverviewLayout(dogrudanSonuc), dogrudanSonuc, 'ikinci cagri degisiklik yapmamali');
+
 // --- 13) ENTEGRASYON: donusum RENDER aninda, yalnizca statik sayfa yolunda.
 const fs = require('fs');
 const path = require('path');
