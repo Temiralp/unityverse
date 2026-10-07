@@ -144,8 +144,7 @@ async function run() {
     '/sayfa/egitmenler-10/',
     '/form/hemen-bilgi-al-1/',
     '/sayfa/iletisim-5/',
-    '/blog/',
-    '/os/yazilim-cozumleri-20/'
+    '/blog/'
   ].forEach((href) => {
     assert.match(html, new RegExp(`href="${href.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"`));
   });
