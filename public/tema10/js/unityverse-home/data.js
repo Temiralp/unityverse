@@ -43,6 +43,10 @@
           href: './blog/'
         },
         {
+          label: 'Yazılım Çözümleri',
+          href: './os/yazilim-cozumleri-20/'
+        },
+        {
           label: 'Tüm Kurslarımız',
           href: './tum-urunler/',
           iconClass: 'fa fa-bars',
@@ -596,6 +600,11 @@
       social: {
         title: 'Sosial media',
         items: [
+          {
+            label: 'Twitter',
+            href: 'https://mobile.twitter.com/semantik_soft',
+            iconClass: 'fa fa-twitter'
+          },
           {
             label: 'Instagram',
             href: 'https://www.instagram.com/unityverse.akademi/?igshid=YmMyMTA2M2Y=',
